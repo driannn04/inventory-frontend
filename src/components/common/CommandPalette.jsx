@@ -29,21 +29,21 @@ export default function CommandPalette() {
 
   // LIST MENU NAVIGASI
   const menuItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: <Home size={18}/>, path: '/', tags: 'home beranda', roles: ['admin', 'staff', 'gudang', 'manager'] },
-    { id: 'barang', name: 'Daftar Barang', icon: <Package size={18}/>, path: '/barang', tags: 'inventory stok katalog item', roles: ['admin', 'gudang'] },
+    { id: 'dashboard', name: 'Dashboard', icon: <Home size={18}/>, path: '/', tags: 'home beranda', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
+    { id: 'barang', name: 'Daftar Barang', icon: <Package size={18}/>, path: '/barang', tags: 'inventory stok katalog item', roles: ['admin', 'gudang', 'staff', 'asisten_manager', 'manager'] },
     { id: 'tambah-masuk', name: 'Input Barang Masuk', icon: <PlusCircle size={18}/>, path: '/stok-masuk', tags: 'tambah stok entry', roles: ['admin', 'gudang'] },
     { id: 'tambah-keluar', name: 'Input Barang Keluar', icon: <ArrowRight size={18}/>, path: '/stok-keluar', tags: 'kurang stok exit', roles: ['admin', 'gudang'] },
-    { id: 'audit', name: 'Audit Stok (Opname)', icon: <ClipboardList size={18}/>, path: '/stok-opname', tags: 'cek fisik opname', roles: ['admin', 'gudang'] },
-    { id: 'pengajuan', name: 'Buat Pengajuan Barang', icon: <PlusCircle size={18}/>, path: '/buat-pengajuan', tags: 'permintaan request', roles: ['staff', 'admin'] },
-    { id: 'list-pengajuan', name: 'Daftar Pengajuan', icon: <ClipboardList size={18}/>, path: '/list-pengajuan', tags: 'riwayat pengajuan', roles: ['admin', 'staff', 'gudang', 'manager'] },
-    { id: 'approval', name: 'Persetujuan (Approval)', icon: <CheckCircle2 size={18}/>, path: '/approval', tags: 'acc pengajuan manager admin', roles: ['admin', 'manager', 'asesmen'] },
-    { id: 'scan', name: 'Scan QR Code', icon: <QrCode size={18}/>, path: '/scan', tags: 'barcode kamera scanner', roles: ['admin', 'gudang', 'staff'] },
+
+    { id: 'pengajuan', name: 'Buat Pengajuan Barang', icon: <PlusCircle size={18}/>, path: '/buat-pengajuan', tags: 'permintaan request', roles: ['staff', 'admin', 'asisten_manager', 'manager'] },
+    { id: 'list-pengajuan', name: 'Daftar Pengajuan', icon: <ClipboardList size={18}/>, path: '/list-pengajuan', tags: 'riwayat pengajuan', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
+    { id: 'approval', name: 'Persetujuan (Approval)', icon: <CheckCircle2 size={18}/>, path: '/approval', tags: 'acc pengajuan manager admin', roles: ['admin', 'manager', 'asisten_manager', 'gudang'] },
+    { id: 'scan', name: 'Scan QR Code', icon: <QrCode size={18}/>, path: '/scan', tags: 'barcode kamera scanner', roles: ['admin', 'gudang'] },
     { id: 'logs', name: 'Log Aktivitas Sistem', icon: <History size={18}/>, path: '/activity-log', tags: 'audit trail riwayat user', roles: ['admin'] },
-    { id: 'supplier', name: 'Manajemen Supplier', icon: <Users size={18}/>, path: '/supplier', tags: 'vendor rekanan suplier toko', roles: ['admin'] },
-    { id: 'users', name: 'Menu Pegawai (User)', icon: <Users size={18}/>, path: '/users', tags: 'karyawan user management pengguna', roles: ['admin'] },
+
+    { id: 'users', name: 'Menu Pegawai (User)', icon: <Users size={18}/>, path: '/kelola-user', tags: 'karyawan user management pengguna', roles: ['admin'] },
     { id: 'kategori', name: 'Kategori Barang', icon: <Package size={18}/>, path: '/kategori', tags: 'jenis tipe barang kategori', roles: ['admin', 'gudang'] },
     { id: 'laporan', name: 'Laporan Analitik', icon: <PieChart size={18}/>, path: '/laporan', tags: 'export excel pdf grafik', roles: ['admin', 'manager', 'gudang'] },
-    { id: 'profil', name: 'Profil Akun', icon: <UserCircle size={18}/>, path: '/profil', tags: 'profil akun ganti password sandi', roles: ['admin', 'staff', 'gudang', 'manager', 'asesmen'] },
+    { id: 'profil', name: 'Profil Akun', icon: <UserCircle size={18}/>, path: '/profil', tags: 'profil akun ganti password sandi', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
   ].filter(item => item.roles.includes(role));
 
   const filteredItems = menuItems.filter(item => 
@@ -166,7 +166,7 @@ export default function CommandPalette() {
                       className={`
                         w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-200
                         ${index === selectedIndex 
-                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 translate-x-2' 
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 translate-x-2' 
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50'}
                       `}
                     >

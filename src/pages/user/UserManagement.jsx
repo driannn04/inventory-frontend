@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import { getUsers, createUser, updateUser, deleteUser, resetPassword, getRoles } from "../../services/userService";
+import { getUsers, createUser, updateUser, deleteUser, resetPassword, getRoles, getNextNup } from "../../services/userService";
 import PageHeader from "../../components/common/PageHeader";
 import {
   UserCog, Plus, Search, RefreshCw, Edit2, Trash2,
@@ -25,7 +25,7 @@ export default function UserManagement() {
   const itemsPerPage = 8;
 
   const [form, setForm] = useState({
-    nama: "", email: "", password: "", role_id: "",
+    nup: "", nama: "", email: "", password: "", role_id: "",
     no_telp: "", jabatan: "", departemen: ""
   });
 
@@ -55,16 +55,25 @@ export default function UserManagement() {
     }
   };
 
-  const openCreate = () => {
+  const openCreate = async () => {
     setEditingData(null);
-    setForm({ nama: "", email: "", password: "", role_id: "", no_telp: "", jabatan: "", departemen: "" });
+    setForm({ nup: "", nama: "", email: "", password: "", role_id: "", no_telp: "", jabatan: "", departemen: "" });
     setShowPassword(false);
     setIsModalOpen(true);
+
+    // ✅ Ambil saran NUP otomatis
+    try {
+      const res = await getNextNup();
+      setForm(prev => ({ ...prev, nup: res.data.nextNup }));
+    } catch (err) {
+      console.error("Gagal mendapatkan saran NUP", err);
+    }
   };
 
   const openEdit = (item) => {
     setEditingData(item);
     setForm({
+      nup: item.nup || "",
       nama: item.nama || "",
       email: item.email || "",
       password: "",
@@ -77,8 +86,8 @@ export default function UserManagement() {
   };
 
   const handleSave = async () => {
-    if (!form.nama || !form.email || !form.role_id) {
-      alert("Nama, email, dan role wajib diisi!");
+    if (!form.nup || !form.nama || !form.role_id) {
+      alert("NUP, Nama, dan role wajib diisi!");
       return;
     }
     if (!editingData && !form.password) {
@@ -150,6 +159,7 @@ export default function UserManagement() {
 
   const filtered = data.filter(item => {
     const matchSearch =
+      item.nup?.toLowerCase().includes(search.toLowerCase()) ||
       item.nama?.toLowerCase().includes(search.toLowerCase()) ||
       item.email?.toLowerCase().includes(search.toLowerCase()) ||
       item.jabatan?.toLowerCase().includes(search.toLowerCase()) ||
@@ -165,8 +175,8 @@ export default function UserManagement() {
     const colors = {
       admin: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
       staff: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-      asesmen: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-      manager: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+      asisten_manager: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+      manager: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
       gudang: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
     };
     return colors[role] || "bg-slate-100 text-slate-600";
@@ -204,7 +214,7 @@ export default function UserManagement() {
               </button>
               <button
                 onClick={openCreate}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest"
               >
                 <Plus size={15} /> Tambah User
               </button>
@@ -217,16 +227,16 @@ export default function UserManagement() {
           {roles.map((r, i) => {
             const count = data.filter(u => u.role === r.nama_role).length;
             const colors = [
-              "from-blue-600 to-indigo-600",
+              "from-blue-600 to-sky-500",
               "from-emerald-600 to-teal-600",
               "from-amber-600 to-orange-600",
               "from-rose-600 to-pink-600",
-              "from-violet-600 to-purple-600"
+              "from-blue-600 to-sky-600"
             ];
             const color = colors[i % colors.length];
             return (
               <div key={r.id} className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{r.nama_role}</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}</p>
                 <p className={`text-2xl font-black mt-1.5 bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
                   {count}
                 </p>
@@ -239,7 +249,7 @@ export default function UserManagement() {
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] px-6 py-4 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-wrap gap-3 items-center">
           <div className="flex items-center gap-3 flex-1 min-w-[200px]">
             <Search size={18} className="text-slate-400 shrink-0" />
-            <input type="text" placeholder="Cari nama, email, jabatan..." value={search}
+            <input type="text" placeholder="Cari NUP, nama, email, jabatan..." value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="outline-none flex-1 bg-transparent text-sm text-slate-800 dark:text-white placeholder-slate-400 font-medium" />
           </div>
@@ -247,7 +257,7 @@ export default function UserManagement() {
             className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
             <option value="">Semua Role</option>
             {roles.map(r => (
-              <option key={r.id} value={r.nama_role}>{r.nama_role}</option>
+              <option key={r.id} value={r.nama_role}>{{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}</option>
             ))}
           </select>
           {(search || filterRole) && (
@@ -288,14 +298,25 @@ export default function UserManagement() {
                       {/* USER INFO */}
                       <td className="p-5">
                         <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center font-bold text-lg shadow-sm">
                             {item.nama?.charAt(0).toUpperCase()}
                           </div>
                           <div>
                             <p className="font-bold text-slate-800 dark:text-slate-200">{item.nama}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                              Bergabung {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </p>
+                            <div className="flex flex-col mt-1 gap-0.5">
+                              {item.nup ? (
+                                <span className="inline-flex w-fit items-center px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black text-blue-600 dark:text-blue-400 tracking-widest uppercase border border-blue-100 dark:border-blue-800/30">
+                                  NUP: {item.nup}
+                                </span>
+                              ) : (
+                                <span className="inline-flex w-fit items-center px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-900/20 text-[10px] font-black text-rose-600 dark:text-rose-400 tracking-widest uppercase border border-rose-100 dark:border-rose-800/30">
+                                  NUP: BELUM DISET
+                                </span>
+                              )}
+                              <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
+                                Bergabung {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -332,7 +353,7 @@ export default function UserManagement() {
                       <td className="p-5 text-center">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${getRoleBadge(item.role)}`}>
                           <Shield size={12} />
-                          {item.role}
+                          {{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[item.role] || item.role}
                         </span>
                       </td>
 
@@ -388,7 +409,7 @@ export default function UserManagement() {
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
                     className={`w-10 h-10 rounded-xl transition-all font-bold text-xs shadow-sm ${currentPage === i + 1
-                      ? "bg-sky-600 text-white"
+                      ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white"
                       : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
                       }`}
                   >
@@ -417,11 +438,11 @@ export default function UserManagement() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800/50">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <UserCog size={24} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400">
+                  <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-500 dark:from-blue-400 dark:to-sky-400">
                     {editingData ? "Edit User" : "Tambah User Baru"}
                   </h2>
                   <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">
@@ -436,16 +457,28 @@ export default function UserManagement() {
 
             {/* Form */}
             <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
-              {/* Nama */}
-              <div>
-                <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block pl-1">Nama Lengkap *</label>
-                <input
-                  type="text"
-                  value={form.nama}
-                  onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                  placeholder="Masukkan nama lengkap"
-                  className="w-full px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition"
-                />
+              {/* NUP & Nama */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block pl-1">NUP *</label>
+                  <input
+                    type="text"
+                    value={form.nup}
+                    onChange={(e) => setForm({ ...form, nup: e.target.value })}
+                    placeholder="Masukkan NUP"
+                    className="w-full px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block pl-1">Nama Lengkap *</label>
+                  <input
+                    type="text"
+                    value={form.nama}
+                    onChange={(e) => setForm({ ...form, nama: e.target.value })}
+                    placeholder="Masukkan nama lengkap"
+                    className="w-full px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition"
+                  />
+                </div>
               </div>
 
               {/* Email */}
@@ -549,7 +582,7 @@ export default function UserManagement() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-8 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-sky-600 to-indigo-600 text-white hover:from-sky-500 hover:to-indigo-500 shadow-lg shadow-sky-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                className="px-8 py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:from-blue-500 hover:to-sky-400 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
                 {editingData ? "Simpan Perubahan" : "Registrasi User"}
@@ -580,7 +613,7 @@ export default function UserManagement() {
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-center text-xl font-black tracking-[0.25em] dark:text-white outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition"
                 />
                 <button
@@ -616,3 +649,5 @@ export default function UserManagement() {
     </MainLayout>
   );
 }
+
+

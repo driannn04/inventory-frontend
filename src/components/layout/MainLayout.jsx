@@ -4,8 +4,8 @@ import CommandPalette from "../common/CommandPalette";
 
 export default function MainLayout({ children }) {
   return (
-    <div className="flex bg-slate-100 dark:bg-slate-900 min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden">
-      
+    <div className="flex bg-[#eef2f7] dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden">
+
       {/* 🔮 MAGIC COMMAND PALETTE */}
       <CommandPalette />
 

@@ -116,9 +116,8 @@ export default function Settings() {
         didOpen: () => Swal.showLoading()
       });
 
-      // Buka di window baru untuk trigger download
       const token = localStorage.getItem("token");
-      window.location.href = `http://localhost:5000/api/settings/backup?token=${token}`;
+      window.location.href = `${api.defaults.baseURL}/settings/backup?token=${token}`;
       
       setTimeout(() => {
         Swal.close();
@@ -132,6 +131,41 @@ export default function Settings() {
       }, 2000);
     } catch (err) {
       Swal.fire({ icon: "error", title: "Gagal", text: "Terjadi kesalahan saat membuat backup" });
+    }
+  };
+
+  const handleClearCache = async () => {
+    try {
+      const result = await Swal.fire({
+        title: "Bersihkan Cache?",
+        text: "Ini akan menyegarkan sistem dan memori library gambar.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#e11d48",
+        confirmButtonText: "Ya, Bersihkan",
+        cancelButtonText: "Batal",
+        customClass: { popup: "rounded-[2.5rem]" }
+      });
+
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Membersihkan...",
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        await api.post("/settings/clear-cache");
+
+        Swal.fire({
+          icon: "success",
+          title: "Selesai",
+          text: "Cache sistem berhasil dibersihkan",
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Gagal", text: "Gagal membersihkan cache sistem" });
     }
   };
 
@@ -163,7 +197,7 @@ export default function Settings() {
           subtitle="Konfigurasi inti aplikasi inventori"
           actions={
             <button onClick={handleUpdate} disabled={saving}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 disabled:scale-100">
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest disabled:opacity-50 disabled:scale-100">
               {saving ? <RefreshCw className="animate-spin" size={15} /> : <Save size={15} />}
               Simpan Perubahan
             </button>
@@ -250,20 +284,14 @@ export default function Settings() {
                         <ShieldCheck size={24} className="text-emerald-500" />
                         <h2 className="text-lg font-black uppercase tracking-tighter text-slate-800 dark:text-white">Keamanan Sistem</h2>
                       </div>
-                      <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700">
-                        <div>
-                          <p className="text-sm font-black text-slate-800 dark:text-white">Registrasi Mandiri</p>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">Izinkan staff membuat akun sendiri</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={settings.reg_enabled === "true"}
-                            onChange={(e) => handleChange("reg_enabled", e.target.checked ? "true" : "false")}
-                          />
-                          <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
+                      <div className="p-6 bg-emerald-50 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-700">
+                         <div className="flex items-center gap-3 text-emerald-600">
+                            <CheckCircle2 size={20} />
+                            <div>
+                               <p className="text-sm font-black uppercase">Mode Internal Aktif</p>
+                               <p className="text-[10px] font-bold opacity-70">Hanya Admin yang dapat mendaftarkan akun baru.</p>
+                            </div>
+                         </div>
                       </div>
                     </div>
                     <div className="space-y-8">
@@ -275,13 +303,13 @@ export default function Settings() {
                         <button
                           type="button"
                           onClick={handleBackup}
-                          className="w-full flex items-center justify-between p-6 bg-indigo-50 dark:bg-indigo-900/10 hover:bg-indigo-100 dark:hover:bg-indigo-900/20 rounded-[2rem] text-indigo-600 border-2 border-indigo-100 dark:border-indigo-900/30 transition-all font-black group"
+                          className="w-full flex items-center justify-between p-6 bg-blue-50 dark:bg-blue-900/10 hover:bg-blue-100 dark:hover:bg-blue-900/20 rounded-[2rem] text-blue-600 border-2 border-blue-100 dark:border-blue-900/30 transition-all font-black group"
                         >
                           <div className="flex items-center gap-4">
                             <Database size={20} className="group-hover:scale-110 transition-transform" />
                             <div className="text-left">
                               <span className="text-xs uppercase tracking-widest block">Backup Database</span>
-                              <span className="text-[9px] text-indigo-400 font-bold uppercase">Unduh file .SQL</span>
+                              <span className="text-[9px] text-blue-400 font-bold uppercase">Unduh file .SQL</span>
                             </div>
                           </div>
                           <RefreshCw size={18} />
@@ -294,9 +322,10 @@ export default function Settings() {
                            </div>
                            <button
                              type="button"
+                             onClick={handleClearCache}
                              className="w-full h-12 bg-white dark:bg-slate-800 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-sm border border-rose-100 dark:border-rose-800"
                            >
-                              Bersihkan Data Log
+                              Bersihkan Cache Sistem
                            </button>
                         </div>
                       </div>

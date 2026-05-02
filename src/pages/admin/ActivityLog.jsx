@@ -112,7 +112,7 @@ export default function ActivityLog() {
         {/* LOG LIST */}
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex items-center gap-3">
-            <Activity size={16} className="text-indigo-500" />
+            <Activity size={16} className="text-blue-500" />
             <h2 className="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Catatan Aktivitas Terkini</h2>
           </div>
 
@@ -163,7 +163,7 @@ export default function ActivityLog() {
                     <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{log.keterangan}</p>
                     <div className="flex items-center gap-2 mt-1.5">
                       {log.tipe_data && (
-                        <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-900/50 px-2 py-0.5 rounded-lg">{log.tipe_data}</span>
+                        <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-900/50 px-2 py-0.5 rounded-lg">{log.tipe_data}</span>
                       )}
                       {log.target_id && (
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded-lg">ID: {log.target_id}</span>
@@ -206,7 +206,7 @@ export default function ActivityLog() {
                       <button 
                         key={i} 
                         onClick={() => setCurrentPage(i + 1)} 
-                        className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                        className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
                       >
                         {i + 1}
                       </button>
@@ -287,7 +287,7 @@ export default function ActivityLog() {
                     icon={<Database size={16} />}
                     label="Tipe Data"
                     value={selectedLog.tipe_data || "Umum"}
-                    color="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500"
+                    color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
                   />
                   {selectedLog.target_id && (
                     <DetailRow
@@ -301,7 +301,7 @@ export default function ActivityLog() {
                     icon={<FileText size={16} />}
                     label="Keterangan Lengkap"
                     value={selectedLog.keterangan}
-                    color="bg-violet-50 dark:bg-violet-900/30 text-violet-500"
+                    color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
                   />
                   <DetailRow
                     icon={<Clock size={16} />}

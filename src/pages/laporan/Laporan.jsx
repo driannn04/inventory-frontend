@@ -5,8 +5,11 @@ import PageHeader from "../../components/common/PageHeader";
 import {
   BarChart3, FileSpreadsheet, FileText, Search,
   Calendar, Filter, RefreshCw, ArrowUpDown, Package,
-  TrendingUp, TrendingDown, ClipboardList, ChevronLeft, ChevronRight
+  TrendingUp, TrendingDown, ClipboardList, ChevronLeft, ChevronRight, FileSearch
 } from "lucide-react";
+import { TableSkeleton } from "../../components/common/Skeleton";
+import EmptyState from "../../components/common/EmptyState";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Laporan() {
   const [jenis, setJenis] = useState("stok");
@@ -195,7 +198,7 @@ export default function Laporan() {
           <button
             onClick={fetchLaporan}
             disabled={loading}
-            className="flex items-center gap-2 bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-black px-6 py-3 rounded-xl hover:from-sky-700 hover:to-indigo-700 transition-all shadow-md active:scale-95 text-sm uppercase"
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black px-6 py-3 rounded-xl hover:from-blue-700 hover:to-sky-600 transition-all shadow-md active:scale-95 text-sm uppercase"
           >
             {loading ? <RefreshCw size={16} className="animate-spin" /> : <Search size={16} />}
             Tampilkan Laporan
@@ -233,85 +236,97 @@ export default function Laporan() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                      <th className="p-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest w-12">#</th>
-                      {getTableColumns().map((col, i) => (
-                        <th key={i} className="p-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">{col}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                    {data.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="py-24 text-center">
-                          <p className="text-slate-500 font-medium">Tidak ada data untuk ditampilkan</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="p-5 text-slate-400 font-mono text-xs">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                          {getTableRow(item).map((val, i) => (
-                            <td key={i} className="p-5 text-slate-700 dark:text-slate-300 font-medium">{val}</td>
+            {/* Table Area */}
+            <AnimatePresence mode="wait">
+              {loading ? (
+                <div key="loading" className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                  <TableSkeleton columns={getTableColumns().length + 1} rows={8} />
+                </div>
+              ) : data.length === 0 ? (
+                <div key="empty" className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                  <EmptyState 
+                    icon={FileSearch} 
+                    title="Laporan Tidak Ditemukan" 
+                    message={`Tidak ada data ${jenisOptions.find(o => o.value === jenis)?.label} untuk filter yang Anda tentukan.`}
+                  />
+                </div>
+              ) : (
+                <motion.div 
+                  key="content"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                          <th className="p-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-12">#</th>
+                          {getTableColumns().map((col, i) => (
+                            <th key={i} className="p-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{col}</th>
                           ))}
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* PAGINATION LAPORAN */}
-              {data.length > itemsPerPage && (
-                <div className="flex items-center justify-between p-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Menampilkan {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, data.length)} dari {data.length} data
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="p-2 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <div className="flex px-2 gap-1.5 items-center">
-                      {[...Array(Math.ceil(data.length / itemsPerPage))].map((_, i) => {
-                        // Logic untuk mempersingkat pagination UI jika halaman sangat banyak
-                        const totalPages = Math.ceil(data.length / itemsPerPage);
-                        if (totalPages > 7) {
-                           if (i !== 0 && i !== totalPages - 1 && Math.abs(i + 1 - currentPage) > 1) {
-                              if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-slate-400">...</span>;
-                              return null;
-                           }
-                        }
-                        return (
-                          <button 
-                            key={i} 
-                            onClick={() => setCurrentPage(i + 1)} 
-                            className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-                          >
-                            {i + 1}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(data.length / itemsPerPage), p + 1))}
-                      disabled={currentPage === Math.ceil(data.length / itemsPerPage)}
-                      className="p-2 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
-                    >
-                      <ChevronRight size={16} />
-                    </button>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                        {data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+                            <td className="p-6 text-slate-400 font-mono text-xs">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
+                            {getTableRow(item).map((val, i) => (
+                              <td key={i} className="p-6 text-slate-800 dark:text-slate-300 font-bold uppercase tracking-tight text-xs group-hover:text-blue-600 transition-colors">{val}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                  
+                  {/* PAGINATION LAPORAN */}
+                  {data.length > itemsPerPage && (
+                    <div className="flex items-center justify-between p-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Hal {currentPage} dari {Math.ceil(data.length / itemsPerPage)}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <div className="flex px-1 gap-1.5 items-center">
+                          {[...Array(Math.ceil(data.length / itemsPerPage))].map((_, i) => {
+                            const totalPages = Math.ceil(data.length / itemsPerPage);
+                            if (totalPages > 5) {
+                               if (i !== 0 && i !== totalPages - 1 && Math.abs(i + 1 - currentPage) > 1) {
+                                  if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-slate-300">...</span>;
+                                  return null;
+                               }
+                            }
+                            return (
+                              <button 
+                                key={i} 
+                                onClick={() => setCurrentPage(i + 1)} 
+                                className={`w-9 h-9 rounded-xl text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                              >
+                                {i + 1}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(Math.ceil(data.length / itemsPerPage), p + 1))}
+                          disabled={currentPage === Math.ceil(data.length / itemsPerPage)}
+                          className="p-2.5 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </>
         )}
       </div>

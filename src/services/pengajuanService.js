@@ -23,3 +23,11 @@ export const rejectPengajuan = (data) => {
 export const getApprovalHistory = (id) => {
   return api.get(`/pengajuan/history/${id}`);
 };
+
+export const deletePengajuan = (id) => {
+  return api.delete(`/pengajuan/${id}`);
+};
+
+export const updatePengajuan = (id, data) => {
+  return api.put(`/pengajuan/${id}`, data);
+};

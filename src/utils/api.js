@@ -2,7 +2,7 @@ import axios from "axios";
 import { getToken } from "../utils/auth";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api"
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api"
 });
 
 // ✅ FIX: format header harus "Bearer <token>"
@@ -28,5 +28,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const UPLOAD_URL = import.meta.env.VITE_UPLOAD_URL || "http://localhost:5000/uploads";
 
 export default api;

@@ -8,8 +8,9 @@ export const updateUser = (id, data) => api.put(`/users/${id}`, data);
 export const deleteUser = (id) => api.delete(`/users/${id}`);
 export const resetPassword = (id, data) => api.put(`/users/${id}/reset-password`, data);
 
-// Roles (dropdown)
+// Roles & Utility
 export const getRoles = () => api.get("/users/roles");
+export const getNextNup = () => api.get("/users/next-nup");
 
 // Profil
 export const getMyProfile = () => api.get("/users/profile/me");

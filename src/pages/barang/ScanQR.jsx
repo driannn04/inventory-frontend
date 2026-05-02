@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { scanQR } from "../../services/barangService";
 import { tambahStokMasuk, tambahStokKeluar } from "../../services/stokService";
-import { getSuppliers } from "../../services/supplierService";
+
 import PageHeader from "../../components/common/PageHeader";
 
 export default function ScanQR() {
@@ -31,8 +31,7 @@ export default function ScanQR() {
   const beepRef = useRef(null);
 
   const [barang, setBarang] = useState(null);
-  const [suppliers, setSuppliers] = useState([]);
-  const [selectedSupplierId, setSelectedSupplierId] = useState("");
+
   const [error, setError] = useState(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(true);
@@ -40,36 +39,32 @@ export default function ScanQR() {
   const [status, setStatus] = useState("idle"); // idle | scanning | paused
   const [modeCepat, setModeCepat] = useState(false);
   const [tipeModeCepat, setTipeModeCepat] = useState("masuk"); // masuk | keluar
+  const [jumlah, setJumlah] = useState(1);
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
   // 🔥 REFS UNTUK MENGATASI STALE CLOSURE PADA SCANNER
   const modeCepatRef = useRef(modeCepat);
   const tipeModeCepatRef = useRef(tipeModeCepat);
-  const supplierIdRef = useRef(selectedSupplierId);
+  const jumlahRef = useRef(jumlah);
 
   useEffect(() => { modeCepatRef.current = modeCepat; }, [modeCepat]);
   useEffect(() => { tipeModeCepatRef.current = tipeModeCepat; }, [tipeModeCepat]);
-  useEffect(() => { supplierIdRef.current = selectedSupplierId; }, [selectedSupplierId]);
+  useEffect(() => { jumlahRef.current = jumlah; }, [jumlah]);
+
 
   // =============================
   // INIT & SOUND
   // =============================
   useEffect(() => {
     beepRef.current = new Audio("/beep.mp3");
-    loadSuppliers();
+
     startScanner();
     return () => stopScanner();
   }, []);
 
-  const loadSuppliers = async () => {
-    try {
-      const res = await getSuppliers();
-      setSuppliers(res.data);
-    } catch (err) {
-      console.error("Gagal load supplier", err);
-    }
-  };
+
 
   const playBeep = () => {
     beepRef.current?.play().catch(() => {});
@@ -189,36 +184,42 @@ export default function ScanQR() {
             playBeep();
 
             if (modeCepatRef.current) {
-              if (tipeModeCepatRef.current === "masuk") {
-                await tambahStokMasuk({
-                  barang_id: dataBarang.id,
-                  supplier_id: supplierIdRef.current || null,
-                  jumlah: 1,
-                  keterangan: "Scan Auto (Mode Cepat)"
-                });
-              } else {
-                await tambahStokKeluar({
-                  barang_id: dataBarang.id,
-                  jumlah: 1,
-                  keterangan: "Scan Auto (Mode Cepat)"
-                });
-              }
+              try {
+                if (tipeModeCepatRef.current === "masuk") {
+                  await tambahStokMasuk({
+                    barang_id: dataBarang.id,
+                    jumlah: parseInt(jumlahRef.current) || 1,
+                    keterangan: "Scan Auto (Mode Cepat)"
+                  });
+                } else {
+                  await tambahStokKeluar({
+                    barang_id: dataBarang.id,
+                    jumlah: parseInt(jumlahRef.current) || 1,
+                    keterangan: "Scan Auto (Mode Cepat)"
+                  });
+                }
 
-              setHistory(prev => [
-                { 
-                  ...dataBarang, 
-                  waktu: new Date().toLocaleTimeString(),
-                  aksi: tipeModeCepatRef.current === "masuk" ? "Masuk" : "Keluar",
-                  supplier: suppliers.find(s => s.id == supplierIdRef.current)?.nama_supplier
-                },
-                ...prev
-              ]);
+                setHistory(prev => [
+                  { 
+                    ...dataBarang, 
+                    waktu: new Date().toLocaleTimeString(),
+                    aksi: tipeModeCepatRef.current === "masuk" ? "Masuk" : "Keluar",
+                    jumlah: jumlahRef.current
+                  },
+                  ...prev
+                ]);
+              } catch (err) {
+                const msg = err.response?.data?.message || "Gagal memproses stok";
+                setError(`[GAGAL] ${dataBarang.nama_barang}: ${msg}`);
+                playBeep(); // Bunyi bip sebagai tanda gagal
+                await stopScanner(); // Berhenti agar user bisa baca error
+              }
             } else {
               setBarang(dataBarang);
               await stopScanner();
             }
           } catch (err) {
-            setError("QR tidak terdaftar di sistem kami");
+            setError(err.response?.data?.message || "QR tidak terdaftar di sistem");
           }
         }
       );
@@ -232,10 +233,10 @@ export default function ScanQR() {
     if (!barang) return;
     try {
       setLoadingAction(true);
+      const qty = parseInt(jumlah) || 1;
       await tambahStokMasuk({
         barang_id: barang.id,
-        supplier_id: selectedSupplierId || null,
-        jumlah: 1,
+        jumlah: qty,
         keterangan: "Scan QR Manual"
       });
       playBeep();
@@ -244,14 +245,14 @@ export default function ScanQR() {
           ...barang, 
           waktu: new Date().toLocaleTimeString(), 
           aksi: "Masuk",
-          supplier: suppliers.find(s => s.id == selectedSupplierId)?.nama_supplier 
+          jumlah: qty
         },
         ...prev
       ]);
       setBarang(null);
       await startScanner();
-    } catch {
-      alert("Gagal memperbarui stok");
+    } catch (err) {
+      alert("Gagal: " + (err.response?.data?.message || "Terjadi kesalahan sistem"));
     } finally {
       setLoadingAction(false);
     }
@@ -261,16 +262,21 @@ export default function ScanQR() {
     if (!barang) return;
     try {
       setLoadingAction(true);
-      await tambahStokKeluar({ barang_id: barang.id, jumlah: 1, keterangan: "Scan QR Manual" });
+      const qty = parseInt(jumlah) || 1;
+      await tambahStokKeluar({ 
+        barang_id: barang.id, 
+        jumlah: qty, 
+        keterangan: "Scan QR Manual" 
+      });
       playBeep();
       setHistory(prev => [
-        { ...barang, waktu: new Date().toLocaleTimeString(), aksi: "Keluar" },
+        { ...barang, waktu: new Date().toLocaleTimeString(), aksi: "Keluar", jumlah: qty },
         ...prev
       ]);
       setBarang(null);
       await startScanner();
-    } catch {
-      alert("Gagal memperbarui stok");
+    } catch (err) {
+      alert("Gagal: " + (err.response?.data?.message || "Stok mungkin tidak mencukupi"));
     } finally {
       setLoadingAction(false);
     }
@@ -313,54 +319,86 @@ export default function ScanQR() {
             {/* CONFIG CARD */}
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-6">
               <div className="flex items-center gap-2 pb-4 border-b dark:border-slate-800">
-                <Settings2 size={18} className="text-indigo-500" />
+                <Settings2 size={18} className="text-blue-500" />
                 <h2 className="font-bold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Konfigurasi Scan</h2>
               </div>
 
-              {/* SUPPLIER PICKER */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                  <User size={12} /> Supplier Aktif (Pengirim)
-                </label>
-                <select 
-                  value={selectedSupplierId}
-                  onChange={(e) => setSelectedSupplierId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:border-indigo-500 rounded-2xl px-4 py-3 outline-none transition-all text-sm font-medium dark:text-white"
-                >
-                  <option value="">-- Penginputan Manual / Internal --</option>
-                  {suppliers.map(s => (
-                    <option key={s.id} value={s.id}>{s.nama_supplier}</option>
-                  ))}
-                </select>
-              </div>
+
 
               {/* MODE TOGGLE */}
-              <div className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${modeCepat ? "border-amber-400 bg-amber-50 dark:bg-amber-900/10" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50"}`}>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${modeCepat ? "bg-amber-100 text-amber-600" : "bg-slate-200 text-slate-500"}`}>
-                    <Zap size={20} />
+              <div className="space-y-4">
+                <div className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${modeCepat ? "border-amber-400 bg-amber-50 dark:bg-amber-900/10" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${modeCepat ? "bg-amber-100 text-amber-600" : "bg-slate-200 text-slate-500"}`}>
+                      <Zap size={20} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-slate-800 dark:text-slate-200">Mode Cepat (Auto)</p>
+                      <p className="text-[10px] text-slate-400">Scan & Simpan otomatis ke database</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm text-slate-800 dark:text-slate-200">Mode Cepat (Auto)</p>
-                    <p className="text-[10px] text-slate-400">Scan & Simpan otomatis ke database</p>
-                  </div>
+                  <button 
+                    onClick={() => setModeCepat(!modeCepat)}
+                    className={`w-12 h-6 rounded-full relative transition-colors ${modeCepat ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-700"}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${modeCepat ? "right-1" : "left-1"}`}></div>
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setModeCepat(!modeCepat)}
-                  className={`w-12 h-6 rounded-full relative transition-colors ${modeCepat ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-700"}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${modeCepat ? "right-1" : "left-1"}`}></div>
-                </button>
               </div>
 
               {modeCepat && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2">
-                  <button onClick={() => setTipeModeCepat("masuk")} className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${tipeModeCepat === "masuk" ? "bg-green-600 border-green-600 text-white shadow-lg shadow-green-200" : "border-slate-100 dark:border-slate-800 text-slate-400"}`}>
-                    TAMBAH (+)
-                  </button>
-                  <button onClick={() => setTipeModeCepat("keluar")} className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${tipeModeCepat === "keluar" ? "bg-red-600 border-red-600 text-white shadow-lg shadow-red-200" : "border-slate-100 dark:border-slate-800 text-slate-400"}`}>
-                    KURANG (-)
-                  </button>
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: "auto" }} 
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4 pt-2"
+                >
+                  {/* QUANTITY CONFIG (Hanya muncul jika Mode Cepat Aktif) */}
+                  <div className="p-5 rounded-2xl bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/50 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-widest">Jumlah Per Scan (Auto)</label>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <Zap size={10} /> Mode Cepat
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="number"
+                        min="1"
+                        max="10000"
+                        value={jumlah}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 10000) setJumlah(10000);
+                          else if (val < 1) setJumlah(1);
+                          else setJumlah(val || 1);
+                        }}
+                        onKeyDown={(e) => ["e", "E", "-", "+"].includes(e.key) && e.preventDefault()}
+                        className="w-20 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 px-3 py-2 rounded-xl text-sm font-black text-blue-600 outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <div className="flex gap-1 flex-1">
+                        {[1, 5, 10, 50].map(val => (
+                          <button 
+                            key={val}
+                            onClick={() => setJumlah(val)}
+                            className={`flex-1 py-2 rounded-xl text-[10px] font-black transition-all ${jumlah === val ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-white dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700"}`}
+                          >
+                            +{val}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* TIPE MODE (MASUK/KELUAR) */}
+                  <div className="flex gap-2">
+                    <button onClick={() => setTipeModeCepat("masuk")} className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${tipeModeCepat === "masuk" ? "bg-green-600 border-green-600 text-white shadow-lg shadow-green-200" : "border-slate-100 dark:border-slate-800 text-slate-400"}`}>
+                      TAMBAH (+)
+                    </button>
+                    <button onClick={() => setTipeModeCepat("keluar")} className={`flex-1 py-3 rounded-2xl text-xs font-bold transition-all border-2 ${tipeModeCepat === "keluar" ? "bg-red-600 border-red-600 text-white shadow-lg shadow-red-200" : "border-slate-100 dark:border-slate-800 text-slate-400"}`}>
+                      KURANG (-)
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </div>
@@ -374,10 +412,10 @@ export default function ScanQR() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 pointer-events-none">
                     <div className="absolute inset-0 border-[40px] border-black/40"></div>
                     <div className="absolute inset-[40px] border-2 border-white/30 rounded-3xl">
-                       <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-indigo-400 rounded-tl-xl"></div>
-                       <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-indigo-400 rounded-tr-xl"></div>
-                       <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-indigo-400 rounded-bl-xl"></div>
-                       <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-indigo-400 rounded-br-xl"></div>
+                       <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-blue-400 rounded-tl-xl"></div>
+                       <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-blue-400 rounded-tr-xl"></div>
+                       <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-blue-400 rounded-bl-xl"></div>
+                       <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-blue-400 rounded-br-xl"></div>
                        <div className="scan-laser-modern"></div>
                     </div>
                   </motion.div>
@@ -390,7 +428,7 @@ export default function ScanQR() {
                     <Square size={32} className="text-white/40" />
                   </div>
                   <p className="font-bold">Kamera Berhenti</p>
-                  <button onClick={startScanner} className="mt-4 bg-indigo-600 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
+                  <button onClick={startScanner} className="mt-4 bg-blue-600 px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
                     <Play size={16}/> Lanjutkan Scan
                   </button>
                 </div>
@@ -409,33 +447,75 @@ export default function ScanQR() {
                   initial={{ x: 30, opacity: 0 }} 
                   animate={{ x: 0, opacity: 1 }} 
                   exit={{ x: -20, opacity: 0 }}
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border-t-4 border-indigo-500 text-center"
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl border-t-4 border-blue-500 text-center"
                 >
-                  <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
                     <Package size={32} />
                   </div>
                   <h3 className="text-xl font-black text-slate-800 dark:text-white capitalize">{barang.nama_barang}</h3>
                   <p className="font-mono text-[10px] text-slate-400 mt-1 uppercase tracking-widest">{barang.kode_barang}</p>
+
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-full flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        Stok: {barang.stok} {barang.satuan || 'Pcs'}
+                      </span>
+                    </div>
+                  </div>
                   
-                  <div className="grid grid-cols-2 gap-2 mt-6">
+                  {/* QUANTITY INPUT FOR MANUAL MODE */}
+                  <div className="mt-6 flex flex-col items-center gap-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sesuaikan Quantity</label>
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setJumlah(Math.max(1, jumlah - 1))}
+                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-xl active:scale-90 transition-transform"
+                      >
+                        -
+                      </button>
+                      <input 
+                        type="number"
+                        min="1"
+                        max="10000"
+                        value={jumlah}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 10000) setJumlah(10000);
+                          else if (val < 1) setJumlah(1);
+                          else setJumlah(val || 1);
+                        }}
+                        onKeyDown={(e) => ["e", "E", "-", "+"].includes(e.key) && e.preventDefault()}
+                        className="w-24 bg-slate-50 dark:bg-slate-800 border-2 border-blue-100 dark:border-blue-900/30 px-4 py-3 rounded-2xl text-center font-black text-blue-600 text-xl outline-none"
+                      />
+                      <button 
+                        onClick={() => setJumlah(jumlah + 1)}
+                        className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-xl active:scale-90 transition-transform"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-6">
                     <button 
                       onClick={handleMasuk} 
                       disabled={loadingAction}
-                      className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95 flex flex-col items-center gap-1"
+                      className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 flex flex-col items-center gap-1"
                     >
-                      <ArrowDownCircle size={20} />
-                      <span className="text-[10px] font-black">MASUK</span>
+                      <ArrowDownCircle size={22} />
+                      <span className="text-[10px] font-black">KONFIRMASI MASUK</span>
                     </button>
                     <button 
                       onClick={handleKeluar}
                       disabled={loadingAction}
-                      className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl shadow-lg transition-all active:scale-95 flex flex-col items-center gap-1"
+                      className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-2xl shadow-lg shadow-red-500/20 transition-all active:scale-95 flex flex-col items-center gap-1"
                     >
-                      <ArrowUpCircle size={20} />
-                      <span className="text-[10px] font-black">KELUAR</span>
+                      <ArrowUpCircle size={22} />
+                      <span className="text-[10px] font-black">KONFIRMASI KELUAR</span>
                     </button>
                   </div>
-                  <button onClick={handleScanUlang} className="mt-3 w-full py-2 text-slate-400 text-[10px] font-bold flex items-center justify-center gap-2 hover:text-indigo-600 transition-colors">
+                  <button onClick={handleScanUlang} className="mt-3 w-full py-2 text-slate-400 text-[10px] font-bold flex items-center justify-center gap-2 hover:text-blue-600 transition-colors">
                     <RotateCcw size={12} /> Batal & Scan Ulang
                   </button>
                 </motion.div>
@@ -452,10 +532,10 @@ export default function ScanQR() {
               ) : (
                 <div className="bg-slate-50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 p-12 rounded-[2.5rem] flex flex-col items-center justify-center text-slate-400">
                   <div className="relative mb-6">
-                    <div className="w-16 h-16 rounded-full border-4 border-indigo-100 dark:border-slate-800 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-full border-4 border-blue-100 dark:border-slate-800 flex items-center justify-center">
                        <Camera size={32} className="opacity-40" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-500 rounded-full animate-ping"></div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full animate-ping"></div>
                   </div>
                   <p className="text-sm font-medium">Menunggu data scan...</p>
                 </div>
@@ -466,7 +546,7 @@ export default function ScanQR() {
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col transition-all">
                <div className="p-6 lg:px-8 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                       <History size={18} />
                     </div>
                     <div>
@@ -493,7 +573,8 @@ export default function ScanQR() {
                           <p className="font-black text-sm text-slate-800 dark:text-white uppercase tracking-tight">{item.nama_barang}</p>
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                              <span className="text-[10px] text-slate-500 font-bold bg-white dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-100 dark:border-slate-700">{item.waktu}</span>
-                             {item.supplier && <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">&bull; {item.supplier}</span>}
+                             <span className="text-[10px] text-blue-600 font-black bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-lg border border-blue-100 dark:border-blue-800/50">QTY: {item.jumlah}</span>
+                             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sisa: {item.aksi === "Masuk" ? (item.stok + parseInt(item.jumlah)) : (item.stok - parseInt(item.jumlah))} {item.satuan}</span>
                           </div>
                         </div>
                         <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${item.aksi === "Masuk" ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-400 shadow-emerald-500/25" : "bg-gradient-to-r from-rose-500 to-red-600 text-white border-rose-400 shadow-rose-500/25"}`}>
@@ -541,8 +622,8 @@ export default function ScanQR() {
           left: 0;
           width: 100%;
           height: 3px;
-          background: linear-gradient(to right, transparent, #818cf8, transparent);
-          box-shadow: 0 0 15px #818cf8;
+          background: linear-gradient(to right, transparent, #3b82f6, transparent);
+          box-shadow: 0 0 15px #3b82f6;
           animation: scan-move 2.5s ease-in-out infinite;
         }
         @keyframes scan-move {

@@ -16,7 +16,7 @@ export default function PageHeader({ icon, title, subtitle, actions, badge }) {
       {/* LEFT: Icon + Text */}
       <div className="flex items-center gap-5">
         {icon && (
-          <div className="p-3.5 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl shadow-lg shadow-blue-500/25 shrink-0">
+          <div className="p-3.5 bg-gradient-to-br from-blue-600 to-sky-500 text-white rounded-2xl shadow-lg shadow-blue-500/25 shrink-0">
             {icon}
           </div>
         )}

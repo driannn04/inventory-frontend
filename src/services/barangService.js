@@ -61,3 +61,7 @@ export const exportKartuStokPDF = (id, params) => {
     responseType: "blob"
   });
 };
+
+export const getPendingOrders = (id) => {
+  return api.get(`/barang/pending-orders/${id}`);
+};

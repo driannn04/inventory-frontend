@@ -114,9 +114,9 @@ export default function ProfilUser() {
   const getRoleBadgeColor = (role) => {
     const colors = {
       admin: "from-red-500 to-rose-600",
-      staff: "from-blue-500 to-indigo-600",
-      asesmen: "from-amber-500 to-orange-600",
-      manager: "from-purple-500 to-violet-600",
+      staff: "from-blue-600 to-sky-500",
+      asisten_manager: "from-amber-500 to-orange-600",
+      manager: "from-blue-500 to-sky-600",
       gudang: "from-emerald-500 to-teal-600",
     };
     return colors[role] || "from-slate-500 to-slate-600";
@@ -130,8 +130,8 @@ export default function ProfilUser() {
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="relative">
-              <div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 flex items-center justify-center shadow-inner border border-white dark:border-slate-800">
-                <span className="text-4xl font-black bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-blue-100 to-sky-100 dark:from-blue-900/40 dark:to-sky-900/40 flex items-center justify-center shadow-inner border border-white dark:border-slate-800">
+                <span className="text-4xl font-black bg-gradient-to-br from-blue-600 to-sky-500 bg-clip-text text-transparent">
                   {profile.nama?.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -146,7 +146,7 @@ export default function ProfilUser() {
               
               <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
                 <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-gradient-to-r ${getRoleBadgeColor(profile.role)} text-white shadow-sm`}>
-                  {profile.role}
+                  {{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[profile.role] || profile.role}
                 </span>
                 {profile.departemen && (
                   <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700">
@@ -166,7 +166,7 @@ export default function ProfilUser() {
               </button>
               <button
                 onClick={() => setShowPwModal(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 px-6 py-3.5 rounded-2xl transition-all text-white text-xs font-black uppercase tracking-widest active:scale-95"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 hover:shadow-lg hover:shadow-blue-500/25 px-6 py-3.5 rounded-2xl transition-all text-white text-xs font-black uppercase tracking-widest active:scale-95"
               >
                 <Key size={15} /> Ubah Sandi
               </button>
@@ -198,10 +198,22 @@ export default function ProfilUser() {
               </div>
             </div>
 
+            {/* NUP */}
+            <div className="flex items-start gap-5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+                <Shield size={20} className="text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">NUP (Nomor Urut Pegawai)</p>
+                <p className="text-sm font-black text-slate-800 dark:text-white mt-1 font-mono tracking-widest">{profile.nup || "-"}</p>
+                <p className="text-[9px] text-slate-400 mt-2 uppercase tracking-widest font-black inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg">Identitas akses utama</p>
+              </div>
+            </div>
+
             {/* Email */}
             <div className="flex items-start gap-5">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                <Mail size={20} className="text-purple-600 dark:text-purple-400" />
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                <Mail size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</p>
@@ -287,7 +299,7 @@ export default function ProfilUser() {
               <button
                 onClick={handleSaveProfile}
                 disabled={saving}
-                className="px-8 py-3.5 rounded-2xl text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 disabled:scale-100"
+                className="px-8 py-3.5 rounded-2xl text-xs font-black bg-gradient-to-r from-blue-600 to-sky-500 hover:shadow-lg hover:shadow-blue-500/25 text-white uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 disabled:scale-100"
               >
                 {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
                 Simpan Profil
@@ -366,7 +378,7 @@ export default function ProfilUser() {
               <button
                 onClick={handleChangePassword}
                 disabled={saving || (pwForm.confirm_password && pwForm.new_password !== pwForm.confirm_password)}
-                className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2 disabled:scale-100"
+                className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest bg-gradient-to-r from-blue-600 to-sky-500 hover:shadow-lg hover:shadow-blue-500/25 text-white transition-all active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2 disabled:scale-100"
               >
                 {saving ? <RefreshCw size={18} className="animate-spin" /> : <Check size={18} />}
                 Simpan Sandi
@@ -384,3 +396,5 @@ export default function ProfilUser() {
     </MainLayout>
   );
 }
+
+

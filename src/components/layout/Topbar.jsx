@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef, useMemo } from "react"; // ✅ tambah useMemo
+import { useEffect, useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { getUser } from "../../utils/auth";
 import { io } from "socket.io-client";
-import axios from "axios";
+import api from "../../utils/api";
 import ToastNotif from "../ToastNotif";
 
 import {
@@ -16,15 +17,16 @@ import {
   User,
   Settings as SettingsIcon,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  ClipboardCheck
 } from "lucide-react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Topbar(){
+export default function Topbar() {
 
-  // ✅ FIX UTAMA: useMemo agar object user tidak dibuat ulang tiap render
-  // Tanpa ini, [user] di useEffect selalu anggap "berubah" → socket spam
+  // âœ… FIX UTAMA: useMemo agar object user tidak dibuat ulang tiap render
+  // Tanpa ini, [user] di useEffect selalu anggap "berubah" â†’ socket spam
   const user = useMemo(() => getUser(), []);
   const location = useLocation();
 
@@ -60,43 +62,41 @@ export default function Topbar(){
   // =============================
   // LOAD AWAL
   // =============================
-  const loadNotif = async ()=>{
-    try{
-      if(!user) return;
+  const loadNotif = async () => {
+    try {
+      if (!user) return;
 
-      const res = await axios.get(
-        `http://localhost:5000/api/notifikasi/${user.id}`
+      const res = await api.get(
+        `/notifikasi/${user.id}`
       );
 
       setNotif(res.data);
 
-    }catch(err){
-      console.log("Notif Error:",err.message);
+    } catch (err) {
+      console.log("Notif Error:", err.message);
     }
   };
 
-  // ✅ FIX: ganti [user] → [] agar tidak re-run tiap render
-  useEffect(()=>{
+  // âœ… FIX: ganti [user] â†’ [] agar tidak re-run tiap render
+  useEffect(() => {
     loadNotif();
-    
+
     // Load All Settings
-    axios.get("http://localhost:5000/api/settings", {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    }).then(res => {
-      if(res.data && res.data.org_name) setOrgName(res.data.org_name);
-    }).catch(() => {});
-  },[]);
+    api.get("/settings").then(res => {
+      if (res.data && res.data.org_name) setOrgName(res.data.org_name);
+    }).catch(() => { });
+  }, []);
 
   // =============================
-  // 🔥 REALTIME SOCKET
+  // ðŸ”¥ REALTIME SOCKET
   // =============================
-  // ✅ FIX: ganti [user] → [] agar socket tidak disconnect/reconnect terus
+  // âœ… FIX: ganti [user] â†’ [] agar socket tidak disconnect/reconnect terus
   useEffect(() => {
     if (!user) return;
 
     if (socketRef.current) return;
 
-    const socket = io("http://localhost:5000", {
+    const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", {
       transports: ["websocket"],
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
@@ -106,11 +106,13 @@ export default function Topbar(){
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      console.log("✅ Socket connected");
+      console.log("âœ… Socket connected");
       socket.emit("register", user.id);
     });
 
     socket.on("notif_baru", (data) => {
+      console.log("🔔 [SOCKET] Menerima Notifikasi Baru:", data);
+
       const newNotif = {
         id: Date.now() + Math.random(),
         judul: data.judul,
@@ -119,8 +121,15 @@ export default function Topbar(){
         created_at: new Date()
       };
 
-      setNotif(prev => [newNotif, ...prev]);
-      setToasts(prev => [newNotif, ...prev]);
+      setNotif(prev => {
+        console.log("State notif diupdate:", [...prev, newNotif].length);
+        return [newNotif, ...prev];
+      });
+
+      setToasts(prev => {
+        console.log("State toasts diupdate:", [...prev, newNotif].length);
+        return [newNotif, ...prev];
+      });
 
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== newNotif.id));
@@ -133,47 +142,47 @@ export default function Topbar(){
       socketRef.current = null;
     };
 
-  }, []); // ✅ [] bukan [user]
+  }, [user?.id]);
 
   // =============================
   // CLICK OUTSIDE
   // =============================
-  useEffect(()=>{
-    const handleClickOutside = (e)=>{
-      if(dropdownRef.current && !dropdownRef.current.contains(e.target)){
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowNotif(false);
         setExpand(false);
       }
-      if(profileRef.current && !profileRef.current.contains(e.target)){
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
         setShowProfile(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return ()=> document.removeEventListener("mousedown", handleClickOutside);
-  },[]);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // =============================
   // ACTION
   // =============================
-  const handleRead = async(id)=>{
-    await axios.put(`http://localhost:5000/api/notifikasi/read/${id}`);
+  const handleRead = async (id) => {
+    await api.put(`/notifikasi/read/${id}`);
 
     setNotif(prev =>
-      prev.map(n => n.id === id ? {...n, is_read: 1} : n)
+      prev.map(n => n.id === id ? { ...n, is_read: 1 } : n)
     );
   };
 
-  const handleReadAll = async()=>{
-    await axios.put(`http://localhost:5000/api/notifikasi/read-all/${user.id}`);
+  const handleReadAll = async () => {
+    await api.put(`/notifikasi/read-all/${user.id}`);
 
     setNotif(prev =>
-      prev.map(n => ({...n, is_read: 1}))
+      prev.map(n => ({ ...n, is_read: 1 }))
     );
   };
 
-  const handleDelete = async(id)=>{
-    await axios.delete(`http://localhost:5000/api/notifikasi/${id}`);
+  const handleDelete = async (id) => {
+    await api.delete(`/notifikasi/${id}`);
 
     setNotif(prev => prev.filter(n => n.id !== id));
   };
@@ -202,27 +211,27 @@ export default function Topbar(){
     });
   };
 
-  return(
-    <div className={`h-[72px] backdrop-blur-2xl border-b flex items-center justify-between px-6 relative z-40 shadow-sm transition-all duration-300 ${isDark ? 'bg-slate-900/80 border-slate-800 text-white' : 'bg-white/70 border-slate-200/60 text-slate-800'}`}>
+  return (
+    <div className={`h-[72px] backdrop-blur-2xl border-b flex items-center justify-between px-6 relative z-40 shadow-sm transition-all duration-300 ${isDark ? 'bg-slate-950/80 border-slate-800 text-white' : 'bg-white/40 border-blue-100/50 text-slate-800'}`}>
 
       {/* LEFT: BREADCRUMBS & SEARCH */}
       <div className="flex items-center gap-6">
-        
+
         {/* Dynamic Breadcrumbs */}
         <div className="hidden md:flex items-center gap-2 text-sm font-semibold capitalize pointer-events-none">
           <span className="text-slate-400 dark:text-slate-500">{orgName}</span>
           <span className="text-slate-300 dark:text-slate-600">/</span>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400 tracking-wide">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 tracking-wide">
             {location.pathname === '/' ? 'Dashboard' : location.pathname.substring(1).replace('-', ' ')}
           </span>
         </div>
 
         {/* Fake Search Global Trigger */}
-        <button 
+        <button
           onClick={() => window.dispatchEvent(new Event('openCommandPalette'))}
-          className="flex items-center gap-3 w-56 md:w-72 px-3.5 py-2 bg-slate-100/50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl text-sm text-slate-400 transition-all shadow-sm group"
+          className="flex items-center gap-3 w-56 md:w-72 px-3.5 py-2 bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-blue-100 dark:border-slate-700/50 rounded-xl text-sm text-slate-400 transition-all shadow-sm group"
         >
-          <Search size={14} className="text-slate-400 group-hover:text-sky-500 transition-colors" />
+          <Search size={14} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
           <span className="flex-1 text-left text-[13px] font-medium">Cari menu/data...</span>
           <kbd className="px-1.5 py-0.5 text-[10px] font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-500 dark:text-slate-400 font-mono shadow-sm">Ctrl+K</kbd>
         </button>
@@ -234,12 +243,11 @@ export default function Topbar(){
         {/* DARK MODE TOGGLE */}
         <button
           onClick={toggleDarkMode}
-          className={`p-2 rounded-full transition-all duration-300 ${
-            isDark 
-              ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' 
+          className={`p-2 rounded-full transition-all duration-300 ${isDark
+              ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700'
               : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-          }`}
-          title="Toggle Dark Mode"
+            }`}
+          title={isDark ? "Ganti ke Tema Terang" : "Ganti ke Tema Gelap"}
         >
           {isDark ? <Moon size={18} /> : <Sun size={18} />}
         </button>
@@ -247,16 +255,15 @@ export default function Topbar(){
         {/* DISTRACTION LINE */}
         <div className="h-6 w-px bg-slate-200"></div>
 
-        {/* 🔔 NOTIF */}
+        {/* ðŸ”” NOTIF */}
         <div className="relative" ref={dropdownRef}>
 
           <div
-            className={`cursor-pointer relative p-2 rounded-full transition-all duration-300 ${
-              isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
-            }`}
-            onClick={()=> setShowNotif(!showNotif)}
+            className={`cursor-pointer relative p-2 rounded-full transition-all duration-300 ${isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'
+              }`}
+            onClick={() => setShowNotif(!showNotif)}
           >
-            <Bell size={20} className={`${unreadCount > 0 ? "text-sky-600" : ""}`}/>
+            <Bell size={20} className={`${unreadCount > 0 ? "text-sky-600" : ""}`} />
 
             {unreadCount > 0 && (
               <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-black text-white bg-red-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
@@ -265,9 +272,32 @@ export default function Topbar(){
             )}
           </div>
 
+          {/* 🔥 REALTIME TOAST CONTAINER (PORTAL) */}
+          {createPortal(
+            <div className="fixed top-24 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+              <AnimatePresence>
+                {toasts.map(t => (
+                  <motion.div
+                    key={t.id}
+                    initial={{ opacity: 0, x: 50, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                    className="pointer-events-auto shadow-2xl"
+                  >
+                    <ToastNotif
+                      data={t}
+                      onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>,
+            document.body
+          )}
+
           <AnimatePresence>
             {showNotif && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -292,17 +322,17 @@ export default function Topbar(){
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={()=> setExpand(!expand)}
+                      onClick={() => setExpand(!expand)}
                       className="text-slate-400 hover:text-sky-600 transition p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700"
                       title={expand ? "Perkecil" : "Perbesar"}
                     >
-                      {expand ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}
+                      {expand ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                     </button>
                     <button
                       onClick={handleReadAll}
                       className="text-[10px] text-sky-600 font-black flex items-center gap-1 bg-sky-50 dark:bg-sky-900/30 px-2.5 py-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-sky-900/50 transition uppercase tracking-wider"
                     >
-                      <CheckCheck size={12}/> Baca Semua
+                      <CheckCheck size={12} /> Baca Semua
                     </button>
                   </div>
                 </div>
@@ -315,11 +345,10 @@ export default function Topbar(){
                       <button
                         key={tab}
                         onClick={() => setNotifFilter(tab === "Belum Dibaca" ? "unread" : null)}
-                        className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all ${
-                          isActive 
-                            ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600" 
+                        className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all ${isActive
+                            ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600"
                             : "text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
-                        }`}
+                          }`}
                       >
                         {tab}
                         {tab === "Belum Dibaca" && unreadCount > 0 && (
@@ -339,7 +368,7 @@ export default function Topbar(){
                     if (filteredNotif.length === 0) {
                       return (
                         <div className="flex flex-col items-center justify-center py-10 opacity-50">
-                          <Bell size={40} className="mb-3 text-slate-300"/>
+                          <Bell size={40} className="mb-3 text-slate-300" />
                           <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             {notifFilter === "unread" ? "Semua notifikasi sudah dibaca" : "Belum ada notifikasi baru"}
                           </p>
@@ -352,7 +381,7 @@ export default function Topbar(){
                       let typeIcon = "🔔";
                       let typeBg = "bg-slate-100 dark:bg-slate-700";
                       let typeColor = "text-slate-500";
-                      
+
                       const title = (n.judul || "").toLowerCase();
                       if (title.includes("masuk") || title.includes("📦")) {
                         typeIcon = "📦"; typeBg = "bg-emerald-50 dark:bg-emerald-900/30"; typeColor = "text-emerald-600";
@@ -360,7 +389,7 @@ export default function Topbar(){
                         typeIcon = "📤"; typeBg = "bg-rose-50 dark:bg-rose-900/30"; typeColor = "text-rose-600";
                       } else if (title.includes("pengajuan")) {
                         typeIcon = "📋"; typeBg = "bg-blue-50 dark:bg-blue-900/30"; typeColor = "text-blue-600";
-                      } else if (title.includes("minimum") || title.includes("⚠")) {
+                      } else if (title.includes("minimum") || title.includes("⚠️")) {
                         typeIcon = "⚠️"; typeBg = "bg-amber-50 dark:bg-amber-900/30"; typeColor = "text-amber-600";
                       }
 
@@ -392,7 +421,7 @@ export default function Topbar(){
 
                           <div
                             className="flex-1 cursor-pointer min-w-0"
-                            onClick={()=> handleRead(n.id)}
+                            onClick={() => handleRead(n.id)}
                           >
                             <div className="flex items-center gap-2 mb-0.5">
                               <p className={`font-bold text-[13px] truncate ${isDark ? 'text-white' : 'text-slate-800'} ${n.is_read === 0 ? '' : 'opacity-70'}`}>
@@ -405,15 +434,15 @@ export default function Topbar(){
                             <p className={`text-xs leading-relaxed truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                               {n.pesan}
                             </p>
-                            <p className={`text-[10px] mt-1 font-bold ${n.is_read===0 ? 'text-sky-500' : 'text-slate-400'}`}>
+                            <p className={`text-[10px] mt-1 font-bold ${n.is_read === 0 ? 'text-sky-500' : 'text-slate-400'}`}>
                               {relTime}
                             </p>
                           </div>
                           <button
-                            onClick={()=> handleDelete(n.id)}
+                            onClick={() => handleDelete(n.id)}
                             className="text-slate-300 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition self-start opacity-0 group-hover:opacity-100"
                           >
-                            <X size={14}/>
+                            <X size={14} />
                           </button>
                         </div>
                       );
@@ -421,13 +450,17 @@ export default function Topbar(){
                   })()}
                 </div>
 
-                {!expand && notif.length > 6 && (
+                {notif.length > 0 && (
                   <button
-                    onClick={()=> setExpand(true)}
+                    onClick={() => {
+                      setShowNotif(false);
+                      setExpand(false);
+                      navigate('/notifikasi');
+                    }}
                     className={`text-center text-[11px] font-black text-sky-600 py-3 border-t transition uppercase tracking-widest
                     ${isDark ? 'border-slate-700 hover:bg-slate-700' : 'border-slate-100 hover:bg-slate-50'}`}
                   >
-                    Lihat Semua ({notif.length}) Notifikasi
+                    Buka Pusat Notifikasi
                   </button>
                 )}
               </motion.div>
@@ -439,13 +472,13 @@ export default function Topbar(){
         {/* DISTRACTION LINE */}
         <div className="h-6 w-px bg-slate-200"></div>
 
-        {/* 👤 PROFILE DROPDOWN */}
+        {/* ðŸ‘¤ PROFILE DROPDOWN */}
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfile(!showProfile)}
             className="flex items-center gap-2 p-1.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700 group overflow-hidden"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-sky-200 dark:shadow-none transition-transform group-hover:scale-105">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-cyan-200 dark:shadow-none transition-transform group-hover:scale-105">
               {user?.nama?.charAt(0)?.toUpperCase() || "A"}
             </div>
             <div className="hidden md:flex flex-col items-start pr-2">
@@ -453,7 +486,7 @@ export default function Topbar(){
                 {user?.nama?.split(' ')[0] || "User"}
               </span>
               <div className="flex items-center gap-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{user?.role}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[user?.role] || user?.role}</span>
                 <ChevronDown size={10} className={`text-slate-400 transition-transform ${showProfile ? 'rotate-180' : ''}`} />
               </div>
             </div>
@@ -468,7 +501,14 @@ export default function Topbar(){
                 className="absolute right-0 top-14 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl z-50 overflow-hidden"
               >
                 <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Akun Anda</p>
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Akun Anda</p>
+                    {user?.nup && (
+                      <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded leading-none uppercase tracking-tighter">
+                        NUP: {user.nup}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm font-black text-slate-800 dark:text-white truncate">{user?.nama}</p>
                 </div>
                 <div className="p-2">

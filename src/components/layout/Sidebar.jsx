@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/api";
 import {
   LayoutDashboard,
   Boxes,
@@ -17,7 +17,10 @@ import {
   LogOut,
   ChevronRight,
   PackageSearch,
-  Settings
+  Settings,
+  User,
+  CircleHelp,
+  PlusCircle
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getRole, getUser } from "../../utils/auth";
@@ -26,6 +29,9 @@ export default function Sidebar() {
   const [openStok, setOpenStok] = useState(false);
   const [openPengajuan, setOpenPengajuan] = useState(false);
   const [orgName, setOrgName] = useState("PDAM Inv");
+  const [pendingCount, setPendingCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [unreadNotifs, setUnreadNotifs] = useState([]);
 
   const role = getRole();
   const user = getUser();
@@ -37,25 +43,68 @@ export default function Sidebar() {
     setOpenPengajuan(false);
 
     // Load All Settings
-      axios.get("http://localhost:5000/api/settings", {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      }).then(res => {
-          if (res.data && res.data.org_name) {
-            const name = res.data.org_name.length > 15 ? res.data.org_name.split(' ')[0] : res.data.org_name;
-            setOrgName(name);
-          }
-        }).catch(() => {});
-  }, [location.pathname]);
+    api.get("/settings").then(res => {
+      if (res.data && res.data.org_name) {
+        const name = res.data.org_name.length > 15 ? res.data.org_name.split(' ')[0] : res.data.org_name;
+        setOrgName(name);
+      }
+    }).catch(() => { });
+
+    // Load Pending Counts for Badge
+    const fetchCounts = async () => {
+      try {
+        const [pengajuanRes, dashboardRes, notifRes] = await Promise.all([
+          api.get("/pengajuan"),
+          api.get("/dashboard"),
+          api.get(`/notifikasi/${user?.id}`)
+        ]);
+
+        const all = pengajuanRes.data;
+        const dashboard = dashboardRes.data;
+        const unreads = notifRes.data.filter(n => n.is_read === 0);
+        setUnreadNotifs(unreads);
+
+        // 1. Pending Approvals (Tugas yang perlu divalidasi)
+        let pCount = 0;
+        if (role === 'asisten_manager') pCount = all.filter(p => p.status === 'pending_asisten_manager').length;
+        else if (role === 'manager') pCount = all.filter(p => p.status === 'pending_manager').length;
+        else if (role === 'gudang') pCount = all.filter(p => p.status === 'pending_gudang').length;
+        else if (role === 'admin') pCount = all.filter(p => p.status.includes('pending')).length;
+        setPendingCount(pCount);
+
+        // 2. Low Stock Items (Semua Role kecuali Staff)
+        if (role !== 'staff') {
+          setLowStockCount(dashboard.summary?.stok_kritis || 0);
+        }
+
+      } catch (err) {
+        console.error("Gagal fetch sidebar counts", err);
+      }
+    };
+
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 60000); // refresh every 1 min
+    return () => clearInterval(interval);
+  }, [location.pathname, role]);
 
   const isActive = (path) => location.pathname === path;
 
   // Modern pill-shaped active state
   const menuClass = (path) => `
-    flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all duration-300 text-sm font-medium
+    flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-300 text-sm font-semibold relative overflow-hidden group
     ${isActive(path)
-      ? "bg-sky-600 text-white shadow-md shadow-sky-200/50 dark:shadow-sky-900/50"
-      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-sky-700 dark:hover:text-sky-400"}
+      ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+      : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"}
   `;
+
+  const Badge = ({ count }) => {
+    if (!count || count <= 0) return null;
+    return (
+      <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black text-white shadow-lg shadow-rose-500/30 animate-pulse">
+        {count > 99 ? '99+' : count}
+      </span>
+    );
+  };
 
   const handleLogout = () => {
     import("sweetalert2").then(({ default: Swal }) => {
@@ -80,13 +129,13 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 h-screen bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 flex flex-col fixed shadow-sm transition-colors duration-300">
-      
+    <div className="w-64 h-screen bg-slate-800 border-r border-slate-700 flex flex-col fixed shadow-sm transition-colors duration-300 z-50">
+
       {/* HEADER / LOGO */}
       <div className="pt-2 pb-6 px-4 flex items-center justify-center border-b border-transparent">
-        <img 
-          src="/logo-premium.png" 
-          alt="PDAM Tirta Pakuan" 
+        <img
+          src="/logo-premium.png"
+          alt="PDAM Tirta Pakuan"
           className="h-32 w-auto object-contain transition-transform hover:scale-105 duration-300"
           onError={(e) => {
             e.target.style.display = 'none';
@@ -94,11 +143,11 @@ export default function Sidebar() {
           }}
         />
         {/* Fallback if image not found */}
-        <div className="hidden items-center gap-2" style={{display: 'none'}}>
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-md">
+        <div className="hidden items-center gap-2" style={{ display: 'none' }}>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-md">
             <ArrowDownUp size={16} className="text-white font-bold" />
           </div>
-          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-700 to-indigo-600 tracking-tight">
+          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-700 to-blue-600 tracking-tight">
             {orgName.includes(' ') ? (
               <>
                 {orgName.split(' ')[0]} <span className="text-slate-800 dark:text-white">{orgName.split(' ').slice(1).join(' ')}</span>
@@ -108,168 +157,224 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto custom-scrollbar pb-24">
-        
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar pb-32">
+
         <Link to="/" className={menuClass("/")}>
-          <LayoutDashboard size={18} />
+          <LayoutDashboard size={18} className={isActive("/") ? "text-cyan-400" : ""} />
           Dashboard
+          {isActive("/") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
         </Link>
 
-        {/* --- DATA MASTER --- */}
-        {(role === "admin" || role === "gudang") && (
+        {/* --- STAFF VIEW --- */}
+        {role === "staff" ? (
           <>
-            <div className="pt-5 pb-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-4">Data Master</p>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Menu Utama</p>
             </div>
-            
-            <Link to="/barang" className={menuClass("/barang")}>
-              <Boxes size={18} />
-              Katalog Barang
+            <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan")}>
+              <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
+              Buat Pengajuan
+              {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
             </Link>
-            
-            {role === "admin" && (
-              <Link to="/kategori" className={menuClass("/kategori")}>
-                <Tags size={18} />
-                Kategori Barang
-              </Link>
-            )}
-
-            {role === "admin" && (
-              <Link to="/supplier" className={menuClass("/supplier")}>
-                <Users size={18} />
-                Data Supplier
-              </Link>
-            )}
+            <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
+              <History size={18} className={isActive("/list-pengajuan") ? "text-cyan-400" : ""} />
+              Riwayat Pengajuan
+              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
           </>
-        )}
-
-        {/* --- TRANSAKSI & PENGAJUAN --- */}
-        <div className="pt-5 pb-1">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-4">Transaksi</p>
-        </div>
-
-        {(role === "staff" || role === "admin") && (
-          <div>
-            <button
-              onClick={() => setOpenPengajuan(!openPengajuan)}
-              className={`w-full flex items-center justify-between py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-300
-                ${openPengajuan ? "bg-slate-50 dark:bg-slate-800 text-sky-700 dark:text-sky-400" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-sky-700 dark:hover:text-sky-400"}
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <FileText size={18} />
-                Pengajuan Barang
-              </div>
-              <ChevronRight size={16} className={`transition-transform duration-300 ${openPengajuan ? "rotate-90" : ""}`} />
-            </button>
-
-            <div className={`overflow-hidden transition-all duration-300 ${openPengajuan ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
-              <div className="ml-5 p-2 space-y-1 border-l-2 border-slate-100 dark:border-slate-800">
-                <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan").replace('px-4', 'px-3')}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span> Buat Baru
-                </Link>
-                <Link to="/list-pengajuan" className={menuClass("/list-pengajuan").replace('px-4', 'px-3')}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span> Riwayat Saya
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {(role === "asesmen" || role === "manager" || role === "gudang" || role === "admin") && (
-          <Link to="/approval" className={menuClass("/approval")}>
-            <ClipboardCheck size={18} />
-            Persetujuan Validasi
-          </Link>
-        )}
-
-        {(role === "gudang" || role === "admin") && (
-          <div>
-            <button
-              onClick={() => setOpenStok(!openStok)}
-              className={`w-full flex items-center justify-between py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-300
-                ${openStok ? "bg-slate-50 dark:bg-slate-800 text-sky-700 dark:text-sky-400" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800 hover:text-sky-700 dark:hover:text-sky-400"}
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <ArrowDownUp size={18} />
-                Mutasi Stok
-              </div>
-              <ChevronRight size={16} className={`transition-transform duration-300 ${openStok ? "rotate-90" : ""}`} />
-            </button>
-
-            <div className={`overflow-hidden transition-all duration-300 ${openStok ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
-               <div className="ml-5 p-2 space-y-1 border-l-2 border-slate-100 dark:border-slate-800">
-                <Link to="/stok-masuk" className={menuClass("/stok-masuk").replace('px-4', 'px-3')}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span> Inbound (Masuk)
-                </Link>
-                <Link to="/stok-keluar" className={menuClass("/stok-keluar").replace('px-4', 'px-3')}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span> Outbound (Keluar)
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- OPERASIONAL & AUDIT --- */}
-        {(role === "admin" || role === "gudang") && (
+        ) : role === "asisten_manager" ? (
+          /* --- ASISTEN MANAGER VIEW --- */
           <>
-            <div className="pt-5 pb-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-4">Operasional</p>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Pusat Kendali</p>
             </div>
-            
-            <Link to="/stok-opname" className={menuClass("/stok-opname")}>
-              <ClipboardList size={18} />
-              Stock Opname
+            <Link to="/approval" className={menuClass("/approval")}>
+              <ClipboardCheck size={18} className={isActive("/approval") ? "text-sky-600" : ""} />
+              Validasi Pengajuan
+              <Badge count={pendingCount} />
+              {isActive("/approval") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
+            <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
+              <History size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
+              Riwayat Pengajuan
+              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Operasional</p>
+            </div>
+            <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan")}>
+              <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
+              Buat Pengajuan
+              {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
+          </>
+        ) : role === "manager" ? (
+          /* --- MANAGER VIEW --- */
+          <>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Pusat Kendali</p>
+            </div>
+            <Link to="/approval" className={menuClass("/approval")}>
+              <ClipboardCheck size={18} className={isActive("/approval") ? "text-sky-600" : ""} />
+              Validasi Pengajuan
+              <Badge count={pendingCount} />
+              {isActive("/approval") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+            <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
+              <History size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
+              Riwayat Pengajuan
+              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Monitoring & Laporan</p>
+            </div>
+            <Link to="/barang" className={menuClass("/barang")}>
+              <PackageSearch size={18} className={isActive("/barang") ? "text-sky-600" : ""} />
+              Pantau Stok Barang
+              <Badge count={lowStockCount} />
+              {isActive("/barang") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
+            <Link to="/laporan" className={menuClass("/laporan")}>
+              <BarChart3 size={18} className={isActive("/laporan") ? "text-sky-600" : ""} />
+              Laporan Inventaris
+              {isActive("/laporan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Operasional</p>
+            </div>
+            <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan")}>
+              <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
+              Buat Pengajuan
+              {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+          </>
+        ) : (
+          /* --- ADMIN/GUDANG VIEW --- */
+          <>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Inventaris</p>
+            </div>
+            <Link to="/barang" className={menuClass("/barang")}>
+              <Boxes size={18} className={isActive("/barang") ? "text-sky-600" : ""} />
+              Katalog Barang
+              <Badge count={lowStockCount} />
+              {isActive("/barang") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
+            {(role === "admin" || role === "gudang") && (
+              <>
+                <Link to="/kategori" className={menuClass("/kategori")}>
+                  <Tags size={18} className={isActive("/kategori") ? "text-sky-600" : ""} />
+                  Kategori
+                  {isActive("/kategori") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+                </Link>
+
+              </>
+            )}
+
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Mutasi & Aktivitas</p>
+            </div>
+
+            <div className="space-y-1">
+              <button
+                onClick={() => setOpenStok(!openStok)}
+                className={`w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300
+                  ${openStok ? "bg-slate-50 dark:bg-slate-800 text-sky-700 dark:text-sky-400" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50/80 dark:hover:bg-slate-800 hover:text-sky-700"}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <ArrowDownUp size={18} />
+                  Mutasi Stok
+                </div>
+                <ChevronRight size={14} className={`transition-transform duration-300 ${openStok ? "rotate-90 text-sky-500" : "opacity-30"}`} />
+              </button>
+
+              <div className={`overflow-hidden transition-all duration-300 ${openStok ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+                <div className="ml-7 space-y-1 border-l-2 border-slate-100 dark:border-slate-800">
+                  <Link to="/stok-masuk" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-masuk") ? "text-sky-600" : "text-slate-400 hover:text-sky-500"}`}>
+                    Stok Masuk
+                  </Link>
+                  <Link to="/stok-keluar" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-keluar") ? "text-sky-600" : "text-slate-400 hover:text-sky-500"}`}>
+                    Stok Keluar
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {role === "admin" && (
+              <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan")}>
+                <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
+                Buat Pengajuan
+                {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+              </Link>
+            )}
+
+            <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
+              <FileText size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
+              Riwayat Pengajuan
+              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+
+            <Link to="/approval" className={menuClass("/approval")}>
+              <ClipboardCheck size={18} className={isActive("/approval") ? "text-cyan-400" : ""} />
+              Validasi Pengajuan
+              <Badge count={pendingCount} />
+              {isActive("/approval") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
+
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Operasional</p>
+            </div>
 
             <Link to="/scan" className={menuClass("/scan")}>
-              <QrCode size={18} />
-              Scanner QR Code
+              <QrCode size={18} className={isActive("/scan") ? "text-sky-600" : ""} />
+              Scanner QR
+              {isActive("/scan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
-          </>
-        )}
-
-        {/* --- LAPORAN & SISTEM --- */}
-        {(role === "admin" || role === "gudang") && (
-          <>
-            <div className="pt-5 pb-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-4">Sistem & Report</p>
-            </div>
-
             <Link to="/laporan" className={menuClass("/laporan")}>
-              <BarChart3 size={18} />
-              Laporan & Analitik
+              <BarChart3 size={18} className={isActive("/laporan") ? "text-cyan-400" : ""} />
+              Laporan
+              {isActive("/laporan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
             </Link>
+
+            {/* SYSTEM (ADMIN ONLY) */}
+            {role === "admin" && (
+              <>
+                <div className="pt-6 pb-2 px-4">
+                  <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Sistem</p>
+                </div>
+                <Link to="/kelola-user" className={menuClass("/kelola-user")}>
+                  <UserCog size={18} className={isActive("/kelola-user") ? "text-sky-600" : ""} />
+                  Kelola User
+                  {isActive("/kelola-user") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                </Link>
+                <Link to="/activity-log" className={menuClass("/activity-log")}>
+                  <History size={18} className={isActive("/activity-log") ? "text-sky-600" : ""} />
+                  Log Aktivitas
+                  {isActive("/activity-log") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                </Link>
+              </>
+            )}
           </>
         )}
 
-        {role === "admin" && (
-          <>
-            <Link to="/activity-log" className={menuClass("/activity-log")}>
-              <History size={18} />
-              Riwayat Sistem
-            </Link>
-
-            <Link to="/kelola-user" className={menuClass("/kelola-user")}>
-              <UserCog size={18} />
-              Manajemen Akses
-            </Link>
-
-          </>
-        )}
+        {/* COMMON MENU (ALL ROLES) */}
+        {/* FOOTER SPACE */}
+        <div className="py-10"></div>
 
       </nav>
-      
-      {/* Sidebar Footer space if needed */}
-      <div className="p-4 mt-auto">
-        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest text-center opacity-50">
+
+      {/* SIDEBAR FOOTER */}
+      <div className="p-6 mt-auto">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] text-center opacity-40">
           PDAM Tirta Pakuan &copy; 2026
         </p>
+        <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em] text-center opacity-40">By Drian</p>
       </div>
 
       {/* Global CSS injected for custom elegant scrollbar hiding if needed */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }

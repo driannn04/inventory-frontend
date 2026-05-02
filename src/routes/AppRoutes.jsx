@@ -4,7 +4,7 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import Barang from "../pages/barang/Barang";
 import StokMasuk from "../pages/stok/StokMasuk";
 import StokKeluar from "../pages/stok/StokKeluar";
-import StockOpname from "../pages/stok/StockOpname";
+
 import BuatPengajuan from "../pages/pengajuan/BuatPengajuan";
 import ListPengajuan from "../pages/pengajuan/ListPengajuan";
 import DetailPengajuan from "../pages/pengajuan/DetailPengajuan";
@@ -13,15 +13,17 @@ import ScanQR from "../pages/barang/ScanQR";
 import KartuStok from "../pages/barang/KartuStok";
 import ActivityLog from "../pages/admin/ActivityLog";
 import Settings from "../pages/admin/Settings";
-import Supplier from "../pages/supplier/Supplier";
+
 import Login from "../pages/auth/Login";
 import ProtectedRoute from "../components/ProtectedRoute";
 
-// ✅ NEW PAGES
+// âœ… NEW PAGES
 import UserManagement from "../pages/user/UserManagement";
 import KategoriBarang from "../pages/kategori/KategoriBarang";
 import Laporan from "../pages/laporan/Laporan";
 import ProfilUser from "../pages/profil/ProfilUser";
+import PusatBantuan from "../pages/bantuan/PusatBantuan";
+import ListNotifikasi from "../pages/notifikasi/ListNotifikasi";
 
 export default function AppRoutes() {
   return (
@@ -31,19 +33,19 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/" element={
-          <ProtectedRoute roles={["admin","staff","asesmen","manager","gudang"]}>
+          <ProtectedRoute roles={["admin","staff","asisten_manager","manager","gudang"]}>
             <Dashboard />
           </ProtectedRoute>
         }/>
 
         <Route path="/barang" element={
-          <ProtectedRoute roles={["admin","gudang"]}>
+          <ProtectedRoute roles={["admin","gudang","staff","asisten_manager","manager"]}>
             <Barang />
           </ProtectedRoute>
         }/>
 
         <Route path="/barang/:id/kartu-stok" element={
-          <ProtectedRoute roles={["admin","gudang"]}>
+          <ProtectedRoute roles={["admin","gudang","staff","asisten_manager","manager"]}>
             <KartuStok />
           </ProtectedRoute>
         }/>
@@ -60,37 +62,37 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
-        <Route path="/stok-opname" element={
-          <ProtectedRoute roles={["admin","gudang"]}>
-            <StockOpname />
-          </ProtectedRoute>
-        }/>
+
 
         <Route path="/buat-pengajuan" element={
-          <ProtectedRoute roles={["staff","admin"]}>
+          <ProtectedRoute roles={["staff","admin","asisten_manager","manager"]}>
             <BuatPengajuan />
           </ProtectedRoute>
         }/>
 
         <Route path="/list-pengajuan" element={
-          <ProtectedRoute roles={["staff","admin","asesmen","manager","gudang"]}>
+          <ProtectedRoute roles={["staff","admin","asisten_manager","manager","gudang"]}>
             <ListPengajuan />
           </ProtectedRoute>
         }/>
 
         <Route path="/pengajuan/:id" element={
-          <ProtectedRoute roles={["admin","asesmen","manager","gudang"]}>
+          <ProtectedRoute roles={["admin","asisten_manager","manager","gudang","staff"]}>
             <DetailPengajuan />
           </ProtectedRoute>
         }/>
 
         <Route path="/approval" element={
-          <ProtectedRoute roles={["admin","asesmen","manager","gudang"]}>
+          <ProtectedRoute roles={["admin","asisten_manager","manager","gudang"]}>
             <ApprovalPengajuan />
           </ProtectedRoute>
         }/>
 
-        <Route path="/scan" element={<ScanQR />} />
+        <Route path="/scan" element={
+          <ProtectedRoute roles={["admin","gudang"]}>
+            <ScanQR />
+          </ProtectedRoute>
+        }/>
 
         <Route path="/activity-log" element={
           <ProtectedRoute roles={["admin"]}>
@@ -98,13 +100,9 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
-        <Route path="/supplier" element={
-          <ProtectedRoute roles={["admin"]}>
-            <Supplier />
-          </ProtectedRoute>
-        }/>
 
-        {/* ✅ NEW ROUTES */}
+
+        {/* âœ… NEW ROUTES */}
         <Route path="/kelola-user" element={
           <ProtectedRoute roles={["admin"]}>
             <UserManagement />
@@ -118,20 +116,32 @@ export default function AppRoutes() {
         }/>
 
         <Route path="/kategori" element={
-          <ProtectedRoute roles={["admin"]}>
+          <ProtectedRoute roles={["admin","gudang"]}>
             <KategoriBarang />
           </ProtectedRoute>
         }/>
 
         <Route path="/laporan" element={
-          <ProtectedRoute roles={["admin","gudang"]}>
+          <ProtectedRoute roles={["admin","gudang","manager"]}>
             <Laporan />
           </ProtectedRoute>
         }/>
 
         <Route path="/profil" element={
-          <ProtectedRoute roles={["admin","staff","asesmen","manager","gudang"]}>
+          <ProtectedRoute roles={["admin","staff","asisten_manager","manager","gudang"]}>
             <ProfilUser />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/bantuan" element={
+          <ProtectedRoute roles={["admin","staff","asisten_manager","manager","gudang"]}>
+            <PusatBantuan />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/notifikasi" element={
+          <ProtectedRoute roles={["admin","staff","asisten_manager","manager","gudang"]}>
+            <ListNotifikasi />
           </ProtectedRoute>
         }/>
 

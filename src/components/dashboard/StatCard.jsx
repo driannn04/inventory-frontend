@@ -4,15 +4,15 @@ import { motion } from "framer-motion";
 export default function StatCard({ title, value, icon, color, trend }) {
   const colors = {
     blue: "text-blue-600 dark:text-blue-400 bg-blue-500/10",
-    indigo: "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10",
+    sky: "text-sky-600 dark:text-sky-400 bg-sky-500/10",
     green: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10",
     red: "text-rose-600 dark:text-rose-400 bg-rose-500/10",
     amber: "text-amber-600 dark:text-amber-400 bg-amber-500/10"
   };
 
   const iconColors = {
-    blue: "bg-blue-500",
-    indigo: "bg-indigo-500",
+    blue: "bg-blue-600",
+    sky: "bg-sky-500",
     green: "bg-emerald-500",
     red: "bg-rose-500",
     amber: "bg-amber-500"

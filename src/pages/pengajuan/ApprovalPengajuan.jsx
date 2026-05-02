@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import MainLayout from "../../components/layout/MainLayout";
 import { getPengajuan } from "../../services/pengajuanService";
 import { getRole } from "../../utils/auth";
-import { RefreshCw, ClipboardCheck, Search, ChevronLeft, ChevronRight, Zap, X } from "lucide-react";
+import { RefreshCw, ClipboardCheck, Search, ChevronLeft, ChevronRight, Zap, X, ShieldCheck, User, Package, CheckCircle, XCircle } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 
 export default function ApprovalPengajuan() {
@@ -15,14 +15,27 @@ export default function ApprovalPengajuan() {
   const itemsPerPage = 8;
   const role = getRole();
 
+  const URGENCY_CONFIG = {
+    darurat: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50",
+    penting: "bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50",
+    normal:  "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50",
+  };
+
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const res = await getPengajuan();
-      const pending = res.data.filter(i => i.status !== "completed" && i.status !== "rejected");
-      setData(pending);
+      // Filter agar hanya menampilkan berkas yang MENJADI TANGGUNG JAWAB role saat ini
+      const queue = res.data.filter(i => {
+        if (role === 'asisten_manager') return i.status === 'pending_asisten_manager';
+        if (role === 'manager') return i.status === 'pending_manager';
+        if (role === 'gudang') return i.status === 'pending_gudang';
+        if (role === 'admin') return i.status !== 'completed' && i.status !== 'rejected';
+        return false;
+      });
+      setData(queue);
     } catch (err) { console.log(err); }
     finally { setLoading(false); }
   };
@@ -40,10 +53,23 @@ export default function ApprovalPengajuan() {
   const currentData = filtered.slice(indexFirst, indexLast);
 
   const STATUS_CONFIG = {
-    pending_assessment: { label: "Menunggu Asesmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
+    pending_asisten_manager: { label: "Menunggu Asisten Manager", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
     pending_manager:    { label: "Menunggu Manager",  cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-    pending_gudang:     { label: "Menunggu Gudang",   cls: "bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-900/30 dark:border-violet-900/50" },
+    pending_gudang:     { label: "Menunggu Gudang",   cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
   };
+
+  const getAvailableStatuses = () => {
+    if (role === 'asisten_manager') return [{ label: "Menunggu Anda", key: "pending_asisten_manager", color: "from-blue-600 to-sky-500", icon: <ShieldCheck size={20} /> }];
+    if (role === 'manager') return [{ label: "Menunggu Anda", key: "pending_manager", color: "from-blue-600 to-sky-500", icon: <User size={20} /> }];
+    if (role === 'gudang') return [{ label: "Menunggu Anda", key: "pending_gudang", color: "from-blue-700 to-sky-600", icon: <Package size={20} /> }];
+    return [
+      { label: "Asisten Manager", key: "pending_asisten_manager", color: "from-blue-600 to-sky-500", icon: <ShieldCheck size={20} /> },
+      { label: "Manager", key: "pending_manager", color: "from-blue-500 to-sky-400", icon: <User size={20} /> },
+      { label: "Gudang", key: "pending_gudang", color: "from-blue-700 to-sky-600", icon: <Package size={20} /> }
+    ];
+  };
+
+  const activeStatuses = getAvailableStatuses();
 
   return (
     <MainLayout>
@@ -62,18 +88,24 @@ export default function ApprovalPengajuan() {
         />
 
         {/* STAT CARDS */}
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "Menunggu Asesmen", key: "pending_assessment", color: "from-amber-600 to-orange-600" },
-            { label: "Menunggu Manager",  key: "pending_manager",    color: "from-blue-600 to-indigo-600" },
-            { label: "Menunggu Gudang",   key: "pending_gudang",     color: "from-violet-600 to-purple-600" },
-          ].map(s => (
-            <div key={s.key} className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
-              <p className={`text-2xl font-black mt-1.5 bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>
-                {data.filter(d => d.status === s.key).length}
-              </p>
-            </div>
+        <div className={`grid gap-5 ${activeStatuses.length === 1 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : activeStatuses.length === 2 ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
+          {activeStatuses.map((s) => (
+            <button 
+              key={s.key} 
+              onClick={() => setFilterStatus(filterStatus === s.key ? "" : s.key)}
+              className={`group relative bg-white dark:bg-slate-900 rounded-3xl p-6 border transition-all hover:scale-[1.03] active:scale-95 text-left overflow-hidden ${filterStatus === s.key ? `border-blue-500 ring-4 ring-blue-500/10 shadow-xl shadow-blue-500/10` : "border-slate-100 dark:border-slate-800 hover:shadow-lg"}`}
+            >
+              <div className={`absolute -right-2 -top-2 w-16 h-16 bg-gradient-to-br ${s.color} opacity-[0.03] rounded-full blur-2xl group-hover:opacity-10 transition-opacity`} />
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/20`}>
+                {s.icon}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+                  {data.filter(d => d.status === s.key).length}
+                </span>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{s.label}</p>
+              </div>
+            </button>
           ))}
         </div>
 
@@ -85,13 +117,15 @@ export default function ApprovalPengajuan() {
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="outline-none flex-1 bg-transparent text-sm text-slate-800 dark:text-white placeholder-slate-400 font-medium" />
           </div>
-          <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
-            className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none transition-all">
-            <option value="">Semua Status</option>
-            <option value="pending_assessment">Menunggu Asesmen</option>
-            <option value="pending_manager">Menunggu Manager</option>
-            <option value="pending_gudang">Menunggu Gudang</option>
-          </select>
+          {activeStatuses.length > 1 && (
+            <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+              className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none transition-all">
+              <option value="">Semua Status</option>
+              {activeStatuses.map(s => (
+                <option key={s.key} value={s.key}>{s.label}</option>
+              ))}
+            </select>
+          )}
           {(search || filterStatus) && (
             <button onClick={() => { setSearch(""); setFilterStatus(""); setCurrentPage(1); }} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-rose-500 transition-all">
               <X size={15} />
@@ -110,6 +144,7 @@ export default function ApprovalPengajuan() {
                   <th className="px-8 py-5">Nomor Pengajuan</th>
                   <th className="px-8 py-5">Pemohon</th>
                   <th className="px-8 py-5">Tanggal</th>
+                  <th className="px-8 py-5">Urgensi</th>
                   <th className="px-8 py-5">Status</th>
                   <th className="px-8 py-5">Aksi</th>
                 </tr>
@@ -142,16 +177,28 @@ export default function ApprovalPengajuan() {
                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-8 py-5 text-[11px] font-bold text-slate-400">{indexFirst + index + 1}</td>
                       <td className="px-8 py-5"><span className="font-black text-blue-600 dark:text-blue-400 text-[11px] font-mono uppercase tracking-tight">{item.nomor_pengajuan}</span></td>
-                      <td className="px-8 py-5 text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight">{item.nama}</td>
+                      <td className="px-8 py-5">
+                        <p className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight">{item.nama}</p>
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border inline-block mt-1 ${
+                          item.pengaju_role === 'manager' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50' :
+                          item.pengaju_role === 'asisten_manager' ? 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/30 dark:border-sky-900/50' :
+                          'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
+                        }`}>
+                          {{ staff: 'Staff', admin: 'Admin', asisten_manager: 'Asmen', manager: 'Manager', gudang: 'Gudang' }[item.pengaju_role] || item.pengaju_role || 'Staff'}
+                        </span>
+                      </td>
                       <td className="px-8 py-5 text-xs font-bold text-slate-500">
                         {new Date(item.tanggal_pengajuan).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${URGENCY_CONFIG[item.urgensi] || URGENCY_CONFIG.normal}`}>{item.urgensi || "normal"}</span>
                       </td>
                       <td className="px-8 py-5">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${badge.cls}`}>{badge.label}</span>
                       </td>
                       <td className="px-8 py-5">
-                        <Link to={`/pengajuan/${item.id}`}
-                          className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all active:scale-95">
+                        <Link to={`/pengajuan/${item.id}?mode=process`}
+                          className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all active:scale-95">
                           <Zap size={12} /> Proses
                         </Link>
                       </td>
@@ -165,12 +212,12 @@ export default function ApprovalPengajuan() {
           {totalPages > 1 && (
             <div className="flex justify-between items-center px-8 py-6 border-t border-slate-50 dark:border-slate-800">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                {indexFirst + 1}–{Math.min(indexLast, filtered.length)} dari {filtered.length}
+                {indexFirst + 1}-{Math.min(indexLast, filtered.length)} dari {filtered.length}
               </span>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronLeft size={16} /></button>
                 {[...Array(totalPages)].map((_, i) => (
-                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}>{i + 1}</button>
+                  <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}>{i + 1}</button>
                 ))}
                 <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronRight size={16} /></button>
               </div>

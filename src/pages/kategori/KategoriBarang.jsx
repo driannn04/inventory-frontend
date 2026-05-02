@@ -10,10 +10,10 @@ import PageHeader from "../../components/common/PageHeader";
 const categoryColors = [
   { gradient: "from-blue-500 to-cyan-500", light: "bg-blue-50 text-blue-600", border: "border-blue-100" },
   { gradient: "from-emerald-500 to-teal-500", light: "bg-emerald-50 text-emerald-600", border: "border-emerald-100" },
-  { gradient: "from-violet-500 to-purple-500", light: "bg-violet-50 text-violet-600", border: "border-violet-100" },
+  { gradient: "from-sky-400 to-blue-500", light: "bg-sky-50 text-sky-600", border: "border-sky-100" },
   { gradient: "from-amber-500 to-orange-500", light: "bg-amber-50 text-amber-600", border: "border-amber-100" },
   { gradient: "from-pink-500 to-rose-500", light: "bg-pink-50 text-pink-600", border: "border-pink-100" },
-  { gradient: "from-indigo-500 to-blue-500", light: "bg-indigo-50 text-indigo-600", border: "border-indigo-100" },
+  { gradient: "from-blue-500 to-sky-500", light: "bg-blue-50 text-blue-600", border: "border-blue-100" },
 ];
 
 export default function KategoriBarang() {
@@ -92,7 +92,7 @@ export default function KategoriBarang() {
               <button onClick={loadData} disabled={loading} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-all active:scale-95">
                 <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               </button>
-              <button onClick={openCreate} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest">
+              <button onClick={openCreate} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest">
                 <Plus size={16} /> Tambah
               </button>
             </>
@@ -163,7 +163,7 @@ export default function KategoriBarang() {
               <ChevronLeft size={16} />
             </button>
             {[...Array(totalPages)].map((_, i) => (
-              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500"}`}>{i + 1}</button>
+              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500"}`}>{i + 1}</button>
             ))}
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all shadow-sm">
               <ChevronRight size={16} />
@@ -179,7 +179,7 @@ export default function KategoriBarang() {
           <div className="relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden">
             {/* Modal Header */}
             <div className="flex flex-col items-center pt-10 pb-8 px-8 border-b border-slate-50 dark:border-slate-800">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mb-5 shadow-xl shadow-blue-500/30">
+              <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center mb-5 shadow-xl shadow-blue-500/30">
                 <Tags size={28} className="text-white" />
               </div>
               <h2 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight">
@@ -202,7 +202,7 @@ export default function KategoriBarang() {
             </div>
             {/* Modal Footer */}
             <div className="px-8 pb-8 flex flex-col gap-3">
-              <button onClick={handleSave} disabled={saving} className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+              <button onClick={handleSave} disabled={saving} className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-widest bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex justify-center items-center gap-2">
                 {saving ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
                 {editingData ? "Simpan Perubahan" : "Tambah Kategori"}
               </button>

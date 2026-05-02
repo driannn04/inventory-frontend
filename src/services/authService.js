@@ -1,6 +1,8 @@
-import axios from "axios";
+import api from "../utils/api";
 
 // login tidak butuh token, pakai axios biasa
 export const loginUser = (data) => {
-  return axios.post("http://localhost:5000/api/auth/login", data);
+  return api.post("/auth/login", data);
 };
+
+export const checkNup = (nup) => api.get(`/auth/check-nup/${nup}`);
