@@ -9,6 +9,7 @@ import BuatPengajuan from "../pages/pengajuan/BuatPengajuan";
 import ListPengajuan from "../pages/pengajuan/ListPengajuan";
 import DetailPengajuan from "../pages/pengajuan/DetailPengajuan";
 import ApprovalPengajuan from "../pages/pengajuan/ApprovalPengajuan";
+import MyPengajuan from "../pages/pengajuan/MyPengajuan";
 import ScanQR from "../pages/barang/ScanQR";
 import KartuStok from "../pages/barang/KartuStok";
 import ActivityLog from "../pages/admin/ActivityLog";
@@ -73,6 +74,12 @@ export default function AppRoutes() {
         <Route path="/list-pengajuan" element={
           <ProtectedRoute roles={["staff","admin","asisten_manager","manager","gudang"]}>
             <ListPengajuan />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/pengajuan-saya" element={
+          <ProtectedRoute roles={["staff","admin","asisten_manager","manager"]}>
+            <MyPengajuan />
           </ProtectedRoute>
         }/>
 

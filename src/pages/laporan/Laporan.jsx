@@ -295,24 +295,30 @@ export default function Laporan() {
                           <ChevronLeft size={16} />
                         </button>
                         <div className="flex px-1 gap-1.5 items-center">
-                          {[...Array(Math.ceil(data.length / itemsPerPage))].map((_, i) => {
+                          {(() => {
                             const totalPages = Math.ceil(data.length / itemsPerPage);
-                            if (totalPages > 5) {
-                               if (i !== 0 && i !== totalPages - 1 && Math.abs(i + 1 - currentPage) > 1) {
-                                  if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-slate-300">...</span>;
-                                  return null;
-                               }
+                            const pages = [];
+                            for (let i = 1; i <= totalPages; i++) {
+                              if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                                pages.push(i);
+                              } else if (i === currentPage - 2 || i === currentPage + 2) {
+                                pages.push("...");
+                              }
                             }
-                            return (
-                              <button 
-                                key={i} 
-                                onClick={() => setCurrentPage(i + 1)} 
-                                className={`w-9 h-9 rounded-xl text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-                              >
-                                {i + 1}
-                              </button>
-                            );
-                          })}
+                            return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                              p === "..." ? (
+                                <span key={`sep-${i}`} className="px-1 text-slate-300 font-black">...</span>
+                              ) : (
+                                <button 
+                                  key={p} 
+                                  onClick={() => setCurrentPage(p)} 
+                                  className={`w-9 h-9 rounded-xl text-[10px] font-black uppercase transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                                >
+                                  {p}
+                                </button>
+                              )
+                            ));
+                          })()}
                         </div>
                         <button
                           onClick={() => setCurrentPage(p => Math.min(Math.ceil(data.length / itemsPerPage), p + 1))}

@@ -3,21 +3,20 @@ import MainLayout from "../../components/layout/MainLayout";
 import { getBarang } from "../../services/barangService";
 import { tambahStokMasuk, getStokMasuk } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-
-import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, User, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Truck } from "lucide-react";
+import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../../components/common/PageHeader";
 import { TableSkeleton } from "../../components/common/Skeleton";
 
 export default function StokMasuk() {
   const [barang, setBarang] = useState([]);
-
   const [riwayat, setRiwayat] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [selectedItem, setSelectedItem] = useState(null);
+  const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({ barang_id: "", jumlah: "", keterangan: "" });
   const selectedBarang = barang.find(b => b.id == form.barang_id);
@@ -36,40 +35,32 @@ export default function StokMasuk() {
 
   const handleSubmit = async () => {
     if (!form.barang_id || !form.jumlah) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Lengkapi data dulu!" }));
-      return;
-    }
-    if (form.jumlah <= 0) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Jumlah harus lebih dari 0!" }));
+      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Lengkapi Data", text: "Pilih barang dan jumlah!" }));
       return;
     }
     try {
       setLoading(true);
       await tambahStokMasuk({ ...form, barang_id: Number(form.barang_id), jumlah: Number(form.jumlah) });
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "success", title: "Berhasil!", text: "Stok berhasil ditambahkan" }));
+      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "success", title: "Berhasil!", text: "Stok masuk berhasil disimpan" }));
       loadRiwayat(); loadBarang(); setCurrentPage(1);
       setForm({ barang_id: "", jumlah: "", keterangan: "" });
     } catch (err) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menambahkan stok" }));
+      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menyimpan data" }));
     } finally { setLoading(false); }
   };
 
-  const totalPages = Math.ceil(riwayat.length / itemsPerPage);
+  const filtered = riwayat.filter(r => 
+    (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
+    (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const indexLast = currentPage * itemsPerPage;
   const indexFirst = indexLast - itemsPerPage;
-  const currentData = riwayat.slice(indexFirst, indexLast);
+  const currentData = filtered.slice(indexFirst, indexLast);
   const totalMasuk = riwayat.reduce((s, r) => s + Number(r.jumlah), 0);
   
   const recentItems = [...new Map(riwayat.slice(0, 20).map(r => [r.barang_id, r])).values()].slice(0, 4);
-
-  const inputClass = "w-full px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 transition-all placeholder-slate-400";
-
-  const getSumberBadge = (ket) => {
-    if (!ket) return <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-xl uppercase tracking-widest italic">Manual</span>;
-    if (ket.startsWith("Scan QR Auto") || ket.startsWith("Scan Auto")) return <span className="text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-xl uppercase tracking-widest">⚡ Auto Scan</span>;
-    if (ket.startsWith("Scan QR")) return <span className="text-[9px] font-black text-sky-600 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-900/50 px-2.5 py-1 rounded-xl uppercase tracking-widest">📱 Scan QR</span>;
-    return <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-xl uppercase tracking-widest italic">Manual</span>;
-  };
 
   const DetailRow = ({ icon, label, value, color }) => (
     <div className="flex items-start gap-3 py-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
@@ -78,7 +69,7 @@ export default function StokMasuk() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-sm font-bold text-slate-800 dark:text-white break-words">{value || <span className="italic text-slate-300">-</span>}</p>
+        <p className="text-sm font-bold text-slate-800 dark:text-white break-words">{value || "-"}</p>
       </div>
     </div>
   );
@@ -86,148 +77,124 @@ export default function StokMasuk() {
   return (
     <MainLayout>
       <div className="space-y-6 pb-10">
-
         <PageHeader
           icon={<PackagePlus size={22} />}
           title="Stok Masuk"
-          subtitle="Inbound logistics & pencatatan penerimaan"
+          subtitle="Manajemen penerimaan dan penambahan stok barang"
           actions={
-            <button onClick={() => { loadRiwayat(); loadBarang(); }} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-700 transition-all active:scale-95">
+            <button onClick={() => { loadRiwayat(); loadBarang(); }} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 transition-all active:scale-95">
               <RefreshCw size={16} />
             </button>
           }
         />
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {[
-            { label: "Total Transaksi", value: riwayat.length, color: "from-blue-700 to-sky-500", shadow: "shadow-blue-500/20" },
-            { label: "Total Unit Masuk", value: totalMasuk, color: "from-emerald-600 to-teal-600", shadow: "shadow-emerald-500/20" },
-          ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
-              <p className={`text-3xl font-black mt-2 bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value.toLocaleString()}</p>
+            { label: "Total Transaksi", value: riwayat.length, color: "from-blue-600 to-sky-500", icon: <RefreshCw size={16} /> },
+            { label: "Total Unit Masuk", value: totalMasuk, color: "from-emerald-500 to-teal-600", icon: <PackagePlus size={16} /> },
+          ].map((s, i) => (
+            <div key={i} className="relative overflow-hidden p-5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white shadow-sm`}>{s.icon}</div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{s.value.toLocaleString()}</span>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{s.label}</p>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* MAIN GRID: FORM + TABLE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-          {/* FORM */}
-          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 space-y-5 flex flex-col relative overflow-hidden">
-            <div className="flex items-center gap-3 mb-2">
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 space-y-6">
+            <div className="flex items-center gap-3">
               <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-xl"><PlusCircle size={18} /></div>
               <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Tambah Stok</h2>
             </div>
-            
+
             {recentItems.length > 0 && (
-              <div className="bg-slate-50/50 dark:bg-slate-800/30 -mx-8 px-8 py-5 border-y border-slate-100 dark:border-slate-800">
-                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><RefreshCw size={12} /> Input Cepat (Terbaru)</p>
-                 <div className="flex flex-wrap gap-2">
-                    {recentItems.map(item => (
-                       <button 
-                          key={item.barang_id}
-                          onClick={() => setForm({...form, barang_id: item.barang_id})}
-                          className={`border px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 
-                          ${form.barang_id == item.barang_id 
-                            ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 shadow-sm" 
-                            : "bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:text-emerald-600"}`}
-                       >
-                          <Package size={12} />
-                          {item.nama_barang}
-                       </button>
-                    ))}
-                 </div>
+              <div className="space-y-3 pt-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Input Cepat</p>
+                <div className="flex flex-wrap gap-2">
+                  {recentItems.map(item => (
+                    <button key={item.barang_id} onClick={() => setForm({...form, barang_id: item.barang_id})} className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${form.barang_id == item.barang_id ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30" : "bg-white dark:bg-slate-800 text-slate-500 border-slate-100 dark:border-slate-700"}`}>
+                      {item.nama_barang}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Pilih Barang *</label>
-              <select name="barang_id" value={form.barang_id} onChange={handleChange} className={inputClass}>
-                <option value="">-- Pilih Barang --</option>
-                {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang}</option>)}
-              </select>
-              {selectedBarang && (
-                <p className="text-[10px] font-bold text-slate-400 mt-2 pl-1 uppercase tracking-widest">
-                  Stok saat ini: <span className="text-blue-600 font-black">{selectedBarang.stok}</span>
-                </p>
-              )}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pilih Barang</label>
+                <select name="barang_id" value={form.barang_id} onChange={handleChange} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all">
+                  <option value="">-- Pilih --</option>
+                  {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Jumlah</label>
+                <input type="number" name="jumlah" value={form.jumlah} onChange={handleChange} placeholder="0" className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Keterangan</label>
+                <textarea name="keterangan" value={form.keterangan} onChange={handleChange} placeholder="..." rows={3} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all resize-none" />
+              </div>
+              <button onClick={handleSubmit} disabled={loading} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                {loading ? "Menyimpan..." : "Simpan Stok Masuk"}
+              </button>
             </div>
-
-
-
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Jumlah *</label>
-              <input type="number" name="jumlah" value={form.jumlah} onChange={handleChange} placeholder="0" min="1" className={inputClass} />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Keterangan</label>
-              <textarea name="keterangan" value={form.keterangan} onChange={handleChange} placeholder="Keterangan penerimaan..." rows={3} className={`${inputClass} resize-none`} />
-            </div>
-
-            <button onClick={handleSubmit} disabled={loading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex justify-center items-center gap-2">
-              {loading ? <RefreshCw size={16} className="animate-spin" /> : <PlusCircle size={16} />}
-              {loading ? "Menyimpan..." : "Simpan Stok Masuk"}
-            </button>
           </div>
 
           {/* TABLE: RIWAYAT */}
-          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
-              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Riwayat Stok Masuk</h2>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hal {currentPage} dari {totalPages || 1}</span>
+          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center gap-4">
+              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest shrink-0">Riwayat Stok Masuk</h2>
+              <div className="relative w-full max-w-[200px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Cari barang..." 
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-[10px] outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-bold"
+                />
+              </div>
             </div>
             {loadingData ? (
               <div className="p-8">
-                <TableSkeleton columns={6} rows={5} />
+                <TableSkeleton columns={5} rows={5} />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left min-w-[700px]">
-                  <thead className="border-b border-slate-50 dark:border-slate-800">
-                    <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                      <th className="px-8 py-5 w-[5%]">#</th>
-                      <th className="px-8 py-5 w-[30%]">Barang</th>
-                      <th className="px-8 py-5 w-[12%] text-center">Jumlah</th>
-                      <th className="px-8 py-5 w-[18%]">Tanggal</th>
-                      <th className="px-8 py-5 w-[25%]">Sumber</th>
-                      <th className="px-8 py-5 w-[10%] text-center">Aksi</th>
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full text-left min-w-[600px]">
+                  <thead>
+                    <tr className="bg-slate-50/30 dark:bg-slate-800/30 border-b border-slate-50 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <th className="px-8 py-5">#</th>
+                      <th className="px-8 py-5">Barang</th>
+                      <th className="px-8 py-5 text-center">Jumlah</th>
+                      <th className="px-8 py-5">Tanggal</th>
+                      <th className="px-8 py-5 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                     {currentData.length === 0 ? (
-                      <tr><td colSpan={6} className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                            <Package size={28} className="text-slate-300 dark:text-slate-600" />
-                          </div>
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Belum ada riwayat stok masuk</p>
-                        </div>
-                      </td></tr>
-                    ) : currentData.map((r, idx) => (
-                      <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group" onClick={() => setSelectedItem(r)}>
-                        <td className="px-8 py-5 text-[11px] font-bold text-slate-400">{indexFirst + idx + 1}</td>
-                        <td className="px-8 py-5">
+                      <tr><td colSpan={5} className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Data tidak ditemukan</td></tr>
+                    ) : currentData.map((r, i) => (
+                      <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer" onClick={() => setSelectedItem(r)}>
+                        <td className="px-8 py-4 text-[11px] font-bold text-slate-400">{indexFirst + i + 1}</td>
+                        <td className="px-8 py-4">
                           <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{r.nama_barang}</p>
-                          {r.kode_barang && <p className="text-[10px] font-mono text-slate-400 mt-0.5">{r.kode_barang}</p>}
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-widest">{r.kode_barang}</p>
                         </td>
-                        <td className="px-8 py-5 text-center">
-                          <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-900/50 px-3 py-1.5 rounded-xl">+{r.jumlah}</span>
+                        <td className="px-8 py-4 text-center">
+                          <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800">+{r.jumlah}</span>
                         </td>
-                        <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                        <td className="px-8 py-4 text-xs font-bold text-slate-500">
                           {new Date(r.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                         </td>
-                        <td className="px-8 py-5">
-                          <div className="flex flex-col gap-1">
-                              <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-1 rounded-lg uppercase tracking-widest w-fit italic">Manual / Internal</span>
-                            {r.keterangan && <span className="text-[10px] text-slate-400 truncate max-w-[150px]">{r.keterangan}</span>}
-                          </div>
-                        </td>
-                        <td className="px-8 py-5 text-center">
-                          <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all opacity-0 group-hover:opacity-100" title="Lihat Detail">
+                        <td className="px-8 py-4 text-center">
+                          <button className="p-2 rounded-xl text-slate-300 hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100">
                             <Eye size={14} />
                           </button>
                         </td>
@@ -240,15 +207,35 @@ export default function StokMasuk() {
 
             {totalPages > 1 && (
               <div className="flex justify-between items-center px-8 py-6 border-t border-slate-50 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {indexFirst + 1}–{Math.min(indexLast, riwayat.length)} dari {riwayat.length}
-                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{indexFirst + 1}—{Math.min(indexLast, filtered.length)} dari {filtered.length}</span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronLeft size={16} /></button>
-                  {[...Array(Math.min(totalPages, 5))].map((_, i) => (
-                    <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}>{i + 1}</button>
-                  ))}
-                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronRight size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.max(1, p - 1)); }} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronLeft size={16} /></button>
+                  
+                  {(() => {
+                    const pages = [];
+                    for (let i = 1; i <= totalPages; i++) {
+                      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        pages.push(i);
+                      } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        pages.push("...");
+                      }
+                    }
+                    return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                      p === "..." ? (
+                        <span key={`sep-${i}`} className="px-2 text-slate-400 font-black">...</span>
+                      ) : (
+                        <button 
+                          key={p} 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage(p); }} 
+                          className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    ));
+                  })()}
+
+                  <button onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.min(totalPages, p + 1)); }} disabled={currentPage === totalPages} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronRight size={16} /></button>
                 </div>
               </div>
             )}
@@ -256,7 +243,6 @@ export default function StokMasuk() {
         </div>
       </div>
 
-      {/* ========== DETAIL MODAL ========== */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div
@@ -279,7 +265,7 @@ export default function StokMasuk() {
                     <PackagePlus size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Detail Stok Masuk</h3>
+                    <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Detail Penerimaan Stok</h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Transaksi #{selectedItem.id}</p>
                   </div>
                 </div>
@@ -349,7 +335,7 @@ export default function StokMasuk() {
                         icon={<MapPin size={16} />}
                         label="Lokasi Rak"
                         value={selectedItem.lokasi_rak || "-"}
-                        color="bg-rose-50 dark:bg-rose-900/30 text-rose-500"
+                        color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
                       />
                       <DetailRow
                         icon={<Calendar size={16} />}
@@ -368,18 +354,8 @@ export default function StokMasuk() {
                         icon={<FileText size={16} />}
                         label="Keterangan"
                         value={selectedItem.keterangan || "Tanpa keterangan"}
-                        color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
+                        color="bg-slate-50 dark:bg-slate-800 text-slate-400"
                       />
-
-                      <div className="flex items-start gap-4 py-5 mt-2 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl px-5 border border-slate-100 dark:border-slate-800">
-                        <div className="p-2.5 rounded-xl shrink-0 bg-white dark:bg-slate-700 shadow-sm text-slate-400">
-                          <Tag size={18} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sumber Transaksi</p>
-                          {getSumberBadge(selectedItem.keterangan)}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>

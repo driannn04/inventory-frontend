@@ -8,13 +8,15 @@ import {
   getApprovalHistory,
   deletePengajuan
 } from "../../services/pengajuanService";
-import { getRole, getUserId } from "../../utils/auth";
+
 import { CheckCircle, XCircle, ArrowLeft, Package, Clock, ShieldCheck, X, AlertTriangle, User, History, Send, Trash2, Pencil, Calendar, ArrowRightCircle } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import ImagePreview from "../../components/common/ImagePreview";
 import { motion } from "framer-motion";
 import { UPLOAD_URL } from "../../utils/api";
 import Swal from "sweetalert2";
+import { getRole, getUserId, getUser } from "../../utils/auth";
+import { useMemo } from "react";
 
 export default function DetailPengajuan() {
 
@@ -31,11 +33,20 @@ export default function DetailPengajuan() {
   const [showReject, setShowReject] = useState(false);
 
   const role = getRole();
-  const user_id = getUserId();
-
+  const user = useMemo(() => getUser(), []);
+  const user_id = user?.id;
   useEffect(() => {
     loadAll();
-  }, []);
+
+    // 🔥 REALTIME DETAIL UPDATE (Listen to Topbar broadcast)
+    const handleRefresh = () => {
+        console.log("🔄 [Detail Pengajuan] Sinyal update diterima, me-refresh status...");
+        loadAll();
+    };
+
+    window.addEventListener('notif_baru', handleRefresh);
+    return () => window.removeEventListener('notif_baru', handleRefresh);
+  }, [user?.id, id]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -88,6 +99,8 @@ export default function DetailPengajuan() {
       Swal.fire({ icon: "success", title: "Berhasil!", text: res.data.message || "Pengajuan berhasil disetujui", timer: 2500, showConfirmButton: false });
       loadAll();
       setShowReject(false);
+      // Trigger update badge di Sidebar secara otomatis
+      window.dispatchEvent(new Event('refreshSidebarBadge'));
     } catch (err) {
       Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menyetujui pengajuan" });
     } finally {
@@ -107,6 +120,8 @@ export default function DetailPengajuan() {
       loadAll();
       setShowReject(false);
       setCatatan("");
+      // Trigger update badge di Sidebar secara otomatis
+      window.dispatchEvent(new Event('refreshSidebarBadge'));
     } catch (err) {
       Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal reject" });
     } finally {
@@ -131,7 +146,10 @@ export default function DetailPengajuan() {
       try {
         await deletePengajuan(id);
         Swal.fire({ icon: "success", title: "Dibatalkan", text: "Pengajuan berhasil dibatalkan", timer: 2000, showConfirmButton: false });
-        navigate("/list-pengajuan");
+        // Trigger update badge di Sidebar secara otomatis
+        window.dispatchEvent(new Event('refreshSidebarBadge'));
+        if (role === "staff") navigate("/pengajuan-saya");
+        else navigate("/list-pengajuan");
       } catch (err) {
         Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal membatalkan pengajuan" });
       } finally {
@@ -236,7 +254,13 @@ export default function DetailPengajuan() {
           title="Detail Pengajuan"
           subtitle={`Informasi berkas ${nomorPengajuan}`}
           actions={
-            <button onClick={() => navigate("/list-pengajuan")} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-800 transition-all active:scale-95 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm">
+            <button 
+              onClick={() => {
+                if (role === "staff") navigate("/pengajuan-saya");
+                else navigate("/list-pengajuan");
+              }}
+              className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-800 transition-all active:scale-95 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm"
+            >
               <ArrowLeft size={16} /> Kembali
             </button>
           }

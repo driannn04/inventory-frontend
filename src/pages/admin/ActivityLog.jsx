@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../components/layout/MainLayout";
 import { getAuditLogs } from "../../services/auditService";
-import { History, User, Search, Filter, ShieldCheck, Clock, RefreshCw, Activity, X, ChevronLeft, ChevronRight, Eye, Hash, FileText, Database, Shield } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { History, User, Search, Filter, ShieldCheck, Clock, RefreshCw, Activity, X, ChevronLeft, ChevronRight, Eye, Hash, FileText, Database, Shield, PackagePlus, PackageMinus, Edit, Trash2, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion"; // Audit log activity component
 import PageHeader from "../../components/common/PageHeader";
 
 const AKSI_CONFIG = {
-  Tambah: { cls: "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-900/50", dot: "bg-emerald-500", icon: "➕" },
-  Edit:   { cls: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50",     dot: "bg-blue-500", icon: "✏️" },
-  Hapus:  { cls: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50",     dot: "bg-rose-500", icon: "🗑️" },
-  Audit:  { cls: "bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50", dot: "bg-amber-500", icon: "🔍" },
-  Login:  { cls: "bg-sky-50 text-sky-600 border border-sky-200 dark:bg-sky-900/30 dark:border-sky-900/50",           dot: "bg-sky-500", icon: "🔑" },
+  MASUK:   { cls: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30", icon: <PackagePlus size={14} />, label: "Stok Masuk" },
+  KELUAR:  { cls: "bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-900/30", icon: <PackageMinus size={14} />, label: "Stok Keluar" },
+  PENGELUARAN: { cls: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30",         icon: <PackageMinus size={14} />, label: "Pengeluaran" },
+  TAMBAH:  { cls: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30", icon: <PackagePlus size={14} />, label: "Tambah" },
+  Tambah:  { cls: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30", icon: <PackagePlus size={14} />, label: "Tambah" },
+  EDIT:    { cls: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30",         icon: <Edit size={14} />,        label: "Edit" },
+  Edit:    { cls: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30",         icon: <Edit size={14} />,        label: "Edit" },
+  HAPUS:   { cls: "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30",         icon: <Trash2 size={14} />,      label: "Hapus" },
+  Hapus:   { cls: "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30",         icon: <Trash2 size={14} />,      label: "Hapus" },
+  APPROVE: { cls: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30",         icon: <CheckCircle size={14} />, label: "Approve" },
+  REJECT:  { cls: "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30",         icon: <X size={14} />,           label: "Reject" },
+  LOGIN:   { cls: "bg-sky-50 text-sky-600 border-sky-100 dark:bg-sky-900/30",           icon: <Shield size={14} />,      label: "Login" },
+  Audit:   { cls: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30",   icon: <Search size={14} />,      label: "Audit" },
 };
 
 const formatRelativeTime = (dateStr) => {
@@ -94,11 +102,15 @@ export default function ActivityLog() {
             <select value={filterAksi} onChange={(e) => setFilterAksi(e.target.value)}
               className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
               <option value="Semua">Semua Aksi</option>
-              <option value="Tambah">Tambah</option>
-              <option value="Edit">Edit</option>
-              <option value="Hapus">Hapus</option>
-              <option value="Audit">Audit</option>
-              <option value="Login">Login</option>
+              <option value="MASUK">Stok Masuk</option>
+              <option value="KELUAR">Stok Keluar Manual</option>
+              <option value="PENGELUARAN">Pengeluaran Pengajuan</option>
+              <option value="TAMBAH">Tambah Data</option>
+              <option value="EDIT">Edit Data</option>
+              <option value="HAPUS">Hapus Data</option>
+              <option value="APPROVE">Approve</option>
+              <option value="REJECT">Reject</option>
+              <option value="LOGIN">Login</option>
             </select>
           </div>
           {(searchTerm || filterAksi !== "Semua") && (
@@ -136,7 +148,12 @@ export default function ActivityLog() {
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tidak ada log aktivitas ditemukan</p>
               </div>
             ) : filteredLogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((log) => {
-              const config = AKSI_CONFIG[log.aksi] || { cls: "bg-slate-50 text-slate-500 border border-slate-200", dot: "bg-slate-400", icon: "📋" };
+              // 🔥 SMART MAPPING: Perbaiki visual log lama agar tetap akurat
+              let aksiKey = log.aksi;
+              if (log.aksi === "TAMBAH" && log.tipe_data === "STOK KELUAR") aksiKey = "KELUAR";
+              if (log.aksi === "TAMBAH" && log.tipe_data === "STOK MASUK")  aksiKey = "MASUK";
+              
+              const config = AKSI_CONFIG[aksiKey] || AKSI_CONFIG[log.aksi] || { cls: "bg-slate-50 text-slate-500 border border-slate-200", dot: "bg-slate-400", icon: "📋" };
               return (
                 <div
                   key={log.id}
@@ -144,8 +161,11 @@ export default function ActivityLog() {
                   onClick={() => setSelectedLog(log)}
                 >
                   {/* Icon */}
-                  <div className={`p-3 rounded-2xl shrink-0 mt-0.5 ${config.cls}`}>
-                    <User size={18} />
+                  <div className={`p-3 rounded-2xl shrink-0 mt-0.5 flex items-center justify-center ${config.cls}`}>
+                    {/* Render icon with bigger size for the left box */}
+                    {typeof config.icon === 'string' ? config.icon : 
+                      <config.icon.type {...config.icon.props} size={20} />
+                    }
                   </div>
                   {/* Content */}
                   <div className="flex-1 min-w-0">
@@ -153,7 +173,7 @@ export default function ActivityLog() {
                       <div className="flex items-center gap-2.5">
                         <span className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{log.nama_user}</span>
                         <span className="text-[9px] font-black px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 uppercase tracking-widest">{log.role}</span>
-                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-xl uppercase tracking-widest ${config.cls}`}>{config.icon} {log.aksi}</span>
+                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-xl uppercase tracking-widest ${config.cls}`}>{config.icon} {config.label}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
                         <Clock size={11} />
@@ -194,24 +214,30 @@ export default function ActivityLog() {
                   <ChevronLeft size={16} />
                 </button>
                 <div className="flex px-2 gap-1.5 items-center">
-                  {[...Array(Math.ceil(filteredLogs.length / itemsPerPage))].map((_, i) => {
+                  {(() => {
                     const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
-                    if (totalPages > 7) {
-                        if (i !== 0 && i !== totalPages - 1 && Math.abs(i + 1 - currentPage) > 1) {
-                          if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-slate-400">...</span>;
-                          return null;
-                        }
+                    const pages = [];
+                    for (let i = 1; i <= totalPages; i++) {
+                      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        pages.push(i);
+                      } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        pages.push("...");
+                      }
                     }
-                    return (
-                      <button 
-                        key={i} 
-                        onClick={() => setCurrentPage(i + 1)} 
-                        className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
-                      >
-                        {i + 1}
-                      </button>
-                    );
-                  })}
+                    return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                      p === "..." ? (
+                        <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
+                      ) : (
+                        <button 
+                          key={p} 
+                          onClick={() => setCurrentPage(p)} 
+                          className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    ));
+                  })()}
                 </div>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredLogs.length / itemsPerPage), p + 1))}
@@ -229,7 +255,12 @@ export default function ActivityLog() {
       {/* ========== DETAIL MODAL ========== */}
       <AnimatePresence>
         {selectedLog && (() => {
-          const config = AKSI_CONFIG[selectedLog.aksi] || { cls: "bg-slate-50 text-slate-500 border border-slate-200", dot: "bg-slate-400", icon: "📋" };
+          // 🔥 SMART MAPPING: Perbaiki visual log lama agar tetap akurat
+          let aksiKey = selectedLog.aksi;
+          if (selectedLog.aksi === "TAMBAH" && selectedLog.tipe_data === "STOK KELUAR") aksiKey = "KELUAR";
+          if (selectedLog.aksi === "TAMBAH" && selectedLog.tipe_data === "STOK MASUK")  aksiKey = "MASUK";
+
+          const config = AKSI_CONFIG[aksiKey] || AKSI_CONFIG[selectedLog.aksi] || { cls: "bg-slate-50 text-slate-500 border border-slate-200", dot: "bg-slate-400", icon: "📋" };
           return (
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -247,8 +278,10 @@ export default function ActivityLog() {
                 {/* Modal Header */}
                 <div className="sticky top-0 bg-white dark:bg-slate-900 z-10 px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl ${config.cls}`}>
-                      <Shield size={20} />
+                    <div className={`p-2.5 rounded-xl flex items-center justify-center ${config.cls}`}>
+                      {typeof config.icon === 'string' ? config.icon : 
+                        <config.icon.type {...config.icon.props} size={22} />
+                      }
                     </div>
                     <div>
                       <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Detail Log Aktivitas</h3>
@@ -278,7 +311,7 @@ export default function ActivityLog() {
                     label="Jenis Aksi"
                     value={
                       <span className={`text-[11px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest inline-flex items-center gap-1.5 ${config.cls}`}>
-                        {config.icon} {selectedLog.aksi}
+                        {config.icon} {config.label}
                       </span>
                     }
                     color="bg-amber-50 dark:bg-amber-900/30 text-amber-500"

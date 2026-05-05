@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getRole, getUser } from "../../utils/auth";
+import { useMemo } from "react";
 
 export default function Sidebar() {
   const [openStok, setOpenStok] = useState(false);
@@ -34,7 +35,7 @@ export default function Sidebar() {
   const [unreadNotifs, setUnreadNotifs] = useState([]);
 
   const role = getRole();
-  const user = getUser();
+  const user = useMemo(() => getUser(), []);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -83,9 +84,23 @@ export default function Sidebar() {
     };
 
     fetchCounts();
-    const interval = setInterval(fetchCounts, 60000); // refresh every 1 min
-    return () => clearInterval(interval);
-  }, [location.pathname, role]);
+    const interval = setInterval(fetchCounts, 60000); // refresh fallback every 1 min
+
+    // Listen to global refresh signal (from Topbar Socket)
+    const handleRefresh = () => {
+        console.log("🔄 [Sidebar] Refreshing counts via global signal...");
+        fetchCounts();
+    };
+
+    window.addEventListener('refreshSidebarBadge', handleRefresh);
+    window.addEventListener('notif_baru', handleRefresh); // Juga dengarkan sinyal notif baru
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('refreshSidebarBadge', handleRefresh);
+      window.removeEventListener('notif_baru', handleRefresh);
+    };
+  }, [role, user?.id]); // Hapus location.pathname agar tidak terus-terusan reset!
 
   const isActive = (path) => location.pathname === path;
 
@@ -176,10 +191,10 @@ export default function Sidebar() {
               Buat Pengajuan
               {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
             </Link>
-            <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
-              <History size={18} className={isActive("/list-pengajuan") ? "text-cyan-400" : ""} />
-              Riwayat Pengajuan
-              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
+              <History size={18} className={isActive("/pengajuan-saya") ? "text-cyan-400" : ""} />
+              Pengajuan Saya
+              {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
             </Link>
           </>
         ) : role === "asisten_manager" ? (
@@ -196,7 +211,7 @@ export default function Sidebar() {
             </Link>
             <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
               <History size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
-              Riwayat Pengajuan
+              Daftar Pengajuan
               {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
             <div className="pt-6 pb-2 px-4">
@@ -206,6 +221,11 @@ export default function Sidebar() {
               <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
               Buat Pengajuan
               {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            </Link>
+            <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
+              <History size={18} className={isActive("/pengajuan-saya") ? "text-sky-600" : ""} />
+              Pengajuan Saya
+              {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
           </>
         ) : role === "manager" ? (
@@ -222,7 +242,7 @@ export default function Sidebar() {
             </Link>
             <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
               <History size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
-              Riwayat Pengajuan
+              Daftar Semua Pengajuan
               {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
             <div className="pt-6 pb-2 px-4">
@@ -246,6 +266,11 @@ export default function Sidebar() {
               <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
               Buat Pengajuan
               {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
+            <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
+              <History size={18} className={isActive("/pengajuan-saya") ? "text-sky-600" : ""} />
+              Pengajuan Saya
+              {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
           </>
         ) : (
@@ -311,9 +336,16 @@ export default function Sidebar() {
 
             <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
               <FileText size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
-              Riwayat Pengajuan
+              Daftar Pengajuan
               {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
+            {role === "admin" && (
+              <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
+                <History size={18} className={isActive("/pengajuan-saya") ? "text-sky-600" : ""} />
+                Pengajuan Saya
+                {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+              </Link>
+            )}
 
             <Link to="/approval" className={menuClass("/approval")}>
               <ClipboardCheck size={18} className={isActive("/approval") ? "text-cyan-400" : ""} />

@@ -3,7 +3,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { getBarang } from "../../services/barangService";
 import { tambahStokKeluar, getStokKeluar } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, AlertCircle, MinusCircle, Package, ClipboardCheck, QrCode, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, ExternalLink } from "lucide-react";
+import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, AlertCircle, MinusCircle, Package, ClipboardCheck, QrCode, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, ExternalLink, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
@@ -19,6 +19,7 @@ export default function StokKeluar() {
   const [form, setForm] = useState({ barang_id: "", jumlah: "", keterangan: "" });
   const selectedBarang = barang.find(b => b.id == form.barang_id);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => { loadBarang(); loadRiwayat(); }, []);
@@ -59,29 +60,21 @@ export default function StokKeluar() {
     } finally { setLoading(false); }
   };
 
-  const totalPages = Math.ceil(riwayat.length / itemsPerPage);
+  const filtered = riwayat.filter(r => 
+    (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
+    (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const indexLast = currentPage * itemsPerPage;
   const indexFirst = indexLast - itemsPerPage;
-  const currentData = riwayat.slice(indexFirst, indexLast);
+  const currentData = filtered.slice(indexFirst, indexLast);
   const totalKeluar = riwayat.reduce((s, r) => s + Number(r.jumlah), 0);
   const dariPengajuan = riwayat.filter(r => r.keterangan?.startsWith("Dari Pengajuan:")).length;
   
   const recentItems = [...new Map(riwayat.slice(0, 20).map(r => [r.barang_id, r])).values()].slice(0, 4);
 
   const inputClass = "w-full px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-rose-500/15 focus:border-rose-500 transition-all placeholder-slate-400";
-
-  const getKeteranganBadge = (ket) => {
-    if (!ket) return <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2.5 py-1 rounded-xl uppercase tracking-widest italic">Manual</span>;
-    if (ket.startsWith("Dari Pengajuan:")) return <span className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-xl uppercase tracking-widest"><ClipboardCheck size={10} />{ket}</span>;
-    if (ket.startsWith("Scan QR")) return <span className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-900/50 px-2.5 py-1 rounded-xl uppercase tracking-widest"><QrCode size={10} />{ket}</span>;
-    return <span className="text-xs text-slate-500 dark:text-slate-400">{ket}</span>;
-  };
-
-  const getSumberType = (r) => {
-    if (r.pengajuan_id || r.keterangan?.startsWith("Dari Pengajuan:")) return "pengajuan";
-    if (r.keterangan?.startsWith("Scan QR") || r.keterangan?.startsWith("Scan Auto")) return "scan";
-    return "manual";
-  };
 
   const DetailRow = ({ icon, label, value, color }) => (
     <div className="flex items-start gap-3 py-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
@@ -111,15 +104,18 @@ export default function StokKeluar() {
         />
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
-            { label: "Total Transaksi", value: riwayat.length, color: "from-rose-600 to-pink-600" },
-            { label: "Total Unit Keluar", value: totalKeluar, color: "from-orange-600 to-amber-600" },
-            { label: "Dari Pengajuan", value: dariPengajuan, color: "from-blue-600 to-sky-500" },
+            { label: "Total Transaksi", value: riwayat.length, color: "from-rose-600 to-pink-600", icon: <RefreshCw size={16} /> },
+            { label: "Total Unit Keluar", value: totalKeluar, color: "from-orange-600 to-amber-600", icon: <PackageMinus size={16} /> },
+            { label: "Dari Pengajuan", value: dariPengajuan, color: "from-blue-600 to-sky-500", icon: <ClipboardCheck size={16} /> },
           ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
-              <p className={`text-3xl font-black mt-2 bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>{s.value.toLocaleString()}</p>
+            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white shadow-sm`}>{s.icon}</div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-slate-800 dark:text-white leading-none">{s.value.toLocaleString()}</span>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">{s.label}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -204,17 +200,26 @@ export default function StokKeluar() {
           </div>
 
           {/* TABLE: RIWAYAT */}
-          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
-              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Riwayat Stok Keluar</h2>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hal {currentPage} dari {totalPages || 1}</span>
+          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center gap-4">
+              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest shrink-0">Riwayat Stok Keluar</h2>
+              <div className="relative w-full max-w-[200px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Cari barang..." 
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-[10px] outline-none focus:ring-2 focus:ring-rose-500/10 transition-all font-bold"
+                />
+              </div>
             </div>
             {loadingData ? (
               <div className="p-8">
                 <TableSkeleton columns={6} rows={5} />
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto flex-1">
                 <table className="w-full text-left min-w-[700px]">
                   <thead className="border-b border-slate-50 dark:border-slate-800">
                     <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
@@ -233,7 +238,7 @@ export default function StokKeluar() {
                           <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
                             <PackageMinus size={28} className="text-slate-300 dark:text-slate-600" />
                           </div>
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Belum ada riwayat pengeluaran</p>
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Data tidak ditemukan</p>
                         </div>
                       </td></tr>
                     ) : currentData.map((r, idx) => (
@@ -276,13 +281,35 @@ export default function StokKeluar() {
 
             {totalPages > 1 && (
               <div className="flex justify-between items-center px-8 py-6 border-t border-slate-50 dark:border-slate-800">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{indexFirst + 1}–{Math.min(indexLast, riwayat.length)} dari {riwayat.length}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{indexFirst + 1}—{Math.min(indexLast, filtered.length)} dari {filtered.length}</span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronLeft size={16} /></button>
-                  {[...Array(Math.min(totalPages, 5))].map((_, i) => (
-                    <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}>{i + 1}</button>
-                  ))}
-                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronRight size={16} /></button>
+                  <button onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.max(1, p - 1)); }} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronLeft size={16} /></button>
+                  
+                  {(() => {
+                    const pages = [];
+                    for (let i = 1; i <= totalPages; i++) {
+                      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        pages.push(i);
+                      } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        pages.push("...");
+                      }
+                    }
+                    return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                      p === "..." ? (
+                        <span key={`sep-${i}`} className="px-2 text-slate-400 font-black">...</span>
+                      ) : (
+                        <button 
+                          key={p} 
+                          onClick={(e) => { e.stopPropagation(); setCurrentPage(p); }} 
+                          className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100"}`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    ));
+                  })()}
+
+                  <button onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.min(totalPages, p + 1)); }} disabled={currentPage === totalPages} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 disabled:opacity-30 hover:bg-slate-100 transition-all"><ChevronRight size={16} /></button>
                 </div>
               </div>
             )}
@@ -425,23 +452,6 @@ export default function StokKeluar() {
                                 </button>
                               )}
                             </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Sumber Badge */}
-                      {!selectedItem.pengajuan_id && (
-                        <div className="flex items-start gap-4 py-4 px-5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl mt-2">
-                          <div className="p-2.5 rounded-xl shrink-0 bg-white dark:bg-slate-700 text-slate-400 shadow-sm">
-                            <Tag size={18} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Jenis Pengeluaran</p>
-                            {getSumberType(selectedItem) === "scan" ? (
-                              <span className="text-[10px] font-black text-sky-600 bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-900/50 px-3 py-1.5 rounded-xl uppercase tracking-widest inline-flex items-center gap-1.5"><QrCode size={11} /> Scan QR</span>
-                            ) : (
-                              <span className="text-[10px] font-black text-slate-500 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl uppercase tracking-widest">Manual</span>
-                            )}
                           </div>
                         </div>
                       )}

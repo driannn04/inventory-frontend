@@ -7,6 +7,7 @@ import {
   Mail, Phone, Shield, Key, ChevronLeft, ChevronRight,
   Briefcase, Building2, X, Eye, EyeOff, AlertTriangle, Check
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function UserManagement() {
   const [data, setData] = useState([]);
@@ -223,21 +224,25 @@ export default function UserManagement() {
         />
 
         {/* STAT MINI */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {roles.map((r, i) => {
             const count = data.filter(u => u.role === r.nama_role).length;
-            const colors = [
-              "from-blue-600 to-sky-500",
-              "from-emerald-600 to-teal-600",
-              "from-amber-600 to-orange-600",
-              "from-rose-600 to-pink-600",
-              "from-blue-600 to-sky-600"
-            ];
-            const color = colors[i % colors.length];
+            const configs = {
+              admin: { color: "from-rose-600 to-pink-600", icon: <Shield size={18} />, label: "Admin" },
+              staff: { color: "from-blue-600 to-sky-500", icon: <Briefcase size={18} />, label: "Staff" },
+              gudang: { color: "from-emerald-600 to-teal-600", icon: <Building2 size={18} />, label: "Gudang" },
+              manager: { color: "from-amber-600 to-orange-600", icon: <UserCog size={18} />, label: "Manager" },
+              asisten_manager: { color: "from-violet-600 to-purple-600", icon: <UserCog size={18} />, label: "Asisten Manager" }
+            };
+            const config = configs[r.nama_role] || { color: "from-slate-600 to-slate-500", icon: <UserCog size={18} />, label: r.nama_role };
+            
             return (
-              <div key={r.id} className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}</p>
-                <p className={`text-2xl font-black mt-1.5 bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+              <div key={r.id} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} text-white flex items-center justify-center mb-4 shadow-lg opacity-80 group-hover:opacity-100 transition-opacity`}>
+                  {config.icon}
+                </div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{config.label}</p>
+                <p className={`text-2xl font-black mt-1 bg-gradient-to-r ${config.color} bg-clip-text text-transparent`}>
                   {count}
                 </p>
               </div>
@@ -245,27 +250,41 @@ export default function UserManagement() {
           })}
         </div>
 
-        {/* FILTER BAR */}
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] px-6 py-4 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-            <Search size={18} className="text-slate-400 shrink-0" />
-            <input type="text" placeholder="Cari NUP, nama, email, jabatan..." value={search}
+        {/* SEARCH & FILTER BAR - Minimalist */}
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="text" placeholder="Cari NUP, nama, email, jabatan..." value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="outline-none flex-1 bg-transparent text-sm text-slate-800 dark:text-white placeholder-slate-400 font-medium" />
+              className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all font-medium dark:text-white shadow-sm"
+            />
           </div>
-          <select value={filterRole} onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
-            className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
-            <option value="">Semua Role</option>
-            {roles.map(r => (
-              <option key={r.id} value={r.nama_role}>{{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
+             <div className="pl-3 pr-1 text-slate-400 border-r border-slate-100 dark:border-slate-800 mr-1">
+               <Shield size={14} />
+             </div>
+             <select 
+               value={filterRole} 
+               onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
+               className="bg-transparent dark:text-slate-200 py-2 pr-8 pl-1 text-[11px] font-black uppercase tracking-widest outline-none transition-all cursor-pointer"
+             >
+               <option value="">Semua Role</option>
+               {roles.map(r => (
+                 <option key={r.id} value={r.nama_role}>
+                   {{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}
+                 </option>
+               ))}
+             </select>
+          </div>
           {(search || filterRole) && (
-            <button onClick={() => { setSearch(""); setFilterRole(""); setCurrentPage(1); }} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-rose-500 transition-all">
-              <X size={15} />
+            <button 
+              onClick={() => { setSearch(""); setFilterRole(""); setCurrentPage(1); }} 
+              className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-rose-500 transition-all shadow-sm shrink-0"
+            >
+              <X size={18} />
             </button>
           )}
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-auto">{filtered.length} user</span>
         </div>
 
         {/* TABLE */}
@@ -404,18 +423,34 @@ export default function UserManagement() {
                 >
                   <ChevronLeft size={18} className="text-slate-600 dark:text-slate-300" />
                 </button>
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-xl transition-all font-bold text-xs shadow-sm ${currentPage === i + 1
-                      ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white"
-                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <div className="flex px-1 gap-1.5 items-center">
+                  {(() => {
+                    const pages = [];
+                    for (let i = 1; i <= totalPages; i++) {
+                      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                        pages.push(i);
+                      } else if (i === currentPage - 2 || i === currentPage + 2) {
+                        pages.push("...");
+                      }
+                    }
+                    return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                      p === "..." ? (
+                        <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
+                      ) : (
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-10 h-10 rounded-xl transition-all font-bold text-xs shadow-sm ${currentPage === p
+                            ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white"
+                            : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            }`}
+                        >
+                          {p}
+                        </button>
+                      )
+                    ));
+                  })()}
+                </div>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
@@ -591,63 +626,87 @@ export default function UserManagement() {
           </div>
         </div>
       )}
-
       {/* ===== MODAL RESET PASSWORD ===== */}
       {isResetModal && resetTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => { setIsResetModal(false); setResetTarget(null); }}></div>
-          <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
-
-            <div className="flex flex-col items-center justify-center p-8 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-800/30">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-4 shadow-lg shadow-orange-500/30">
-                <AlertTriangle size={30} className="text-white" />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-white dark:border-slate-800 rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col"
+          >
+            <div className="flex flex-col items-center justify-center p-8 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/30">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mb-5 shadow-xl shadow-orange-500/20">
+                <Key size={32} className="text-white" />
               </div>
-              <h2 className="text-xl font-black text-slate-800 dark:text-white">Reset Sandi</h2>
-              <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Akun: {resetTarget.nama}</p>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Reset Sandi</h2>
+              <div className="mt-2 px-4 py-1.5 rounded-full bg-slate-200/50 dark:bg-slate-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
+                {resetTarget.nama}
+              </div>
             </div>
 
-            <div className="p-8">
-              <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 block text-center">Sandi Baru</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-                  className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-center text-xl font-black tracking-[0.25em] dark:text-white outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-500 transition"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+            <div className="p-8 space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sandi Baru</label>
+                  <button 
+                    onClick={() => {
+                      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+                      let pass = "";
+                      for (let i = 0; i < 10; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                      setNewPassword(pass);
+                      setShowPassword(true);
+                    }}
+                    className="text-[10px] font-black text-amber-600 hover:text-amber-700 uppercase tracking-widest transition-colors flex items-center gap-1.5"
+                  >
+                    <RefreshCw size={10} /> Acak Sandi
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimal 6 karakter"
+                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-base font-bold dark:text-white outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all placeholder:text-slate-300 dark:placeholder:text-slate-700 shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-amber-500 transition-all"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
-              <p className="text-[10px] uppercase font-bold text-slate-400 text-center mt-4 tracking-widest">Hanya berikan sandi baru ini kepada pemilik akun.</p>
+
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 flex gap-3">
+                <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 leading-relaxed uppercase tracking-tight">
+                  Tindakan ini akan mengganti sandi lama user secara permanen. Pastikan user segera diberitahu.
+                </p>
+              </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-3">
+            <div className="p-8 pt-0 flex flex-col gap-3">
               <button
                 onClick={handleResetPassword}
                 disabled={saving}
-                className="w-full py-4 rounded-2xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:to-orange-500 shadow-lg shadow-orange-500/30 transition-all active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2"
+                className="w-full py-4 rounded-2xl text-sm font-black bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-xl hover:shadow-orange-500/30 transition-all active:scale-95 disabled:opacity-50 flex justify-center items-center gap-2 uppercase tracking-widest shadow-lg shadow-orange-500/20"
               >
-                {saving ? <RefreshCw size={18} className="animate-spin" /> : <Key size={18} />}
-                Konfirmasi Reset
+                {saving ? <RefreshCw size={18} className="animate-spin" /> : <Check size={18} />}
+                Ganti Sandi Sekarang
               </button>
               <button
                 onClick={() => { setIsResetModal(false); setResetTarget(null); }}
-                className="w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+                className="w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all"
               >
                 Batalkan
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </MainLayout>
   );
 }
-
-

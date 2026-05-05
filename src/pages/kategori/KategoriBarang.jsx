@@ -162,9 +162,23 @@ export default function KategoriBarang() {
             <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all shadow-sm">
               <ChevronLeft size={16} />
             </button>
-            {[...Array(totalPages)].map((_, i) => (
-              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === i + 1 ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500"}`}>{i + 1}</button>
-            ))}
+            {(() => {
+              const pages = [];
+              for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                  pages.push(i);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                  pages.push("...");
+                }
+              }
+              return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                p === "..." ? (
+                  <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
+                ) : (
+                  <button key={p} onClick={() => setCurrentPage(p)} className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500"}`}>{p}</button>
+                )
+              ));
+            })()}
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all shadow-sm">
               <ChevronRight size={16} />
             </button>

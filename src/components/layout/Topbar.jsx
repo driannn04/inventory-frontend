@@ -113,6 +113,10 @@ export default function Topbar() {
     socket.on("notif_baru", (data) => {
       console.log("🔔 [SOCKET] Menerima Notifikasi Baru:", data);
 
+      // ⚡ SIARKAN SINYAL KE SELURUH KOMPONEN
+      window.dispatchEvent(new CustomEvent('notif_baru', { detail: data }));
+      window.dispatchEvent(new Event('refreshSidebarBadge'));
+
       const newNotif = {
         id: Date.now() + Math.random(),
         judul: data.judul,
@@ -121,19 +125,19 @@ export default function Topbar() {
         created_at: new Date()
       };
 
-      setNotif(prev => {
-        console.log("State notif diupdate:", [...prev, newNotif].length);
-        return [newNotif, ...prev];
-      });
-
-      setToasts(prev => {
-        console.log("State toasts diupdate:", [...prev, newNotif].length);
-        return [newNotif, ...prev];
-      });
+      setNotif(prev => [newNotif, ...prev]);
+      setToasts(prev => [newNotif, ...prev]);
 
       setTimeout(() => {
         setToasts(prev => prev.filter(t => t.id !== newNotif.id));
       }, 4000);
+    });
+
+    socket.on("refresh_data", () => {
+      console.log("🔄 [SOCKET] Sinyal refresh data diterima (Silent)");
+      // Hanya kirim sinyal refresh ke Sidebar/List tanpa pop-up
+      window.dispatchEvent(new Event('notif_baru'));
+      window.dispatchEvent(new Event('refreshSidebarBadge'));
     });
 
     return () => {

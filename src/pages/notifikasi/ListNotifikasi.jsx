@@ -13,7 +13,9 @@ import {
   TrendingDown,
   ClipboardList,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -84,6 +86,9 @@ export default function ListNotifikasi() {
     return { icon: <Bell size={20} />, bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-500" };
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const filteredNotif = notif.filter(n => {
     const matchFilter = 
       filter === "semua" ? true : 
@@ -96,6 +101,9 @@ export default function ListNotifikasi() {
       
     return matchFilter && matchSearch;
   });
+
+  const totalPages = Math.ceil(filteredNotif.length / itemsPerPage);
+  const currentData = filteredNotif.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const unreadCount = notif.filter(n => n.is_read === 0).length;
 
@@ -129,7 +137,7 @@ export default function ListNotifikasi() {
               type="text" 
               placeholder="Cari notifikasi..." 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-medium dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
@@ -145,7 +153,7 @@ export default function ListNotifikasi() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setFilter(tab.id)}
+                onClick={() => { setFilter(tab.id); setCurrentPage(1); }}
                 className={`flex-1 md:flex-none px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
                   filter === tab.id 
                     ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" 
@@ -166,7 +174,7 @@ export default function ListNotifikasi() {
               <RefreshCw size={32} className="mx-auto animate-spin mb-4 text-slate-300" />
               <p className="font-medium text-sm">Memuat notifikasi...</p>
             </div>
-          ) : filteredNotif.length === 0 ? (
+          ) : currentData.length === 0 ? (
             <div className="p-20 text-center flex flex-col items-center opacity-50">
               <Bell size={64} className="text-slate-300 mb-6" />
               <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Tidak ada notifikasi</h3>
@@ -175,78 +183,130 @@ export default function ListNotifikasi() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              <AnimatePresence>
-                {filteredNotif.map(n => {
-                  const ui = getNotifIconAndColor(n.judul);
-                  const isUnread = n.is_read === 0;
+            <>
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                <AnimatePresence mode="popLayout">
+                  {currentData.map(n => {
+                    const ui = getNotifIconAndColor(n.judul);
+                    const isUnread = n.is_read === 0;
 
-                  return (
-                    <motion.div
-                      key={n.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                      className={`p-6 flex flex-col sm:flex-row gap-6 group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
-                        isUnread ? "bg-sky-50/30 dark:bg-sky-900/10" : ""
-                      }`}
-                    >
-                      {/* ICON */}
-                      <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center ${ui.bg} ${ui.text}`}>
-                        {ui.icon}
-                      </div>
-
-                      {/* CONTENT */}
-                      <div 
-                        className="flex-1 cursor-pointer"
-                        onClick={() => isUnread && handleRead(n.id)}
+                    return (
+                      <motion.div
+                        key={n.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`p-6 flex flex-col sm:flex-row gap-6 group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+                          isUnread ? "bg-sky-50/30 dark:bg-sky-900/10" : ""
+                        }`}
                       >
-                        <div className="flex items-center gap-3 mb-1.5">
-                          <h4 className={`text-base font-bold ${isUnread ? "text-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>
-                            {n.judul}
-                          </h4>
-                          {isUnread && (
-                            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-full">
-                              Baru
-                            </span>
-                          )}
+                        {/* ICON */}
+                        <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center ${ui.bg} ${ui.text}`}>
+                          {ui.icon}
                         </div>
-                        <p className={`text-sm leading-relaxed mb-3 ${isUnread ? "text-slate-600 dark:text-slate-300 font-medium" : "text-slate-500 dark:text-slate-400"}`}>
-                          {n.pesan}
-                        </p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          {new Date(n.created_at).toLocaleString("id-ID", { 
-                            day: "2-digit", month: "long", year: "numeric", 
-                            hour: "2-digit", minute: "2-digit" 
-                          })}
-                        </p>
-                      </div>
 
-                      {/* ACTIONS */}
-                      <div className="flex items-center gap-2 sm:self-start opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isUnread && (
-                          <button 
-                            onClick={() => handleRead(n.id)}
-                            className="p-2.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-colors"
-                            title="Tandai Dibaca"
-                          >
-                            <CheckCheck size={18} />
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => handleDelete(n.id)}
-                          className="p-2.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-colors"
-                          title="Hapus"
+                        {/* CONTENT */}
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => isUnread && handleRead(n.id)}
                         >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                          <div className="flex items-center gap-3 mb-1.5">
+                            <h4 className={`text-base font-bold ${isUnread ? "text-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}>
+                              {n.judul}
+                            </h4>
+                            {isUnread && (
+                              <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 text-[9px] font-black uppercase tracking-widest rounded-full">
+                                Baru
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-sm leading-relaxed mb-3 ${isUnread ? "text-slate-600 dark:text-slate-300 font-medium" : "text-slate-500 dark:text-slate-400"}`}>
+                            {n.pesan}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {new Date(n.created_at).toLocaleString("id-ID", { 
+                              day: "2-digit", month: "long", year: "numeric", 
+                              hour: "2-digit", minute: "2-digit" 
+                            })}
+                          </p>
+                        </div>
 
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-            </div>
+                        {/* ACTIONS */}
+                        <div className="flex items-center gap-2 sm:self-start opacity-0 group-hover:opacity-100 transition-opacity">
+                          {isUnread && (
+                            <button 
+                              onClick={() => handleRead(n.id)}
+                              className="p-2.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-colors"
+                              title="Tandai Dibaca"
+                            >
+                              <CheckCheck size={18} />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDelete(n.id)}
+                            className="p-2.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-colors"
+                            title="Hapus"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+
+                      </motion.div>
+                    )
+                  })}
+                </AnimatePresence>
+              </div>
+
+              {/* PAGINATION NOTIFIKASI */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Halaman {currentPage} dari {totalPages}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2.5 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <div className="flex px-1 gap-1.5 items-center">
+                      {(() => {
+                        const pages = [];
+                        for (let i = 1; i <= totalPages; i++) {
+                          if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                            pages.push(i);
+                          } else if (i === currentPage - 2 || i === currentPage + 2) {
+                            pages.push("...");
+                          }
+                        }
+                        return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                          p === "..." ? (
+                            <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
+                          ) : (
+                            <button
+                              key={p}
+                              onClick={() => setCurrentPage(p)}
+                              className={`w-9 h-9 rounded-xl text-[10px] font-black transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500"}`}
+                            >
+                              {p}
+                            </button>
+                          )
+                        ));
+                      })()}
+                    </div>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2.5 bg-white dark:bg-slate-800 text-slate-500 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition-all disabled:opacity-30 disabled:scale-100 active:scale-95"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
