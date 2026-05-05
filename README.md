@@ -1,16 +1,40 @@
-# React + Vite
+# 🎨 Tirta Warehouse - Frontend UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The modern, responsive, and minimalist user interface for the Tirta Warehouse Management System. Built with a focus on speed, clarity, and premium aesthetics.
 
-Currently, two official plugins are available:
+## ✨ Features
+- **Dashboard**: Real-time analytics and stock overview.
+- **WMS Interface**: Clean management for inventory items and stock movements.
+- **QR Scanner**: Built-in scanner for quick item verification.
+- **Dark Mode**: Support for professional dark/light themes.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Tech Stack
+- **Framework**: React.js with Vite
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **API Client**: Axios
 
-## React Compiler
+## 🛠️ Setup Instructions
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. **Configuration**:
+   Create a `.env` file in the root folder:
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   VITE_UPLOAD_URL=http://localhost:5000/uploads
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. **Development Mode**:
+   ```bash
+   npm run dev
+   ```
+
+4. **Production Build**:
+   ```bash
+   npm run build
+   ```
