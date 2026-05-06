@@ -29,12 +29,13 @@ export default function AsistenManagerDashboard() {
     const [recentLogs, setRecentLogs] = useState([]);
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [pieRange, setPieRange] = useState("year"); // Filter waktu untuk status sistem
 
     const loadData = async () => {
         try {
             const [all, dashboardRes] = await Promise.all([
                 getPengajuan(),
-                getDashboard()
+                getDashboard({ pieRange })
             ]);
 
             setDashboardData(dashboardRes.data);
@@ -59,7 +60,7 @@ export default function AsistenManagerDashboard() {
             if (document.visibilityState === "visible") loadData();
         }, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [pieRange]);
 
     if (loading) return (
        <div className="pt-4 pb-12 space-y-8">
@@ -136,7 +137,17 @@ export default function AsistenManagerDashboard() {
                             <div className="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-2xl"><Activity size={22} /></div>
                             <div>
                                 <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Status Pengajuan Sistem</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Distribusi Proses Validasi</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2">
+                                    Distribusi Proses 
+                                    <span className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md border border-slate-200">
+                                        {["7d", "30d", "year"].map(t => (
+                                            <button key={t} onClick={() => setPieRange(t)}
+                                                className={`px-1.5 py-0.5 rounded text-[7px] font-black ${pieRange === t ? "bg-white text-blue-600 shadow-sm" : "text-slate-400"}`}>
+                                                {t.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </span>
+                                </p>
                             </div>
                         </div>
                         <Link to="/list-pengajuan" className="group p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all">

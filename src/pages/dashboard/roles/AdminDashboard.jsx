@@ -39,6 +39,11 @@ const PIE_COLORS = ["#06b6d4", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 export default function AdminDashboard() {
    const [data, setData] = useState(null);
    const [loading, setLoading] = useState(true);
+   
+   // Tiga filter mandiri untuk setiap bagian
+   const [chartRange, setChartRange] = useState("year");
+   const [pieRange, setPieRange] = useState("year");
+   const [topRange, setTopRange] = useState("year");
 
    useEffect(() => {
       loadData();
@@ -46,11 +51,11 @@ export default function AdminDashboard() {
          if (document.visibilityState === "visible") loadData();
       }, 30000);
       return () => clearInterval(interval);
-   }, []);
+   }, [chartRange, pieRange, topRange]); // Reload jika salah satu filter berubah
 
    const loadData = async () => {
       try {
-         const res = await api.get("/dashboard");
+         const res = await api.get(`/dashboard?chartRange=${chartRange}&pieRange=${pieRange}&topRange=${topRange}`);
          setData(res.data);
       } catch (err) {
          console.error(err);
@@ -60,20 +65,13 @@ export default function AdminDashboard() {
    };
 
    if (loading) return (
+      // ... skeleton loading ...
       <div className="pt-4 pb-12 space-y-8">
          <div className="flex justify-between items-center px-2">
             <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
-            <div className="flex gap-6">
-               <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
-               <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
-            </div>
          </div>
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => <div key={i} className="h-[120px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>)}
-         </div>
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
-            <div className="lg:col-span-4 h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
          </div>
       </div>
    );
@@ -93,16 +91,30 @@ export default function AdminDashboard() {
    } = data;
 
    const trendData = (() => {
-      let base = barang_masuk_bulanan.map(m => {
-         const k = barang_keluar_bulanan.find(x => x.bulan === m.bulan);
+      if (chartRange === '7d' || chartRange === '30d') {
+         // Jika harian, pakai label tanggal langsung dari backend
+         return barang_masuk_bulanan.map(m => {
+            const k = barang_keluar_bulanan.find(x => x.label === m.label);
+            return {
+               bulan: new Date(m.label).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+               masuk: Number(m.total),
+               keluar: k ? Number(k.total) : 0
+            };
+         });
+      }
+
+      // Jika bulanan (6m atau year), pakai nama bulan
+      const namaBulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+      return namaBulan.map((nama, index) => {
+         const bulanIndex = index + 1;
+         const dataMasuk = barang_masuk_bulanan.find(m => m.label === bulanIndex);
+         const dataKeluar = barang_keluar_bulanan.find(k => k.label === bulanIndex);
          return {
-            bulanInt: m.bulan,
-            bulan: `Bln ${m.bulan}`,
-            masuk: Number(m.total),
-            keluar: k ? Number(k.total) : 0
+            bulan: nama,
+            masuk: dataMasuk ? Number(dataMasuk.total) : 0,
+            keluar: dataKeluar ? Number(dataKeluar.total) : 0
          };
       });
-      return base.sort((a, b) => a.bulanInt - b.bulanInt);
    })();
 
    const pieData = status_pengajuan.map(s => ({ name: s.status, value: s.total }));
@@ -141,6 +153,14 @@ export default function AdminDashboard() {
                      <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><BarChart3 size={18} /></div>
                      <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Tren Mutasi Barang</h3>
                   </div>
+                  <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
+                     {["7d", "30d", "6m", "year"].map((t) => (
+                        <button key={t} onClick={() => setChartRange(t)}
+                           className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${chartRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+                           {t.toUpperCase()}
+                        </button>
+                     ))}
+                  </div>
                </div>
                <div className="h-[300px] w-full min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -162,7 +182,17 @@ export default function AdminDashboard() {
                </div>
             </div>
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center">
-               <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest mb-6 w-full text-center">Alur Pengajuan</h3>
+               <div className="flex justify-between items-center mb-6 w-full">
+                  <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Alur Pengajuan</h3>
+                  <div className="flex bg-slate-50 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-100 dark:border-slate-700">
+                     {["7d", "30d", "year"].map((t) => (
+                        <button key={t} onClick={() => setPieRange(t)}
+                           className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${pieRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+                           {t.toUpperCase()}
+                        </button>
+                     ))}
+                  </div>
+               </div>
                <div className="h-[220px] w-full relative min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                      <RePieChart>
@@ -194,9 +224,19 @@ export default function AdminDashboard() {
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-3 mb-8">
-                     <div className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-xl"><TrendingDown size={16} /></div>
-                     <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Top Mutasi Keluar</h3>
+                  <div className="flex items-center justify-between mb-8">
+                     <div className="flex items-center gap-3">
+                        <div className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-xl"><TrendingDown size={16} /></div>
+                        <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Top Mutasi</h3>
+                     </div>
+                     <div className="flex bg-slate-50 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-100 dark:border-slate-700">
+                        {["7d", "30d", "year"].map((t) => (
+                           <button key={t} onClick={() => setTopRange(t)}
+                              className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${topRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+                              {t.toUpperCase()}
+                           </button>
+                        ))}
+                     </div>
                   </div>
                   <div className="h-[230px] min-w-0">
                      <ResponsiveContainer width="100%" height="100%" minWidth={0}>

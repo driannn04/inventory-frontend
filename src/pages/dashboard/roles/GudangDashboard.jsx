@@ -34,17 +34,19 @@ export default function GudangDashboard() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [chartRange, setChartRange] = useState("year");
+
     useEffect(() => {
         loadData();
         const interval = setInterval(() => {
             if (document.visibilityState === "visible") loadData();
         }, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [chartRange]);
 
     const loadData = async () => {
         try {
-            const res = await api.get("/dashboard");
+            const res = await api.get(`/dashboard?chartRange=${chartRange}`);
             setData(res.data);
         } catch (err) {
             console.error(err);
@@ -88,16 +90,29 @@ export default function GudangDashboard() {
     // Rakit data grafik Trend Mutasi
     const trendData = (() => {
         if (!barang_masuk_bulanan || !barang_keluar_bulanan) return [];
-        let base = barang_masuk_bulanan.map(m => {
-           const k = barang_keluar_bulanan.find(x => x.bulan === m.bulan);
-           return {
-              bulanInt: m.bulan,
-              bulan: `Bln ${m.bulan}`,
-              masuk: Number(m.total),
-              keluar: k ? Number(k.total) : 0
-           };
+
+        if (chartRange === '7d' || chartRange === '30d') {
+            return barang_masuk_bulanan.map(m => {
+                const k = barang_keluar_bulanan.find(x => x.label === m.label);
+                return {
+                    bulan: new Date(m.label).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+                    masuk: Number(m.total),
+                    keluar: k ? Number(k.total) : 0
+                };
+            });
+        }
+
+        const namaBulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+        return namaBulan.map((nama, index) => {
+            const bulanIndex = index + 1;
+            const dataMasuk = barang_masuk_bulanan.find(m => m.label === bulanIndex);
+            const dataKeluar = barang_keluar_bulanan.find(k => k.label === bulanIndex);
+            return {
+                bulan: nama,
+                masuk: dataMasuk ? Number(dataMasuk.total) : 0,
+                keluar: dataKeluar ? Number(dataKeluar.total) : 0
+            };
         });
-        return base.sort((a, b) => a.bulanInt - b.bulanInt);
     })();
 
     return (
@@ -127,6 +142,14 @@ export default function GudangDashboard() {
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><BarChart3 size={18} /></div>
                             <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Tren Mutasi Logistik</h3>
+                        </div>
+                        <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
+                            {["7d", "30d", "6m", "year"].map((t) => (
+                                <button key={t} onClick={() => setChartRange(t)}
+                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${chartRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+                                    {t.toUpperCase()}
+                                </button>
+                            ))}
                         </div>
                     </div>
                     <div className="h-[300px] w-full min-w-0">
