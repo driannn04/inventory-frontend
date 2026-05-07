@@ -15,7 +15,7 @@ export default function ProfilUser() {
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
 
-  const [form, setForm] = useState({ nama: "", no_telp: "", jabatan: "", departemen: "" });
+  const [form, setForm] = useState({ nama: "", no_telp: "" });
   const [pwForm, setPwForm] = useState({ old_password: "", new_password: "", confirm_password: "" });
 
   useEffect(() => { loadProfile(); }, []);
@@ -27,9 +27,7 @@ export default function ProfilUser() {
       setProfile(res.data);
       setForm({
         nama: res.data.nama || "",
-        no_telp: res.data.no_telp || "",
-        jabatan: res.data.jabatan || "",
-        departemen: res.data.departemen || ""
+        no_telp: res.data.no_telp || ""
       });
     } catch (err) {
       console.error(err);
@@ -151,7 +149,7 @@ export default function ProfilUser() {
                 {profile.departemen && (
                   <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-800 text-slate-500 border border-slate-100 dark:border-slate-700">
                     <Building2 size={12} />
-                    {profile.departemen}
+                    {profile.departemen} {profile.sub_departemen ? `> ${profile.sub_departemen}` : ""}
                   </span>
                 )}
               </div>
@@ -246,13 +244,7 @@ export default function ProfilUser() {
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jabatan</p>
-                {editing ? (
-                  <input type="text" value={form.jabatan} onChange={(e) => setForm({ ...form, jabatan: e.target.value })}
-                    placeholder="Staf IT"
-                    className="w-full mt-2 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl py-3 px-4 font-bold outline-none focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 transition-all shadow-sm" />
-                ) : (
-                  <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mt-1">{profile.jabatan || "-"}</p>
-                )}
+                <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mt-1">{profile.jabatan || "-"}</p>
               </div>
             </div>
 
@@ -263,13 +255,9 @@ export default function ProfilUser() {
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Departemen</p>
-                {editing ? (
-                  <input type="text" value={form.departemen} onChange={(e) => setForm({ ...form, departemen: e.target.value })}
-                    placeholder="Divisi TI"
-                    className="w-full mt-2 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl py-3 px-4 font-bold outline-none focus:ring-4 focus:ring-rose-500/15 focus:border-rose-500 transition-all shadow-sm" />
-                ) : (
-                  <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mt-1">{profile.departemen || "-"}</p>
-                )}
+                <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mt-1">
+                  {profile.departemen || "-"} {profile.sub_departemen ? `> ${profile.sub_departemen}` : ""}
+                </p>
               </div>
             </div>
 
@@ -291,7 +279,7 @@ export default function ProfilUser() {
           {editing && (
             <div className="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex justify-end gap-3">
               <button
-                onClick={() => { setEditing(false); setForm({ nama: profile.nama, no_telp: profile.no_telp || "", jabatan: profile.jabatan || "", departemen: profile.departemen || "" }); }}
+                onClick={() => { setEditing(false); setForm({ nama: profile.nama, no_telp: profile.no_telp || "" }); }}
                 className="px-6 py-3.5 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-[11px] font-black text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 uppercase tracking-widest transition-all"
               >
                 Batal

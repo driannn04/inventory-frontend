@@ -11,6 +11,9 @@ export const resetPassword = (id, data) => api.put(`/users/${id}/reset-password`
 // Roles & Utility
 export const getRoles = () => api.get("/users/roles");
 export const getNextNup = () => api.get("/users/next-nup");
+export const getJabatans = () => api.get("/users/jabatans");
+export const getDepartments = () => api.get("/users/departments");
+export const getSubDepartments = (deptId) => api.get(`/users/departments/${deptId}/sub`);
 
 // Profil
 export const getMyProfile = () => api.get("/users/profile/me");

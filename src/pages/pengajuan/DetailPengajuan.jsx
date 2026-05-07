@@ -472,6 +472,11 @@ export default function DetailPengajuan() {
                                     return map[r] || r;
                                 })()
                             }</p>
+                            {data[0]?.dept_pengaju && (
+                                <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">
+                                    {data[0]?.dept_pengaju} {data[0]?.sub_dept_pengaju ? `| ${data[0]?.sub_dept_pengaju}` : ''}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

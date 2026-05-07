@@ -246,6 +246,9 @@ export default function Settings() {
                         <InputGroup label="Nama PDAM / Instansi" icon={Building2} value={settings.org_name} onChange={(v) => handleChange("org_name", v)} />
                         <InputGroup label="Nomor Telepon Kantor" icon={Phone} value={settings.org_phone} onChange={(v) => handleChange("org_phone", v)} />
                         <InputGroup label="Email Resmi" icon={Mail} value={settings.org_email} onChange={(v) => handleChange("org_email", v)} />
+                        <InputGroup label="Jabatan Penandatangan Laporan" icon={ShieldCheck} value={settings.org_manager_title} onChange={(v) => handleChange("org_manager_title", v)} placeholder="Contoh: MANAGER LOGISTIK" />
+                        <InputGroup label="Nama Penandatangan Laporan" icon={CheckCircle2} value={settings.org_manager_name} onChange={(v) => handleChange("org_manager_name", v)} />
+                        <InputGroup label="NIP Penandatangan" icon={FileCode} value={settings.org_manager_nip} onChange={(v) => handleChange("org_manager_nip", v)} />
                         <InputGroup label="Kode Unit (Prefix)" icon={FileCode} value={settings.org_unit_code} onChange={(v) => handleChange("org_unit_code", v)} />
                       </div>
                     </div>
