@@ -176,6 +176,11 @@ export default function MyPengajuan() {
                         <td className="px-8 py-5">
                           <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight line-clamp-1">{item.keperluan || "Tanpa Keterangan"}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{item.jumlah_item} Item Barang</p>
+                          {item.sub_dept_pengaju && (
+                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                              Unit: {item.sub_dept_pengaju}
+                            </p>
+                          )}
                         </td>
                         <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                           {new Date(item.tanggal_pengajuan).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}

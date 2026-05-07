@@ -464,19 +464,27 @@ export default function DetailPengajuan() {
                         </div>
                         <div>
                             <p className="text-base font-black text-slate-800 dark:text-white uppercase tracking-tight">{nama_pengaju}</p>
-                            <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-0.5">Peran: {
-                                (() => {
-                                    const r = data[0]?.pengaju_role;
-                                    if (!r) return 'Staff';
-                                    const map = { staff: 'Staff', admin: 'Admin', asisten_manager: 'Asisten Manager', manager: 'Manager', gudang: 'Gudang' };
-                                    return map[r] || r;
-                                })()
-                            }</p>
-                            {data[0]?.dept_pengaju && (
-                                <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">
-                                    {data[0]?.dept_pengaju} {data[0]?.sub_dept_pengaju ? `| ${data[0]?.sub_dept_pengaju}` : ''}
-                                </p>
-                            )}
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border ${
+                                    data[0]?.pengaju_role === 'manager' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                    data[0]?.pengaju_role === 'asisten_manager' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                    'bg-slate-50 text-slate-500 border-slate-200'
+                                }`}>
+                                    {{ staff: 'Staff', admin: 'Admin', asisten_manager: 'Asisten Manager', manager: 'Manager', gudang: 'Gudang' }[data[0]?.pengaju_role] || data[0]?.pengaju_role || 'Staff'}
+                                </span>
+                            </div>
+                            <div className="mt-2 space-y-0.5">
+                                {data[0]?.dept_pengaju && (
+                                    <p className="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span className="text-slate-400">Divisi:</span> {data[0]?.dept_pengaju}
+                                    </p>
+                                )}
+                                {data[0]?.sub_dept_pengaju && (
+                                    <p className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest flex items-center gap-1">
+                                        <span className="text-slate-400">Unit:</span> {data[0]?.sub_dept_pengaju}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
