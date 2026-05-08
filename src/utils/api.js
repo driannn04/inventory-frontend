@@ -16,15 +16,31 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ TAMBAH: auto logout kalau 401/403
+// ✅ TAMBAH: Global Error Handler (401, 403, 503)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status;
+
+    if (!error.response) {
+      // Server mati total atau internet user mati (Network Error)
+      // Kita anggap sebagai maintenance jika internet user masih nyala
+      if (navigator.onLine) {
+        window.location.href = "/maintenance";
+      }
+    } else if (status === 401) {
+      // Sesi habis, paksa login ulang
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       window.location.href = "/login";
+    } else if (status === 403) {
+      // Akses ditolak (Role tidak sesuai)
+      window.location.href = "/forbidden";
+    } else if (status === 503) {
+      // Server sedang Maintenance
+      window.location.href = "/maintenance";
     }
+    
     return Promise.reject(error);
   }
 );

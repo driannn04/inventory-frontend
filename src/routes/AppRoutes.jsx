@@ -13,7 +13,7 @@ import MyPengajuan from "../pages/pengajuan/MyPengajuan";
 import ScanQR from "../pages/barang/ScanQR";
 import KartuStok from "../pages/barang/KartuStok";
 import ActivityLog from "../pages/admin/ActivityLog";
-import Settings from "../pages/admin/Settings";
+
 
 import Login from "../pages/auth/Login";
 import ProtectedRoute from "../components/ProtectedRoute";
@@ -25,6 +25,10 @@ import Laporan from "../pages/laporan/Laporan";
 import ProfilUser from "../pages/profil/ProfilUser";
 import PusatBantuan from "../pages/bantuan/PusatBantuan";
 import ListNotifikasi from "../pages/notifikasi/ListNotifikasi";
+import Settings from "../pages/admin/Settings";
+import NotFound from "../pages/error/NotFound";
+import AccessDenied from "../pages/error/AccessDenied";
+import Maintenance from "../pages/error/Maintenance";
 
 export default function AppRoutes() {
   return (
@@ -116,12 +120,12 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
+
         <Route path="/settings" element={
           <ProtectedRoute roles={["admin"]}>
             <Settings />
           </ProtectedRoute>
         }/>
-
         <Route path="/kategori" element={
           <ProtectedRoute roles={["admin","gudang"]}>
             <KategoriBarang />
@@ -129,7 +133,7 @@ export default function AppRoutes() {
         }/>
 
         <Route path="/laporan" element={
-          <ProtectedRoute roles={["admin","gudang","manager"]}>
+          <ProtectedRoute roles={["admin","gudang","manager","asisten_manager"]}>
             <Laporan />
           </ProtectedRoute>
         }/>
@@ -152,7 +156,9 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
-        <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="/forbidden" element={<AccessDenied />} />
+        <Route path="/maintenance" element={<Maintenance />} />
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
     </BrowserRouter>

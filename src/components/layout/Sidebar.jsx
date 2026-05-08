@@ -43,13 +43,7 @@ export default function Sidebar() {
     setOpenStok(false);
     setOpenPengajuan(false);
 
-    // Load All Settings
-    api.get("/settings").then(res => {
-      if (res.data && res.data.org_name) {
-        const name = res.data.org_name.length > 15 ? res.data.org_name.split(' ')[0] : res.data.org_name;
-        setOrgName(name);
-      }
-    }).catch(() => { });
+    setOrgName("PDAM Tirta Pakuan");
 
     // Load Pending Counts for Badge
     const fetchCounts = async () => {
@@ -227,6 +221,14 @@ export default function Sidebar() {
               Pengajuan Saya
               {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
             </Link>
+            <div className="pt-6 pb-2 px-4">
+              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Monitoring & Laporan</p>
+            </div>
+            <Link to="/laporan" className={menuClass("/laporan")}>
+              <BarChart3 size={18} className={isActive("/laporan") ? "text-sky-600" : ""} />
+              Laporan Inventaris
+              {isActive("/laporan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+            </Link>
           </>
         ) : role === "manager" ? (
           /* --- MANAGER VIEW --- */
@@ -384,6 +386,11 @@ export default function Sidebar() {
                   <History size={18} className={isActive("/activity-log") ? "text-sky-600" : ""} />
                   Log Aktivitas
                   {isActive("/activity-log") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                </Link>
+                <Link to="/settings" className={menuClass("/settings")}>
+                  <Settings size={18} className={isActive("/settings") ? "text-sky-600" : ""} />
+                  Pengaturan
+                  {isActive("/settings") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
                 </Link>
               </>
             )}

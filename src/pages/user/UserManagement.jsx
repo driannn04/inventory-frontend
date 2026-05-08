@@ -85,19 +85,12 @@ export default function UserManagement() {
   const openCreate = async () => {
     setEditingData(null);
     setForm({ 
-      nup: "", nama: "", email: "", password: "", role_id: "", 
+      nup: "OTOMATIS", nama: "", email: "", password: "", role_id: "", 
       no_telp: "", jabatan_id: "", id_dept: "", id_subdept: "" 
     });
     setSubDepartments([]);
     setShowPassword(false);
     setIsModalOpen(true);
-
-    try {
-      const res = await getNextNup();
-      setForm(prev => ({ ...prev, nup: res.data.nextNup }));
-    } catch (err) {
-      console.error("Gagal mendapatkan saran NUP", err);
-    }
   };
 
   const openEdit = async (item) => {
@@ -130,8 +123,8 @@ export default function UserManagement() {
   };
 
   const handleSave = async () => {
-    if (!form.nup || !form.nama || !form.role_id) {
-      alert("NUP, Nama, dan role wajib diisi!");
+    if (!form.nama || !form.role_id || !form.id_dept || !form.id_subdept) {
+      alert("Nama, Role, Departemen, dan Sub-Departemen wajib diisi!");
       return;
     }
     if (!editingData && !form.password) {
@@ -144,8 +137,28 @@ export default function UserManagement() {
       if (editingData) {
         const { password, ...updateData } = form;
         await updateUser(editingData.id, updateData);
+        import("sweetalert2").then(({ default: Swal }) => {
+          Swal.fire({
+            title: "Berhasil!",
+            text: "Data user telah diperbarui.",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+            customClass: { popup: "rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl" }
+          });
+        });
       } else {
-        await createUser(form);
+        const res = await createUser(form);
+        import("sweetalert2").then(({ default: Swal }) => {
+          Swal.fire({
+            title: "User Ditambahkan!",
+            html: `User baru berhasil dibuat dengan NUP: <b class="text-blue-600">${res.data.nup}</b>`,
+            icon: "success",
+            confirmButtonText: "Mantap",
+            confirmButtonColor: "#2563eb",
+            customClass: { popup: "rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl" }
+          });
+        });
       }
       setIsModalOpen(false);
       setEditingData(null);
@@ -190,7 +203,16 @@ export default function UserManagement() {
     setSaving(true);
     try {
       await resetPassword(resetTarget.id, { new_password: newPassword });
-      alert("Password berhasil direset!");
+      import("sweetalert2").then(({ default: Swal }) => {
+        Swal.fire({
+          title: "Password Berhasil!",
+          text: "Kata sandi user telah diperbarui.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: { popup: "rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl" }
+        });
+      });
       setIsResetModal(false);
       setNewPassword("");
       setResetTarget(null);
@@ -503,11 +525,11 @@ export default function UserManagement() {
               <div className="p-6 sm:p-8 space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar">
                 <div className="grid grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">NUP *</label>
+                    <label className="text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">NUP (Otomatis)</label>
                     <input
-                      type="text" value={form.nup} onChange={(e) => setForm({ ...form, nup: e.target.value })}
-                      placeholder="Masukkan NUP"
-                      className="w-full px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition"
+                      type="text" value={form.nup} readOnly
+                      className="w-full px-5 py-3 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none text-slate-500 font-bold cursor-not-allowed"
+                      placeholder="Dibuat oleh sistem"
                     />
                   </div>
                   <div className="space-y-2">

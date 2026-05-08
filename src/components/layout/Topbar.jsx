@@ -15,7 +15,7 @@ import {
   Moon,
   Search,
   User,
-  Settings as SettingsIcon,
+
   LogOut,
   ChevronDown,
   ClipboardCheck
@@ -81,10 +81,7 @@ export default function Topbar() {
   useEffect(() => {
     loadNotif();
 
-    // Load All Settings
-    api.get("/settings").then(res => {
-      if (res.data && res.data.org_name) setOrgName(res.data.org_name);
-    }).catch(() => { });
+    setOrgName("PDAM Tirta Pakuan");
   }, []);
 
   // =============================
@@ -523,15 +520,7 @@ export default function Topbar() {
                   >
                     <User size={16} /> Profil Saya
                   </Link>
-                  {user?.role === 'admin' && (
-                    <Link
-                      to="/settings"
-                      onClick={() => setShowProfile(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-bold text-slate-600 dark:text-slate-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 transition-all"
-                    >
-                      <SettingsIcon size={16} /> Pengaturan Sistem
-                    </Link>
-                  )}
+
                 </div>
                 <div className="p-2 border-t border-slate-100 dark:border-slate-800">
                   <button
