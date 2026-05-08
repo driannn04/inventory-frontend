@@ -229,11 +229,21 @@ export default function Barang() {
                       <td className="px-8 py-4">
                         <div className="flex justify-center">
                           <div className="inline-flex divide-x divide-slate-100 dark:divide-slate-700 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
-                            <div className="px-4 py-2 flex flex-col items-center min-w-[70px]">
+                            <div className="px-3 py-2 flex flex-col items-center min-w-[60px]">
                               <span className={`text-[13px] font-black ${Number(item.stok_tersedia) <= 0 ? 'text-rose-500' : 'text-slate-800 dark:text-white'}`}>{item.stok_tersedia}</span>
                               <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5 tracking-tighter">Ready</span>
                             </div>
-                            <div className="px-4 py-2 flex flex-col items-center min-w-[70px] bg-white/40 dark:bg-slate-900/40">
+                            {/* RESERVED (TABLE VIEW) */}
+                            {Number(item.stok) - Number(item.stok_tersedia) > 0 && (
+                              <button 
+                                onClick={() => { setTraceId(item.id); setTraceName(item.nama_barang); setShowTrace(true); }}
+                                className="px-3 py-2 flex flex-col items-center min-w-[60px] bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 transition-colors"
+                              >
+                                <span className="text-[13px] font-black text-amber-500">{Number(item.stok) - Number(item.stok_tersedia)}</span>
+                                <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest mt-0.5 tracking-tighter">Pesan</span>
+                              </button>
+                            )}
+                            <div className="px-3 py-2 flex flex-col items-center min-w-[60px] bg-white/40 dark:bg-slate-900/40">
                               <span className="text-[13px] font-black text-slate-500">{item.stok}</span>
                               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 tracking-tighter">Fisik</span>
                             </div>
@@ -296,10 +306,13 @@ export default function Barang() {
                         {/* RESERVED INFO */}
                         {Number(item.stok) - Number(item.stok_tersedia) > 0 && (
                           <>
-                            <div className="flex flex-col items-center">
-                              <span className="text-[14px] font-black text-amber-500">{Number(item.stok) - Number(item.stok_tersedia)}</span>
+                            <button 
+                              onClick={() => { setTraceId(item.id); setTraceName(item.nama_barang); setShowTrace(true); }}
+                              className="flex flex-col items-center hover:scale-110 transition-transform cursor-pointer group/trace"
+                            >
+                              <span className="text-[14px] font-black text-amber-500 group-hover/trace:underline">{Number(item.stok) - Number(item.stok_tersedia)}</span>
                               <span className="text-[8px] font-bold text-amber-500 uppercase tracking-widest mt-0.5">Pesan</span>
-                            </div>
+                            </button>
                             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 opacity-50"></div>
                           </>
                         )}
