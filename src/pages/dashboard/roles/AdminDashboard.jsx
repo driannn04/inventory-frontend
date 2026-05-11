@@ -163,7 +163,7 @@ export default function AdminDashboard() {
                   </div>
                </div>
                <div className="h-[300px] w-full min-w-0">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                      <AreaChart data={trendData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                         <defs>
                            <linearGradient id="colorMasuk" x1="0" y1="0" x2="0" y2="1">
@@ -198,7 +198,7 @@ export default function AdminDashboard() {
                   </div>
                </div>
                <div className="h-[220px] w-full relative min-w-0">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                      <RePieChart>
                         <Pie data={pieData} cx="50%" cy="50%" innerRadius={65} outerRadius={85} paddingAngle={8} dataKey="value">
                            {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke="none" />)}
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                      </div>
                   </div>
                   <div className="h-[230px] min-w-0">
-                     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                     <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <BarChart data={top_barang_keluar} layout="vertical" margin={{ left: -20, right: 20 }}>
                            <XAxis type="number" hide />
                            <YAxis dataKey="nama_barang" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 'bold' }} width={100} />

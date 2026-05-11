@@ -20,13 +20,14 @@ import {
   Settings,
   User,
   CircleHelp,
-  PlusCircle
+  PlusCircle,
+  X
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getRole, getUser } from "../../utils/auth";
 import { useMemo } from "react";
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const [openStok, setOpenStok] = useState(false);
   const [openPengajuan, setOpenPengajuan] = useState(false);
   const [orgName, setOrgName] = useState("PDAM Inv");
@@ -141,29 +142,37 @@ export default function Sidebar() {
     <div className="w-64 h-screen bg-slate-800 border-r border-slate-700 flex flex-col fixed shadow-sm transition-colors duration-300 z-50">
 
       {/* HEADER / LOGO */}
-      <div className="pt-2 pb-6 px-4 flex items-center justify-center border-b border-transparent">
-        <img
-          src="/logo-premium.png"
-          alt="PDAM Tirta Pakuan"
-          className="h-32 w-auto object-contain transition-transform hover:scale-105 duration-300"
-          onError={(e) => {
-            e.target.style.display = 'none';
-            e.target.nextSibling.style.display = 'flex';
-          }}
-        />
-        {/* Fallback if image not found */}
-        <div className="hidden items-center gap-2" style={{ display: 'none' }}>
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-md">
-            <ArrowDownUp size={16} className="text-white font-bold" />
+      <div className="pt-2 pb-6 px-4 flex items-center justify-between border-b border-transparent">
+        <div className="flex justify-center flex-1">
+          <img
+            src="/logo-premium.png"
+            alt="PDAM Tirta Pakuan"
+            className="h-32 w-auto object-contain transition-transform hover:scale-105 duration-300"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          {/* Fallback if image not found */}
+          <div className="hidden items-center gap-2" style={{ display: 'none' }}>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-md">
+              <ArrowDownUp size={16} className="text-white font-bold" />
+            </div>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-700 to-blue-600 tracking-tight">
+              {orgName.includes(' ') ? (
+                <>
+                  {orgName.split(' ')[0]} <span className="text-slate-800 dark:text-white">{orgName.split(' ').slice(1).join(' ')}</span>
+                </>
+              ) : orgName}
+            </span>
           </div>
-          <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-700 to-blue-600 tracking-tight">
-            {orgName.includes(' ') ? (
-              <>
-                {orgName.split(' ')[0]} <span className="text-slate-800 dark:text-white">{orgName.split(' ').slice(1).join(' ')}</span>
-              </>
-            ) : orgName}
-          </span>
         </div>
+        <button 
+          onClick={onClose}
+          className="p-2 -mr-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl lg:hidden transition-colors"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar pb-32">

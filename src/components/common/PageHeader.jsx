@@ -11,10 +11,10 @@
 
 export default function PageHeader({ icon, title, subtitle, actions, badge }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] px-8 py-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-6">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] px-5 py-5 md:px-8 md:py-6 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 overflow-hidden">
       
       {/* LEFT: Icon + Text */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4 md:gap-5 w-full md:w-auto flex-wrap">
         {icon && (
           <div className="p-3.5 bg-gradient-to-br from-blue-600 to-sky-500 text-white rounded-2xl shadow-lg shadow-blue-500/25 shrink-0">
             {icon}
@@ -42,7 +42,7 @@ export default function PageHeader({ icon, title, subtitle, actions, badge }) {
 
       {/* RIGHT: Actions */}
       {actions && (
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-3 w-full md:w-auto shrink-0 mt-2 md:mt-0 hide-scrollbar">
           {actions}
         </div>
       )}

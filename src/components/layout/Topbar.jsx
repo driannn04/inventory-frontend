@@ -15,7 +15,7 @@ import {
   Moon,
   Search,
   User,
-
+  Menu,
   LogOut,
   ChevronDown,
   ClipboardCheck
@@ -23,7 +23,7 @@ import {
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
 
   // âœ… FIX UTAMA: useMemo agar object user tidak dibuat ulang tiap render
   // Tanpa ini, [user] di useEffect selalu anggap "berubah" â†’ socket spam
@@ -213,10 +213,18 @@ export default function Topbar() {
   };
 
   return (
-    <div className={`h-[72px] backdrop-blur-2xl border-b flex items-center justify-between px-6 relative z-40 shadow-sm transition-all duration-300 ${isDark ? 'bg-slate-950/80 border-slate-800 text-white' : 'bg-white/40 border-blue-100/50 text-slate-800'}`}>
+    <div className={`h-[72px] backdrop-blur-2xl border-b flex items-center justify-between px-4 md:px-6 relative z-40 shadow-sm transition-all duration-300 ${isDark ? 'bg-slate-950/80 border-slate-800 text-white' : 'bg-white/40 border-blue-100/50 text-slate-800'}`}>
 
       {/* LEFT: BREADCRUMBS & SEARCH */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4 md:gap-6">
+
+        {/* Hamburger Menu (Mobile Only) */}
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden transition-colors"
+        >
+          <Menu size={24} />
+        </button>
 
         {/* Dynamic Breadcrumbs */}
         <div className="hidden md:flex items-center gap-2 text-sm font-semibold capitalize pointer-events-none">
@@ -230,16 +238,16 @@ export default function Topbar() {
         {/* Fake Search Global Trigger */}
         <button
           onClick={() => window.dispatchEvent(new Event('openCommandPalette'))}
-          className="flex items-center gap-3 w-56 md:w-72 px-3.5 py-2 bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-blue-100 dark:border-slate-700/50 rounded-xl text-sm text-slate-400 transition-all shadow-sm group"
+          className="flex items-center justify-center md:justify-start gap-3 w-10 h-10 md:w-56 lg:w-72 md:h-auto md:px-3.5 md:py-2 bg-white/50 hover:bg-white dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-blue-100 dark:border-slate-700/50 rounded-xl text-sm text-slate-400 transition-all shadow-sm group"
         >
-          <Search size={14} className="text-slate-400 group-hover:text-cyan-500 transition-colors" />
-          <span className="flex-1 text-left text-[13px] font-medium">Cari menu/data...</span>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-500 dark:text-slate-400 font-mono shadow-sm">Ctrl+K</kbd>
+          <Search size={16} className="text-slate-400 group-hover:text-cyan-500 transition-colors shrink-0" />
+          <span className="hidden md:block flex-1 text-left text-[13px] font-medium">Cari menu/data...</span>
+          <kbd className="hidden lg:block px-1.5 py-0.5 text-[10px] font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded text-slate-500 dark:text-slate-400 font-mono shadow-sm shrink-0">Ctrl+K</kbd>
         </button>
 
       </div>
 
-      <div className="flex items-center gap-5 relative">
+      <div className="flex items-center gap-2 md:gap-5 relative">
 
         {/* DARK MODE TOGGLE */}
         <button
