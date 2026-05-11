@@ -1,0 +1,11 @@
+[build]
+  # Perintah untuk mem-build aplikasi
+  command = "npm run build"
+  # Folder hasil build yang akan di-publish
+  publish = "dist"
+
+[[redirects]]
+  # Mengarahkan semua request ke index.html (Penting untuk aplikasi React/SPA)
+  from = "/*"
+  to = "/index.html"
+  status = 200
