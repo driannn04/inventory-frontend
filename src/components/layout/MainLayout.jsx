@@ -26,14 +26,14 @@ export default function MainLayout({ children }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen w-full transition-all duration-300">
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen min-w-0 transition-all duration-300">
 
         {/* Topbar */}
         <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
 
         {/* Page Content with Scaling & Spacing */}
-        <div className="flex-1 p-4 md:p-6 lg:p-12 transition-all overflow-x-hidden max-w-[100vw] lg:max-w-none">
-          <div className="max-w-[1500px] mx-auto w-full">
+        <div className="flex-1 p-4 md:p-6 lg:p-8 transition-all overflow-x-hidden">
+          <div className="w-full">
             {children}
           </div>
         </div>

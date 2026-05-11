@@ -34,7 +34,7 @@ export default function Barang() {
   const [showTrace, setShowTrace] = useState(false);
   const [traceId, setTraceId] = useState(null);
   const [traceName, setTraceName] = useState("");
-  const itemsPerPage = viewMode === "card" ? 12 : 8;
+  const itemsPerPage = 10; 
 
   useEffect(() => { loadBarang(); }, []);
 
@@ -214,19 +214,19 @@ export default function Barang() {
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                   {currentBarang.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                      <td className="px-8 py-4 text-center">
+                      <td className="px-8 py-3 text-center">
                         <div className="flex justify-center">
-                          <ImagePreview src={item.foto ? `${UPLOAD_URL}/${item.foto}` : "/no-image.png"} alt={item.nama_barang} size="md" />
+                          <ImagePreview src={item.foto ? `${UPLOAD_URL}/${item.foto}` : "/no-image.png"} alt={item.nama_barang} size="sm" />
                         </div>
                       </td>
-                      <td className="px-8 py-4">
+                      <td className="px-8 py-3">
                         <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{item.nama_barang}</p>
                         <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5 tracking-widest">{item.kode_barang}</p>
                       </td>
-                      <td className="px-8 py-4 text-center">
+                      <td className="px-8 py-3 text-center">
                         <span className="text-[10px] font-black text-slate-500 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-xl uppercase tracking-widest">{item.nama_kategori}</span>
                       </td>
-                      <td className="px-8 py-4">
+                      <td className="px-8 py-3">
                         <div className="flex justify-center">
                           <div className="inline-flex divide-x divide-slate-100 dark:divide-slate-700 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden shadow-sm">
                             <div className="px-3 py-2 flex flex-col items-center min-w-[60px]">
@@ -251,9 +251,9 @@ export default function Barang() {
                         </div>
                       </td>
                       {role !== 'staff' && (
-                        <td className="px-8 py-4 text-center text-[10px] font-bold text-slate-400 uppercase">{item.lokasi_rak || "-"}</td>
+                        <td className="px-8 py-3 text-center text-[10px] font-bold text-slate-400 uppercase">{item.lokasi_rak || "-"}</td>
                       )}
-                      <td className="px-8 py-4">
+                      <td className="px-8 py-3">
                         <div className="flex justify-center items-center gap-2">
                            {(role === 'admin' || role === 'gudang') && (
                             <>
@@ -272,7 +272,7 @@ export default function Barang() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <AnimatePresence>
               {currentBarang.map((item) => (
                 <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }} key={item.id}
@@ -349,10 +349,51 @@ export default function Barang() {
         {/* PAGINATION */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 mt-8 shadow-sm">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">HAL {currentPage} DARI {totalPages}</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Menampilkan {indexFirst + 1}–{Math.min(indexLast, filteredBarang.length)} dari {filteredBarang.length} data
+            </span>
             <div className="flex gap-2">
-              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 disabled:opacity-30 active:scale-95 transition-all"><ChevronLeft size={16} /></button>
-              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 disabled:opacity-30 active:scale-95 transition-all"><ChevronRight size={16} /></button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 disabled:opacity-30 active:scale-95 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <div className="hidden sm:flex px-2 gap-1.5 items-center">
+                {(() => {
+                  const pages = [];
+                  for (let i = 1; i <= totalPages; i++) {
+                    if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                      pages.push(i);
+                    } else if (i === currentPage - 2 || i === currentPage + 2) {
+                      pages.push("...");
+                    }
+                  }
+                  return pages.filter((v, i, a) => a.indexOf(v) === i).map((p, i) => (
+                    p === "..." ? (
+                      <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-8 h-8 rounded-lg text-[10px] font-black uppercase transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                      >
+                        {p}
+                      </button>
+                    )
+                  ));
+                })()}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 disabled:opacity-30 active:scale-95 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         )}

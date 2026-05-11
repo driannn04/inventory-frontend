@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import { getAuditLogs } from "../../services/auditService";
-import { History, User, Search, Filter, ShieldCheck, Clock, RefreshCw, Activity, X, ChevronLeft, ChevronRight, Eye, Hash, FileText, Database, Shield, PackagePlus, PackageMinus, Edit, Trash2, CheckCircle } from "lucide-react";
+import { getAuditLogs, exportAuditLogs } from "../../services/auditService";
+import { History, User, Search, Filter, ShieldCheck, Clock, RefreshCw, Activity, X, ChevronLeft, ChevronRight, Eye, Hash, FileText, Database, Shield, PackagePlus, PackageMinus, Edit, Trash2, CheckCircle, Globe, Monitor, Code, FileDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion"; // Audit log activity component
 import PageHeader from "../../components/common/PageHeader";
 
@@ -40,6 +40,7 @@ const formatRelativeTime = (dateStr) => {
 export default function ActivityLog() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAksi, setFilterAksi] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,6 +54,26 @@ export default function ActivityLog() {
     try { const res = await getAuditLogs(); setLogs(res.data); setCurrentPage(1); }
     catch (err) { console.error("Gagal memuat log:", err); }
     finally { setLoading(false); }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await exportAuditLogs();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Audit_Log_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Gagal mengekspor data");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const filteredLogs = logs.filter(log => {
@@ -113,6 +134,20 @@ export default function ActivityLog() {
               <option value="LOGIN">Login</option>
             </select>
           </div>
+
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+          >
+            {exporting ? (
+              <RefreshCw size={14} className="animate-spin" />
+            ) : (
+              <FileDown size={14} />
+            )}
+            {exporting ? "Mengekspor..." : "Export Excel"}
+          </button>
+
           {(searchTerm || filterAksi !== "Semua") && (
             <button onClick={() => { setSearchTerm(""); setFilterAksi("Semua"); }} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-rose-500 transition-all">
               <X size={15} />
@@ -272,7 +307,7 @@ export default function ActivityLog() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 30 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-lg max-h-[85vh] overflow-y-auto"
+                className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header */}
@@ -294,64 +329,129 @@ export default function ActivityLog() {
                 </div>
 
                 {/* Modal Body */}
-                <div className="px-8 py-6 space-y-1">
-                  <DetailRow
-                    icon={<User size={16} />}
-                    label="Pengguna"
-                    value={
-                      <div className="flex items-center gap-2">
-                        <span>{selectedLog.nama_user}</span>
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${config.cls}`}>{selectedLog.role}</span>
-                      </div>
-                    }
-                    color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
-                  />
-                  <DetailRow
-                    icon={<Activity size={16} />}
-                    label="Jenis Aksi"
-                    value={
-                      <span className={`text-[11px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest inline-flex items-center gap-1.5 ${config.cls}`}>
-                        {config.icon} {config.label}
-                      </span>
-                    }
-                    color="bg-amber-50 dark:bg-amber-900/30 text-amber-500"
-                  />
-                  <DetailRow
-                    icon={<Database size={16} />}
-                    label="Tipe Data"
-                    value={selectedLog.tipe_data || "Umum"}
-                    color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
-                  />
-                  {selectedLog.target_id && (
+                <div className="px-8 py-6 overflow-y-auto custom-scrollbar flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
+                    <div className="space-y-1">
+                      <DetailRow
+                        icon={<User size={16} />}
+                        label="Pengguna"
+                        value={
+                          <div className="flex items-center gap-2">
+                            <span>{selectedLog.nama_user}</span>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-widest ${config.cls}`}>{selectedLog.role}</span>
+                          </div>
+                        }
+                        color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
+                      />
+                      <DetailRow
+                        icon={<Activity size={16} />}
+                        label="Jenis Aksi"
+                        value={
+                          <span className={`text-[11px] font-black px-3 py-1.5 rounded-xl uppercase tracking-widest inline-flex items-center gap-1.5 ${config.cls}`}>
+                            {config.icon} {config.label}
+                          </span>
+                        }
+                        color="bg-amber-50 dark:bg-amber-900/30 text-amber-500"
+                      />
+                      <DetailRow
+                        icon={<Database size={16} />}
+                        label="Tipe Data"
+                        value={selectedLog.tipe_data || "Umum"}
+                        color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
+                      />
+                      {selectedLog.target_id && (
+                        <DetailRow
+                          icon={<Hash size={16} />}
+                          label="Target ID"
+                          value={`#${selectedLog.target_id}`}
+                          color="bg-slate-50 dark:bg-slate-800 text-slate-400"
+                        />
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <DetailRow
+                        icon={<Clock size={16} />}
+                        label="Waktu Aktivitas"
+                        value={
+                          <div>
+                            <p className="text-sm font-bold">{new Date(selectedLog.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
+                            <p className="text-[11px] text-slate-400 font-bold mt-0.5">{new Date(selectedLog.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                          </div>
+                        }
+                        color="bg-sky-50 dark:bg-sky-900/30 text-sky-500"
+                      />
+                      {selectedLog.ip_address && (
+                        <DetailRow
+                          icon={<Globe size={16} />}
+                          label="IP Address"
+                          value={selectedLog.ip_address}
+                          color="bg-slate-50 dark:bg-slate-800 text-slate-400"
+                        />
+                      )}
+                      {selectedLog.user_agent && (
+                        <DetailRow
+                          icon={<Monitor size={16} />}
+                          label="Perangkat / Browser"
+                          value={<span className="text-[11px] leading-tight block">{selectedLog.user_agent}</span>}
+                          color="bg-slate-50 dark:bg-slate-800 text-slate-400"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
                     <DetailRow
-                      icon={<Hash size={16} />}
-                      label="Target ID"
-                      value={`#${selectedLog.target_id}`}
-                      color="bg-slate-50 dark:bg-slate-800 text-slate-400"
+                      icon={<FileText size={16} />}
+                      label="Keterangan Lengkap"
+                      value={selectedLog.keterangan}
+                      color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
                     />
-                  )}
-                  <DetailRow
-                    icon={<FileText size={16} />}
-                    label="Keterangan Lengkap"
-                    value={selectedLog.keterangan}
-                    color="bg-blue-50 dark:bg-blue-900/30 text-blue-500"
-                  />
-                  <DetailRow
-                    icon={<Clock size={16} />}
-                    label="Waktu Aktivitas"
-                    value={
-                      <div>
-                        <p className="text-sm font-bold">{new Date(selectedLog.created_at).toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
-                        <p className="text-[11px] text-slate-400 font-bold mt-0.5">{new Date(selectedLog.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</p>
+                  </div>
+
+                  {/* COMPARISON DATA (IF ANY) */}
+                  {(selectedLog.data_lama || selectedLog.data_baru) && (
+                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Code size={18} className="text-blue-500" />
+                        <h4 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Detail Perubahan Data</h4>
                       </div>
-                    }
-                    color="bg-sky-50 dark:bg-sky-900/30 text-sky-500"
-                  />
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {selectedLog.data_lama && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between px-1">
+                              <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Kondisi Sebelumnya</p>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight italic">Old State</span>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-rose-50/20 dark:bg-rose-900/10 border border-rose-100/50 dark:border-rose-900/20 max-h-[350px] overflow-auto custom-scrollbar">
+                              <pre className="text-[11px] font-mono text-rose-700 dark:text-rose-400 leading-relaxed">
+                                {JSON.stringify(JSON.parse(selectedLog.data_lama), null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                        {selectedLog.data_baru && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between px-1">
+                              <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Kondisi Terbaru</p>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight italic">New State</span>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-emerald-50/20 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-900/20 max-h-[350px] overflow-auto custom-scrollbar">
+                              <pre className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                                {JSON.stringify(JSON.parse(selectedLog.data_baru), null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Waktu Relatif */}
-                  <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-100 dark:border-slate-700 text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Waktu Relatif</p>
-                    <p className="text-lg font-black text-slate-800 dark:text-white">{formatRelativeTime(selectedLog.created_at)}</p>
+                  <div className="mt-8 p-5 rounded-3xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-100 dark:border-slate-700 text-center">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Time Stamp</p>
+                    <p className="text-xl font-black text-slate-800 dark:text-white tracking-tight">{formatRelativeTime(selectedLog.created_at)}</p>
                   </div>
                 </div>
               </motion.div>
