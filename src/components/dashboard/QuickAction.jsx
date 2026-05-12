@@ -41,7 +41,7 @@ export default function QuickAction() {
   ];
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm h-full">
       <div className="flex items-center justify-between mb-6">
         <div>
            <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Aksi Cepat</h3>

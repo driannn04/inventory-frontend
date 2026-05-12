@@ -127,11 +127,51 @@ export default function StokMasuk() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pilih Barang</label>
-                <select name="barang_id" value={form.barang_id} onChange={handleChange} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all">
-                  <option value="">-- Pilih --</option>
-                  {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang}</option>)}
+                <select name="barang_id" value={form.barang_id} onChange={handleChange} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-bold text-slate-700 dark:text-white">
+                  <option value="">-- Pilih Barang --</option>
+                  {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang} ({b.kode_barang})</option>)}
                 </select>
               </div>
+
+              {/* LIVE PREVIEW CARD */}
+              <AnimatePresence mode="wait">
+                {selectedBarang && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0, y: -10 }}
+                    animate={{ opacity: 1, height: "auto", y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -10 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex gap-4 items-center mb-2">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
+                        <img 
+                          src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} 
+                          alt="preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                           <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.kode_barang}</span>
+                           <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.nama_kategori}</span>
+                        </div>
+                        <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase truncate mb-2">{selectedBarang.nama_barang}</h4>
+                        <div className="flex items-center gap-3">
+                           <div className="flex flex-col">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Stok Saat Ini</span>
+                              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{selectedBarang.stok} <span className="text-[9px] text-slate-400">{selectedBarang.satuan}</span></span>
+                           </div>
+                           <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                           <div className="flex flex-col">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Lokasi</span>
+                              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{selectedBarang.lokasi_rak || "-"}</span>
+                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Jumlah</label>
                 <input type="number" name="jumlah" value={form.jumlah} onChange={handleChange} placeholder="0" className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" />

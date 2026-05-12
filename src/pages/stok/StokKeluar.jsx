@@ -162,21 +162,52 @@ export default function StokKeluar() {
               </select>
             </div>
 
-            {selectedBarang && (
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stok Tersedia</span>
-                  <span className={`text-xl font-black ${selectedBarang.stok <= selectedBarang.stok_minimum ? "text-rose-600" : "text-emerald-600"}`}>
-                    {selectedBarang.stok} <span className="text-xs font-bold text-slate-400">{selectedBarang.satuan}</span>
-                  </span>
-                </div>
-                {selectedBarang.stok <= selectedBarang.stok_minimum && (
-                  <p className="text-[10px] text-rose-500 mt-2 flex items-center gap-1.5 font-bold">
-                    <AlertCircle size={11} /> Stok mendekati batas minimum
-                  </p>
-                )}
-              </div>
-            )}
+            {/* LIVE PREVIEW CARD */}
+            <AnimatePresence mode="wait">
+              {selectedBarang && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0, y: -10 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -10 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex gap-4 items-center mb-2">
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
+                      <img 
+                        src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} 
+                        alt="preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                         <span className="px-2 py-0.5 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.kode_barang}</span>
+                         <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.nama_kategori}</span>
+                      </div>
+                      <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase truncate mb-2">{selectedBarang.nama_barang}</h4>
+                      <div className="flex items-center gap-3">
+                         <div className="flex flex-col">
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Stok Tersedia</span>
+                            <span className={`text-xs font-black ${selectedBarang.stok <= selectedBarang.stok_minimum ? "text-rose-600" : "text-emerald-600"}`}>
+                              {selectedBarang.stok} <span className="text-[9px] text-slate-400">{selectedBarang.satuan}</span>
+                            </span>
+                         </div>
+                         <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
+                         <div className="flex flex-col">
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Lokasi Rak</span>
+                            <span className="text-xs font-black text-slate-700 dark:text-slate-300">{selectedBarang.lokasi_rak || "-"}</span>
+                         </div>
+                      </div>
+                      {selectedBarang.stok <= selectedBarang.stok_minimum && (
+                        <p className="text-[8px] text-rose-500 mt-2 flex items-center gap-1 font-bold animate-pulse">
+                          <AlertCircle size={10} /> Stok Kritis!
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Jumlah Keluar *</label>

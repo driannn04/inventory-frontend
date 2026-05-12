@@ -4,7 +4,7 @@ import { Plus, Search, Pencil, Trash2, QrCode, Download, ScrollText, Package, Re
 import BarangModal from "../../components/modals/BarangModal";
 import { getBarang, deleteBarang, getQR, downloadQR } from "../../services/barangService";
 import { UPLOAD_URL } from "../../utils/api";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { showSuccess, showError, confirmDelete } from "../../utils/swalHelper";
 import { getRole } from "../../utils/auth";
 import PageHeader from "../../components/common/PageHeader";
@@ -17,11 +17,12 @@ import EmptyState from "../../components/common/EmptyState";
 export default function Barang() {
   const role = getRole();
   const navigate = useNavigate();
+  const location = useLocation();
   const [openModal, setOpenModal] = useState(false);
   const [barang, setBarang] = useState([]);
   const [selectedBarang, setSelectedBarang] = useState(null);
   const [search, setSearch] = useState("");
-  const [filterKategori, setFilterKategori] = useState("");
+  const [filterKategori, setFilterKategori] = useState(location.state?.category || "");
   const [filterStatus, setFilterStatus] = useState("all");
   const [viewMode, setViewMode] = useState((role === 'staff' || role === 'asisten_manager' || role === 'manager') ? "card" : "table");
   const [qrModal, setQrModal] = useState(false);
@@ -36,7 +37,13 @@ export default function Barang() {
   const [traceName, setTraceName] = useState("");
   const itemsPerPage = 10; 
 
-  useEffect(() => { loadBarang(); }, []);
+  useEffect(() => { 
+    loadBarang();
+    // Bersihkan state setelah digunakan agar tidak nyangkut saat refresh
+    if (location.state?.category) {
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   const loadBarang = async () => {
     setLoading(true);

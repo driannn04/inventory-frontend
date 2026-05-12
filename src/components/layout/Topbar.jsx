@@ -94,10 +94,11 @@ export default function Topbar({ onMenuClick }) {
     if (socketRef.current) return;
 
     const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:5000", {
-      transports: ["websocket"],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
-      timeout: 5000
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 5000,
+      timeout: 10000
     });
 
     socketRef.current = socket;

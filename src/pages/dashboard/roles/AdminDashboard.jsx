@@ -3,7 +3,7 @@ import api, { UPLOAD_URL } from "../../../utils/api";
 import QuickAction from "../../../components/dashboard/QuickAction";
 import StatCard from "../../../components/dashboard/StatCard";
 import { TableSkeleton } from "../../../components/common/Skeleton";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
    Package,
    Boxes,
@@ -17,7 +17,8 @@ import {
    AlertTriangle,
    TrendingUp,
    Plus,
-   ArrowRightLeft
+   ArrowRightLeft,
+   X
 } from "lucide-react";
 import {
    AreaChart,
@@ -39,11 +40,14 @@ const PIE_COLORS = ["#06b6d4", "#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 export default function AdminDashboard() {
    const [data, setData] = useState(null);
    const [loading, setLoading] = useState(true);
-   
+
    // Tiga filter mandiri untuk setiap bagian
    const [chartRange, setChartRange] = useState("year");
    const [pieRange, setPieRange] = useState("year");
    const [topRange, setTopRange] = useState("year");
+
+   const [selectedBarang, setSelectedBarang] = useState(null);
+   const [showDetail, setShowDetail] = useState(false);
 
    useEffect(() => {
       loadData();
@@ -62,6 +66,12 @@ export default function AdminDashboard() {
       } finally {
          setLoading(false);
       }
+   };
+
+   // Fungsi untuk membuka detail
+   const openDetail = (item) => {
+      setSelectedBarang(item);
+      setShowDetail(true);
    };
 
    if (loading) return (
@@ -225,53 +235,121 @@ export default function AdminDashboard() {
             </div>
          </div>
 
-         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-8">
-                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-xl"><TrendingDown size={16} /></div>
-                        <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Top Mutasi</h3>
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* 1. TOP MUTASI */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-[500px]">
+               <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                     <div className="p-2.5 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-[1rem] shadow-sm">
+                        <TrendingDown size={18} />
                      </div>
-                     <div className="flex bg-slate-50 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-100 dark:border-slate-700">
-                        {["7d", "30d", "year"].map((t) => (
-                           <button key={t} onClick={() => setTopRange(t)}
-                              className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${topRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
-                              {t.toUpperCase()}
-                           </button>
-                        ))}
+                     <div>
+                        <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest leading-none">Top Mutasi</h3>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Barang paling sering keluar</p>
                      </div>
                   </div>
-                  <div className="h-[230px] min-w-0">
-                     <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                        <BarChart data={top_barang_keluar} layout="vertical" margin={{ left: -20, right: 20 }}>
-                           <XAxis type="number" hide />
-                           <YAxis dataKey="nama_barang" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: '#94a3b8', fontWeight: 'bold' }} width={100} />
-                           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '20px', border: 'none' }} />
-                           <Bar dataKey="total_keluar" fill="#06b6d4" radius={[0, 10, 10, 0]} barSize={12} />
-                        </BarChart>
-                     </ResponsiveContainer>
-                  </div>
-               </div>
-               <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col">
-                  <div className="flex items-center gap-3 mb-8">
-                     <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-xl"><Plus size={16} /></div>
-                     <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Katalog Terbaru</h3>
-                  </div>
-                  <div className="space-y-4 flex-1">
-                     {barang_terbaru?.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between group">
-                           <div className="flex flex-col gap-0.5 min-w-0">
-                              <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase truncate tracking-tight">{item.nama_barang}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.kode_barang}</span>
-                           </div>
-                           <span className="text-[9px] font-black text-slate-400 border border-slate-100 dark:border-slate-800 px-2 py-0.5 rounded-md group-hover:bg-slate-50 transition-colors uppercase">{item.satuan}</span>
-                        </div>
+                  <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
+                     {["7d", "30d", "year"].map((t) => (
+                        <button key={t} onClick={() => setTopRange(t)}
+                           className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${topRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}>
+                           {t.toUpperCase()}
+                        </button>
                      ))}
                   </div>
                </div>
+
+               <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  {top_barang_keluar?.length > 0 ? (
+                     top_barang_keluar.map((item, index) => {
+                        const maxVal = top_barang_keluar[0].total_keluar;
+                        const percentage = (item.total_keluar / maxVal) * 100;
+                        const rankColors = [
+                           "from-amber-400 to-orange-500 shadow-amber-500/20",
+                           "from-slate-300 to-slate-400 shadow-slate-400/20",
+                           "from-amber-600 to-amber-700 shadow-amber-700/20",
+                        ];
+
+                        return (
+                           <div key={index} className="group relative cursor-pointer" onClick={() => openDetail(item)}>
+                              <div className="flex items-center justify-between mb-2">
+                                 <div className="flex items-center gap-3 min-w-0">
+                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0 shadow-lg 
+                                       ${index < 3 ? `bg-gradient-to-br ${rankColors[index]}` : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>
+                                       {index + 1}
+                                    </div>
+                                    <span className="text-[11px] font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight truncate group-hover:text-blue-600 transition-colors">
+                                       {item.nama_barang}
+                                    </span>
+                                 </div>
+                                 <div className="flex items-center gap-1.5 ml-2">
+                                    <span className="text-[12px] font-black text-slate-800 dark:text-white">{item.total_keluar}</span>
+                                    <span className="text-[8px] font-bold text-slate-400 uppercase">Unit</span>
+                                 </div>
+                              </div>
+                              <div className="h-1.5 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
+                                 <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${percentage}%` }}
+                                    transition={{ duration: 1, ease: "easeOut" }}
+                                    className={`h-full rounded-full bg-gradient-to-r ${index < 3 ? rankColors[index].split(' shadow-')[0] : "from-blue-500 to-sky-400"}`}
+                                 />
+                              </div>
+                           </div>
+                        );
+                     })
+                  ) : (
+                     <div className="h-full flex flex-col items-center justify-center py-10 opacity-40">
+                        <TrendingDown size={32} className="text-slate-300 mb-3" />
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Belum ada data mutasi</p>
+                     </div>
+                  )}
+               </div>
             </div>
-            <div className="lg:col-span-4 h-full">
+
+            {/* 2. KATALOG TERBARU */}
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-[500px]">
+               <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-[1rem] shadow-sm">
+                     <Plus size={18} />
+                  </div>
+                  <div>
+                     <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest leading-none">Katalog Terbaru</h3>
+                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Inventaris terbaru</p>
+                  </div>
+               </div>
+               <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  {barang_terbaru?.length > 0 ? (
+                     barang_terbaru.map((item, i) => (
+                        <div key={i} onClick={() => openDetail(item)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-100 dark:hover:border-slate-700/50 cursor-pointer">
+                           <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center border border-slate-200/50 dark:border-slate-700 shrink-0">
+                              {item.foto ? (
+                                 <img src={`${UPLOAD_URL}/${item.foto}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              ) : (
+                                 <Package className="text-slate-300" size={16} />
+                              )}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase truncate leading-tight tracking-tight">
+                                 {item.nama_barang}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{item.kode_barang}</span>
+                                 <span className="text-[8px] font-black text-emerald-500 uppercase">{item.stok} {item.satuan}</span>
+                              </div>
+                           </div>
+                        </div>
+                     ))
+                  ) : (
+                     <div className="h-full flex flex-col items-center justify-center py-10 opacity-40">
+                        <Package size={32} className="text-slate-300 mb-3" />
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kosong</p>
+                     </div>
+                  )}
+               </div>
+            </div>
+
+            {/* 3. AKSI CEPAT */}
+            <div className="h-[500px]">
                <QuickAction />
             </div>
          </div>
@@ -304,7 +382,10 @@ export default function AdminDashboard() {
                                     </span>
                                  </td>
                                  <td className="px-8 py-5 text-right">
-                                    <button className="text-[10px] font-black uppercase text-blue-600 tracking-widest hover:underline flex items-center gap-1 justify-end ml-auto">
+                                    <button 
+                                       onClick={() => navigate(`/stok-masuk?barang_id=${item.id}`)}
+                                       className="text-[10px] font-black uppercase text-blue-600 tracking-widest hover:underline flex items-center gap-1 justify-end ml-auto"
+                                    >
                                        Restock <ArrowUpRight size={12} />
                                     </button>
                                  </td>
@@ -403,6 +484,83 @@ export default function AdminDashboard() {
                </table>
             </div>
          </div>
+
+         {/* MODAL PREVIEW DETAIL BARANG */}
+         <AnimatePresence>
+            {showDetail && selectedBarang && (
+               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                  <motion.div 
+                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
+                     onClick={() => setShowDetail(false)}
+                  />
+                  <motion.div 
+                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                     animate={{ scale: 1, opacity: 1, y: 0 }}
+                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                     className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 dark:border-slate-800"
+                  >
+                     {/* Foto Header */}
+                     <div className="h-64 bg-slate-100 dark:bg-slate-800 relative overflow-hidden group">
+                        {selectedBarang.foto ? (
+                           <img src={`${UPLOAD_URL}/${selectedBarang.foto}`} className="w-full h-full object-cover" />
+                        ) : (
+                           <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                              <Package size={64} />
+                              <p className="text-[10px] font-black uppercase mt-4 tracking-widest">Tidak ada foto</p>
+                           </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                        <div className="absolute bottom-6 left-8 right-8">
+                           <span className="px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg mb-2 inline-block">
+                              {selectedBarang.kategori || "Tanpa Kategori"}
+                           </span>
+                           <h3 className="text-xl font-black text-white uppercase tracking-tight leading-none">
+                              {selectedBarang.nama_barang}
+                           </h3>
+                        </div>
+                        <button onClick={() => setShowDetail(false)} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl transition-all">
+                           <X size={20} />
+                        </button>
+                     </div>
+
+                     {/* Info Content */}
+                     <div className="p-8 space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Kode Barang</p>
+                              <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{selectedBarang.kode_barang}</p>
+                           </div>
+                           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lokasi Rak</p>
+                              <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{selectedBarang.lokasi_rak || "Belum Diatur"}</p>
+                           </div>
+                        </div>
+
+                        <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-6 rounded-[2rem] border border-blue-100/50 dark:border-blue-800">
+                           <div>
+                              <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-1">Stok Real-Time</p>
+                              <h4 className="text-3xl font-black text-blue-600 leading-none">{selectedBarang.stok} <span className="text-sm uppercase">{selectedBarang.satuan}</span></h4>
+                           </div>
+                           <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${selectedBarang.stok <= 5 ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}>
+                              {selectedBarang.stok <= 5 ? 'Stok Kritis' : 'Stok Aman'}
+                           </div>
+                        </div>
+
+                        <button 
+                           onClick={() => {
+                              setShowDetail(false);
+                              navigate('/barang');
+                           }}
+                           className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                        >
+                           Buka Di Katalog Lengkap
+                        </button>
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
       </motion.div>
    );
 }

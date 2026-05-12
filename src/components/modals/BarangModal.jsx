@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Plus, Check, RefreshCw } from "lucide-react";
 import { createBarang, updateBarang } from "../../services/barangService";
-import { getKategori } from "../../services/kategoriService";
+import { getKategori, createKategori } from "../../services/kategoriService";
 import { getSatuan } from "../../services/satuanService";
 import { UPLOAD_URL } from "../../utils/api";
 import { showSuccess, showError } from "../../utils/swalHelper";
@@ -23,6 +23,11 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
   const [satuanList, setSatuanList] = useState([]);
   const [isOtherSatuan, setIsOtherSatuan] = useState(false);
   const [otherValue, setOtherValue] = useState("");
+
+  // Quick Add Category State
+  const [isAddingCat, setIsAddingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [isSavingCat, setIsSavingCat] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,6 +86,24 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
       setOtherValue("");
     }
   }, [editData, open, satuanList]);
+
+  const handleQuickAddCat = async () => {
+    if (!newCatName.trim()) return;
+    setIsSavingCat(true);
+    try {
+      const res = await createKategori({ nama_kategori: newCatName });
+      const newCat = { id: res.data.id, nama_kategori: newCatName };
+      setCategories(prev => [...prev, newCat]);
+      setForm(prev => ({ ...prev, kategori_id: res.data.id }));
+      setIsAddingCat(false);
+      setNewCatName("");
+      showSuccess("Kategori baru ditambahkan");
+    } catch (err) {
+      showError(err.response?.data?.message || "Gagal menambah kategori");
+    } finally {
+      setIsSavingCat(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -230,20 +253,50 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
 
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="text-[11px] font-black uppercase text-slate-500 tracking-widest pl-1 mb-1.5 block">Kategori</label>
-                  <select
-                    name="kategori_id"
-                    value={form.kategori_id}
-                    onChange={handleChange}
-                    className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer"
-                  >
-                    <option value="">-- Pilih Kategori --</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.nama_kategori}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex justify-between items-center mb-1.5 px-1">
+                    <label className="text-[11px] font-black uppercase text-slate-500 tracking-widest block">Kategori</label>
+                    <button 
+                      onClick={() => setIsAddingCat(!isAddingCat)}
+                      className="text-[9px] font-black uppercase text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1"
+                    >
+                      {isAddingCat ? <X size={10} /> : <Plus size={10} />}
+                      {isAddingCat ? "Batal" : "Kategori Baru"}
+                    </button>
+                  </div>
+                  
+                  {isAddingCat ? (
+                    <div className="flex gap-2 animate-slideDown">
+                       <input
+                         type="text"
+                         value={newCatName}
+                         onChange={(e) => setNewCatName(e.target.value)}
+                         className="flex-1 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 px-4 py-3 rounded-xl text-xs font-bold text-blue-700 dark:text-blue-300 outline-none focus:ring-2 focus:ring-blue-500/20"
+                         placeholder="Nama kategori baru..."
+                         autoFocus
+                       />
+                       <button 
+                        onClick={handleQuickAddCat}
+                        disabled={isSavingCat || !newCatName.trim()}
+                        className="w-11 h-11 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 active:scale-95 disabled:opacity-50"
+                       >
+                         {isSavingCat ? <RefreshCw size={14} className="animate-spin" /> : <Check size={18} />}
+                       </button>
+                    </div>
+                  ) : (
+                    <select
+                      name="kategori_id"
+                      value={form.kategori_id}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer"
+                    >
+                      <option value="">-- Pilih Kategori --</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.nama_kategori}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className="text-[11px] font-black uppercase text-slate-500 tracking-widest pl-1 mb-1.5 block">Satuan</label>

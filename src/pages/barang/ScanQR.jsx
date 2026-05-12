@@ -114,47 +114,54 @@ export default function ScanQR() {
 
   const startScanner = async () => {
     try {
-      if (scannerRef.current) await handleCleanup();
+      setStatus("scanning");
+      setError(null);
+      
+      // 1. Cek apakah ada kamera
+      const devices = await Html5Qrcode.getCameras();
+      if (!devices || devices.length === 0) {
+        setError("Perangkat kamera tidak ditemukan");
+        return;
+      }
+
+      // 2. Matikan instance lama jika ada
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning()) await scannerRef.current.stop();
+          await scannerRef.current.clear();
+        } catch (e) { console.warn("Cleanup warning:", e); }
+      }
+
+      // 3. Tunggu sebentar agar hardware benar-benar lepas
+      await new Promise(r => setTimeout(r, 800));
 
       const scanner = new Html5Qrcode("reader");
       scannerRef.current = scanner;
-      setStatus("scanning");
       setIsCameraActive(true);
-      setError(null);
-      setAutoProcessingMsg("");
-      isProcessingRef.current = false;
       scannerReadyRef.current = true;
 
       const formatsToSupport = [
         Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.ITF,
       ];
 
       await scanner.start(
         { facingMode: "environment" },
         { 
-          fps: 20, 
+          fps: 15, 
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minSize = Math.min(viewfinderWidth, viewfinderHeight);
-            const size = Math.floor(minSize * 0.8);
-            return { width: size, height: size }; // Square is more reliable for all types
+            const size = Math.floor(minSize * 0.75);
+            return { width: size, height: size };
           },
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-          },
-          rememberLastUsedCamera: true,
-          aspectRatio: 1.777778, // 16:9 often provides better field of view
+          aspectRatio: 1.0,
           formatsToSupport
         },
         async (decodedText) => {
           if (isProcessingRef.current || !scannerReadyRef.current) return;
-
+          
           let kodeBarang = decodedText.trim();
           if (decodedText.startsWith("{")) {
             try { kodeBarang = JSON.parse(decodedText).kode_barang; } catch(e) { kodeBarang = decodedText; }
@@ -166,7 +173,6 @@ export default function ScanQR() {
           lastScanRef.current = kodeBarang;
 
           try {
-            console.log("Decoding barcode:", kodeBarang);
             const res = await scanQR(kodeBarang);
             const dataBarang = res.data.data;
             playBeep();
@@ -186,28 +192,27 @@ export default function ScanQR() {
                 isProcessingRef.current = false;
                 setAutoProcessingMsg("");
                 lastScanRef.current = ""; 
-              }, 1500);
+              }, 2000);
             } else {
               setBarang(dataBarang);
               setError(null);
-              // Reset faster in manual mode
               setTimeout(() => { 
                 isProcessingRef.current = false; 
                 lastScanRef.current = ""; 
-              }, 800);
+              }, 1000);
             }
           } catch (err) {
-            console.error("Scan error:", err);
             setError(err.response?.data?.message || "Barang tidak ditemukan");
-            setAutoProcessingMsg("");
             isProcessingRef.current = false;
-            setTimeout(() => { lastScanRef.current = ""; }, 1500);
+            setTimeout(() => { lastScanRef.current = ""; }, 2000);
           }
         }
       );
     } catch (err) {
-      setError("Gagal mengakses kamera");
+      console.error("Camera Access Error:", err);
+      setError("Izin kamera ditolak atau sedang digunakan aplikasi lain");
       setStatus("idle");
+      setIsCameraActive(false);
     }
   };
 
