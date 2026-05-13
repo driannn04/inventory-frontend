@@ -39,11 +39,21 @@ export default function Barang() {
 
   useEffect(() => { 
     loadBarang();
-    // Bersihkan state setelah digunakan agar tidak nyangkut saat refresh
-    if (location.state?.category) {
-      window.history.replaceState({}, document.title);
-    }
   }, []);
+
+  // Update filter jika navigasi membawa data kategori baru
+  useEffect(() => {
+    if (location.state?.category) {
+      setFilterKategori(location.state.category);
+      setCurrentPage(1);
+      
+      // Bersihkan state setelah digunakan agar tidak ter-filter terus saat navigasi manual
+      const timer = setTimeout(() => {
+        window.history.replaceState({}, document.title);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [location.state?.category]);
 
   const loadBarang = async () => {
     setLoading(true);
@@ -127,7 +137,7 @@ export default function Barang() {
                 <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               </button>
               {(role === 'admin' || role === 'gudang') && (
-                <button onClick={() => { setSelectedBarang(null); setOpenModal(true); }} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest">
+                <button onClick={() => { setSelectedBarang(null); setOpenModal(true); }} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest">
                   <Plus size={16} /> Tambah Barang
                 </button>
               )}
@@ -137,60 +147,57 @@ export default function Barang() {
 
         <BarangModal open={openModal} setOpen={setOpenModal} reload={loadBarang} editData={selectedBarang} />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((s) => (
             <button 
               key={s.key} 
               onClick={() => { setFilterStatus(s.key); setCurrentPage(1); }}
-              className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 text-left group
+              className={`p-4 rounded-3xl border transition-all duration-300 text-left
                 ${filterStatus === s.key 
-                  ? "bg-white dark:bg-slate-900 border-blue-500 ring-4 ring-blue-500/5 shadow-md shadow-blue-500/5 scale-[1.02]" 
-                  : "bg-white/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm"}`}
+                  ? "bg-white dark:bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5 scale-[1.02]" 
+                  : "bg-white/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-200"}`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110`}>
+                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center text-white shrink-0`}>
                   {s.icon}
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className={`text-lg font-black leading-none ${filterStatus === s.key ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-200"}`}>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{s.label}</p>
+                  <span className={`text-lg font-black ${filterStatus === s.key ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-white"}`}>
                     {s.count}
                   </span>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 truncate">{s.label}</p>
                 </div>
               </div>
-              {filterStatus === s.key && (
-                <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-blue-500 rounded-full" />
-              )}
             </button>
           ))}
         </div>
 
-        {/* TOOLBAR: SEARCH & FILTERS */}
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] px-6 py-3 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-            <Search size={18} className="text-slate-400 shrink-0" />
+        {/* TOOLBAR: SEARCH & FILTERS - SIMPLIFIED */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex-1 min-w-[300px] bg-white dark:bg-slate-900 rounded-2xl px-6 py-3 border border-slate-100 dark:border-slate-800 flex items-center gap-3 shadow-sm focus-within:border-blue-500 transition-all">
+            <Search size={18} className="text-slate-400" />
             <input 
               type="text" placeholder="Cari nama atau kode barang..." value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="outline-none flex-1 bg-transparent text-sm text-slate-800 dark:text-white placeholder-slate-400 font-medium" 
+              className="outline-none flex-1 bg-transparent text-sm font-medium dark:text-white" 
             />
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 border-r border-slate-100 dark:border-slate-800 pr-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2 shadow-sm">
               <ListFilter size={14} className="text-slate-400" />
               <select value={filterKategori} onChange={(e) => { setFilterKategori(e.target.value); setCurrentPage(1); }}
-                className="bg-transparent border-none text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest outline-none cursor-pointer">
+                className="bg-transparent border-none text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest outline-none">
                 <option value="">Semua Kategori</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
-              <button onClick={() => { setViewMode("table"); setCurrentPage(1); }} className={`p-1.5 rounded-lg transition-all ${viewMode === "table" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button onClick={() => setViewMode("table")} className={`p-2 rounded-lg transition-all ${viewMode === "table" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
                 <List size={16} />
               </button>
-              <button onClick={() => { setViewMode("card"); setCurrentPage(1); }} className={`p-1.5 rounded-lg transition-all ${viewMode === "card" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
+              <button onClick={() => setViewMode("card")} className={`p-2 rounded-lg transition-all ${viewMode === "card" ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
                 <LayoutGrid size={16} />
               </button>
             </div>

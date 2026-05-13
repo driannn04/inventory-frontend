@@ -107,10 +107,14 @@ export default function Sidebar({ onClose }) {
       : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"}
   `;
 
-  const Badge = ({ count }) => {
+  const Badge = ({ count, color = "rose" }) => {
     if (!count || count <= 0) return null;
+    const colors = {
+      rose: "bg-rose-500 shadow-rose-500/30",
+      blue: "bg-cyan-500 shadow-cyan-500/30",
+    };
     return (
-      <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black text-white shadow-lg shadow-rose-500/30 animate-pulse">
+      <span className={`ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[9px] font-black text-white shadow-lg animate-pulse ${colors[color]}`}>
         {count > 99 ? '99+' : count}
       </span>
     );
@@ -287,122 +291,93 @@ export default function Sidebar({ onClose }) {
         ) : (
           /* --- ADMIN/GUDANG VIEW --- */
           <>
-            <div className="pt-6 pb-2 px-4">
-              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Inventaris</p>
+        {/* --- ADMIN/GUDANG VIEW --- */}
+        {(role === "admin" || role === "gudang") && (
+          <>
+            <div className="pt-6 pb-2 px-4 flex items-center gap-2">
+              <div className="h-px flex-1 bg-slate-700/50"></div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Master</p>
+              <div className="h-px flex-1 bg-slate-700/50"></div>
             </div>
+            
             <Link to="/barang" className={menuClass("/barang")}>
-              <Boxes size={18} className={isActive("/barang") ? "text-sky-600" : ""} />
-              Katalog Barang
-              <Badge count={lowStockCount} />
-              {isActive("/barang") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+              <Boxes size={18} /> Katalog Barang
+              <Badge count={lowStockCount} color="blue" />
             </Link>
-            {(role === "admin" || role === "gudang") && (
-              <>
-                <Link to="/kategori" className={menuClass("/kategori")}>
-                  <Tags size={18} className={isActive("/kategori") ? "text-sky-600" : ""} />
-                  Kategori
-                  {isActive("/kategori") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
-                </Link>
 
-              </>
-            )}
+            <Link to="/kategori" className={menuClass("/kategori")}>
+              <Tags size={18} /> Kategori
+            </Link>
 
-            <div className="pt-6 pb-2 px-4">
-              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Mutasi & Aktivitas</p>
+            <div className="pt-6 pb-2 px-4 flex items-center gap-2">
+              <div className="h-px flex-1 bg-slate-700/50"></div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Transaksi</p>
+              <div className="h-px flex-1 bg-slate-700/50"></div>
             </div>
 
             <div className="space-y-1">
               <button
                 onClick={() => setOpenStok(!openStok)}
                 className={`w-full flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300
-                  ${openStok ? "bg-slate-50 dark:bg-slate-800 text-sky-700 dark:text-sky-400" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50/80 dark:hover:bg-slate-800 hover:text-sky-700"}
+                  ${openStok ? "bg-slate-700/50 text-cyan-400" : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"}
                 `}
               >
                 <div className="flex items-center gap-3">
-                  <ArrowDownUp size={18} />
-                  Mutasi Stok
+                  <ArrowDownUp size={18} /> Mutasi Stok
                 </div>
-                <ChevronRight size={14} className={`transition-transform duration-300 ${openStok ? "rotate-90 text-sky-500" : "opacity-30"}`} />
+                <ChevronRight size={14} className={`transition-transform duration-300 ${openStok ? "rotate-90 text-cyan-400" : "opacity-30"}`} />
               </button>
 
               <div className={`overflow-hidden transition-all duration-300 ${openStok ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
-                <div className="ml-7 space-y-1 border-l-2 border-slate-100 dark:border-slate-800">
-                  <Link to="/stok-masuk" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-masuk") ? "text-sky-600" : "text-slate-400 hover:text-sky-500"}`}>
+                <div className="ml-7 space-y-1 border-l border-slate-700">
+                  <Link to="/stok-masuk" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-masuk") ? "text-cyan-400" : "text-slate-500 hover:text-slate-300"}`}>
                     Stok Masuk
                   </Link>
-                  <Link to="/stok-keluar" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-keluar") ? "text-sky-600" : "text-slate-400 hover:text-sky-500"}`}>
+                  <Link to="/stok-keluar" className={`flex items-center gap-3 py-2 px-4 text-[12px] font-bold transition-colors ${isActive("/stok-keluar") ? "text-cyan-400" : "text-slate-500 hover:text-slate-300"}`}>
                     Stok Keluar
                   </Link>
                 </div>
               </div>
             </div>
 
-            {role === "admin" && (
-              <Link to="/buat-pengajuan" className={menuClass("/buat-pengajuan")}>
-                <PlusCircle size={18} className={isActive("/buat-pengajuan") ? "text-sky-600" : ""} />
-                Buat Pengajuan
-                {isActive("/buat-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
-              </Link>
-            )}
+            <Link to="/approval" className={menuClass("/approval")}>
+              <ClipboardCheck size={18} /> Validasi Pengajuan
+              <Badge count={pendingCount} />
+            </Link>
 
             <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
-              <FileText size={18} className={isActive("/list-pengajuan") ? "text-sky-600" : ""} />
-              Daftar Pengajuan
-              {isActive("/list-pengajuan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
-            </Link>
-            {role === "admin" && (
-              <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
-                <History size={18} className={isActive("/pengajuan-saya") ? "text-sky-600" : ""} />
-                Pengajuan Saya
-                {isActive("/pengajuan-saya") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
-              </Link>
-            )}
-
-            <Link to="/approval" className={menuClass("/approval")}>
-              <ClipboardCheck size={18} className={isActive("/approval") ? "text-cyan-400" : ""} />
-              Validasi Pengajuan
-              <Badge count={pendingCount} />
-              {isActive("/approval") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+              <FileText size={18} /> Semua Pengajuan
             </Link>
 
-            <div className="pt-6 pb-2 px-4">
-              <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Operasional</p>
+            <div className="pt-6 pb-2 px-4 flex items-center gap-2">
+              <div className="h-px flex-1 bg-slate-700/50"></div>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Sistem</p>
+              <div className="h-px flex-1 bg-slate-700/50"></div>
             </div>
 
             <Link to="/scan" className={menuClass("/scan")}>
-              <QrCode size={18} className={isActive("/scan") ? "text-sky-600" : ""} />
-              Scanner QR
-              {isActive("/scan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+              <QrCode size={18} /> Scanner QR
             </Link>
+            
             <Link to="/laporan" className={menuClass("/laporan")}>
-              <BarChart3 size={18} className={isActive("/laporan") ? "text-cyan-400" : ""} />
-              Laporan
-              {isActive("/laporan") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+              <BarChart3 size={18} /> Laporan
             </Link>
 
-            {/* SYSTEM (ADMIN ONLY) */}
             {role === "admin" && (
               <>
-                <div className="pt-6 pb-2 px-4">
-                  <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em]">Sistem</p>
-                </div>
                 <Link to="/kelola-user" className={menuClass("/kelola-user")}>
-                  <UserCog size={18} className={isActive("/kelola-user") ? "text-sky-600" : ""} />
-                  Kelola User
-                  {isActive("/kelola-user") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                  <UserCog size={18} /> Manajemen User
                 </Link>
                 <Link to="/activity-log" className={menuClass("/activity-log")}>
-                  <History size={18} className={isActive("/activity-log") ? "text-sky-600" : ""} />
-                  Log Aktivitas
-                  {isActive("/activity-log") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                  <History size={18} /> Log Aktivitas
                 </Link>
                 <Link to="/settings" className={menuClass("/settings")}>
-                  <Settings size={18} className={isActive("/settings") ? "text-sky-600" : ""} />
-                  Pengaturan
-                  {isActive("/settings") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-sky-600 rounded-r-full" />}
+                  <Settings size={18} /> Pengaturan
                 </Link>
               </>
             )}
+          </>
+        )}
           </>
         )}
 

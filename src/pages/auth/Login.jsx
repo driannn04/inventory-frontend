@@ -92,171 +92,178 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-950 overflow-hidden relative selection:bg-cyan-500 selection:text-white">
+    <div className="min-h-screen w-full flex bg-white overflow-hidden selection:bg-blue-600 selection:text-white">
       
-      {/* 🌊 AQUA PREMIUM BACKGROUND */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-5%] w-[70%] h-[70%] bg-gradient-to-br from-cyan-600/20 via-blue-900/10 to-transparent blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-15%] right-[-10%] w-[80%] h-[80%] bg-gradient-to-tr from-blue-900/30 via-cyan-900/10 to-transparent blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
-        
-        {/* Animated Floating Water Drops / Orbs */}
-        <div className="absolute top-[20%] right-[10%] w-40 h-40 bg-cyan-500/10 backdrop-blur-3xl rounded-full border border-cyan-500/20 animate-bounce" style={{ animationDuration: '10s' }} />
-        <div className="absolute bottom-[10%] left-[5%] w-32 h-32 bg-blue-500/10 backdrop-blur-3xl rounded-full border border-blue-500/20 animate-pulse" style={{ animationDuration: '7s' }} />
+      {/* 🚀 LEFT SIDE: VISUAL (DESKTOP ONLY) */}
+      <div className="hidden lg:flex w-[55%] relative items-center justify-center overflow-hidden">
+        {/* Full-cover warehouse photo */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="absolute inset-0 z-0"
+        >
+          <img 
+            src="/pdam_warehouse_new.png" 
+            alt="Gudang PDAM Tirta Pakuan" 
+            className="w-full h-full object-cover"
+          />
+          {/* Blue gradient overlay agar teks terbaca & warna cerah */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/70 via-blue-500/50 to-cyan-400/40" />
+        </motion.div>
 
-        {/* Dynamic Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" 
-          style={{ backgroundImage: `radial-gradient(#06b6d4 1.5px, transparent 1.5px)`, backgroundSize: '40px 40px' }} 
-        />
+        {/* Branding Overlay - REVISED */}
+        <div className="absolute top-12 left-12 z-20 flex flex-col items-start gap-4">
+           <div className="bg-white p-3 rounded-2xl shadow-xl border border-white">
+              <img src="/logo-premium.png" alt="Logo PDAM" className="w-12 h-12 object-contain" />
+           </div>
+           <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-[2rem] shadow-2xl max-w-[280px]">
+              <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">PDAM TIRTA PAKUAN <br/> <span className="text-blue-300">Pusat Inventaris</span></h3>
+              <p className="text-[9px] font-bold text-blue-100 uppercase tracking-[0.2em] mt-3 leading-relaxed opacity-80">
+                Sistem Manajemen Gudang & Aset Inventaris Terpadu.
+              </p>
+           </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-[420px] p-4 relative z-10">
-        {/* 🏆 FROSTED AQUA GLASS CARD */}
-        <div className="bg-slate-900/40 backdrop-blur-[40px] rounded-[3.5rem] p-10 shadow-[0_40px_100px_-15px_rgba(6,182,212,0.15)] border border-white/10 relative group overflow-hidden">
-          
-          {/* Inner Glow Effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50" />
+      {/* 🔐 RIGHT SIDE: LOGIN FORM */}
+      <div className="w-full lg:w-[45%] flex flex-col items-center justify-center p-6 sm:p-10 relative">
+        
+        {/* Mobile Background Elements */}
+        <div className="lg:hidden absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-blue-50 blur-[100px] rounded-full opacity-60" />
+        </div>
 
-          {/* LOGO SECTION */}
-          <div className="flex flex-col items-center mb-10">
-            <div className="relative mb-6">
-              <div className="absolute inset-[-20px] bg-cyan-500 blur-3xl opacity-20 animate-pulse" />
-              <div className="relative z-10 w-20 h-20 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 p-2 shadow-2xl shadow-cyan-500/20 group-hover:scale-110 transition-transform duration-700">
-                <img 
-                  src="/logo-premium.png" 
-                  alt="Logo PDAM" 
-                  className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
-                />
-              </div>
-            </div>
+        <div className="w-full max-w-[360px] relative z-10">
+          {/* LOGO AREA */}
+          <div className="flex flex-col items-center mb-10 lg:items-start">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="w-14 h-14 bg-blue-50 rounded-2xl p-2 mb-5 border border-blue-100 shadow-sm"
+            >
+              <img src="/logo-premium.png" alt="Logo PDAM" className="w-full h-full object-contain" />
+            </motion.div>
             
-            <div className="text-center space-y-1">
-              <h2 className="text-3xl font-black tracking-tight text-white leading-none uppercase">
-                Sistem <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Inventory</span>
-              </h2>
-              <p className="text-[9px] font-black text-cyan-400/80 uppercase tracking-[0.5em]">
-                PDAM Tirta Pakuan Bogor
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="text-center lg:text-left"
+            >
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                Akses <span className="text-blue-600">Masuk</span>
+              </h1>
+              <p className="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-[0.2em] leading-relaxed">
+                Silakan masuk untuk mengelola data inventaris gudang PDAM Tirta Pakuan Bogor.
               </p>
-            </div>
+            </motion.div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center px-4">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Akses Akun (NUP)</label>
-                {isVerifyingNup && <Loader2 size={10} className="animate-spin text-blue-500" />}
+            <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+              <div className="flex justify-between items-center px-1 mb-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUP Pegawai</label>
+                {isVerifyingNup && <Loader2 size={10} className="animate-spin text-blue-600" />}
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-cyan-500/40 group-focus-within:text-cyan-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-300">
                   <User size={16} />
                 </div>
                 <input
                   type="text"
-                  placeholder="Masukkan NUP Anda"
-                  className={`w-full bg-white/5 border ${userData ? 'border-emerald-400/50 ring-4 ring-emerald-500/5' : 'border-white/10'} pl-13 pr-6 py-4 rounded-2xl text-xs focus:ring-8 focus:ring-cyan-500/5 focus:border-cyan-400 transition-all outline-none text-white font-bold placeholder-slate-500/50`}
+                  placeholder="Masukkan NUP"
+                  className={`w-full bg-slate-50 border-2 ${userData ? 'border-blue-500 bg-white' : 'border-slate-100'} pl-13 pr-6 py-3.5 rounded-xl text-xs font-bold focus:bg-white focus:border-blue-600 transition-all outline-none text-slate-800 placeholder-slate-300`}
                   value={nup}
                   onChange={(e) => setNup(e.target.value)}
                   required
-                  disabled={isLoading}
                 />
               </div>
-            </div>
+            </motion.div>
 
-            {/* ✅ User Identity Card (Name + Role) */}
-            <AnimatePresence mode="wait">
+            {/* IDENTITY PREVIEW */}
+            <AnimatePresence>
               {userData && (
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }} 
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  className="mx-2 px-5 py-4 bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border border-emerald-500/30 rounded-[2rem] flex items-center gap-4 shadow-xl shadow-emerald-500/5 group/card relative overflow-hidden"
+                  initial={{ opacity: 0, height: 0, scale: 0.95 }} 
+                  animate={{ opacity: 1, height: "auto", scale: 1 }}
+                  exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                  className="bg-blue-600 p-4 rounded-2xl flex items-center gap-4 shadow-xl shadow-blue-600/20"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 font-black text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-black text-lg backdrop-blur-md">
                     {userData.nama?.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                       <p className="text-[14px] font-black text-slate-800 leading-none truncate">{userData.nama}</p>
-                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    </div>
-                    <div className="mt-2 flex items-center gap-2">
-                       <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-[9px] font-black text-emerald-700 uppercase tracking-widest border border-emerald-200">
-                         {userData.role?.replace('_', ' ')}
-                       </span>
-                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Akses Aktif</span>
-                    </div>
+                  <div className="flex-1 min-w-0 text-white">
+                     <p className="text-[13px] font-black leading-none truncate mb-1 uppercase tracking-tight">{userData.nama}</p>
+                     <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{userData.role?.replace('_', ' ')}</p>
                   </div>
+                  <CheckCircle2 size={20} className="text-blue-200" />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-4">Kata Sandi</label>
+            <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 mb-1.5 block">Kata Sandi</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none text-cyan-500/40 group-focus-within:text-cyan-400 transition-colors">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-300">
                   <Lock size={16} />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full bg-white/5 border border-white/10 pl-13 pr-14 py-4 rounded-2xl text-xs focus:ring-8 focus:ring-cyan-500/5 focus:border-cyan-500 transition-all outline-none text-white font-bold placeholder-slate-500/50 tracking-widest"
+                  className="w-full bg-slate-50 border-2 border-slate-100 pl-13 pr-14 py-3.5 rounded-xl text-xs font-bold focus:bg-white focus:border-blue-600 transition-all outline-none text-slate-800 placeholder-slate-300 tracking-widest"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-500 hover:text-cyan-400 transition-colors"
-                  disabled={isLoading}
+                  className="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-300 hover:text-blue-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </div>
+            </motion.div>
 
-            <button
+            <motion.button
+              initial={{ y: 15, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
               type="submit"
               disabled={isLoading}
-              className="w-full relative flex items-center justify-center bg-cyan-600 hover:bg-cyan-500 text-white font-black text-[10px] uppercase tracking-[0.3em] py-5 mt-4 rounded-2xl shadow-[0_20px_40px_-10px_rgba(6,182,212,0.4)] hover:shadow-[0_25px_50px_-10px_rgba(6,182,212,0.6)] active:scale-[0.98] transition-all duration-500 disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-[0.2em] py-5 mt-4 rounded-2xl shadow-2xl shadow-blue-600/30 active:scale-[0.97] transition-all duration-300 disabled:opacity-70 group flex items-center justify-center gap-3"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shine_1.5s_infinite]" />
-              <span className="relative flex items-center gap-3">
-                {isLoading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin text-white/80" />
-                    Memverifikasi...
-                  </>
-                ) : (
-                  <>
-                    Masuk Sekarang
-                    <ArrowRightCircle size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
-                  </>
-                )}
-              </span>
-            </button>
+              {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Masuk ke Sistem"}
+              {!isLoading && <ArrowRightCircle size={18} className="group-hover:translate-x-1 transition-transform" />}
+            </motion.button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-blue-500/10 flex justify-center">
-             <div className="flex items-center gap-4 text-[8px] font-black text-blue-400 uppercase tracking-widest opacity-60">
-                <span>V3.2 PRO</span>
-                <div className="w-1 h-1 rounded-full bg-blue-400" />
-                <span>AKSES TERPROTEKSI</span>
-             </div>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-10 pt-6 border-t border-slate-50 text-center lg:text-left flex flex-col lg:flex-row lg:items-center gap-3"
+          >
+             <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+                &copy; {new Date().getFullYear()} PDAM Tirta Pakuan Bogor
+             </p>
+             <div className="hidden lg:block w-1 h-1 rounded-full bg-slate-200" />
+             <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
+                Dibuat oleh Drian &amp; Aden
+             </p>
+          </motion.div>
         </div>
-        
-        <p className="text-center mt-8 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] opacity-40">
-          &copy; {new Date().getFullYear()} PDAM Tirta Pakuan Bogor
-        </p>
       </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
-        @keyframes shine {
-          100% { left: 125%; }
+        @keyframes float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-20px) scale(1.02); }
+        }
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
         }
       `}} />
     </div>

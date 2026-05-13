@@ -18,21 +18,29 @@ export default function StatCard({ title, value, icon, color, trend }) {
     amber: "from-amber-500 to-orange-500"
   };
 
+  const shadowVariants = {
+    blue: "shadow-blue-500/20",
+    sky: "shadow-sky-500/20",
+    green: "shadow-emerald-500/20",
+    red: "shadow-rose-500/20",
+    amber: "shadow-amber-500/20"
+  };
+
   return (
     <motion.div 
       whileHover={{ y: -4, scale: 1.02 }}
-      className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 group overflow-hidden"
+      className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-5 sm:p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 group overflow-hidden"
     >
-      <div className="flex items-center gap-4 relative z-10">
-        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradientVariants[color]} flex items-center justify-center text-white shadow-lg shadow-${color}-500/20 group-hover:scale-110 transition-transform duration-500`}>
-          {React.cloneElement(icon, { size: 20 })}
+      <div className="flex items-center gap-3 sm:gap-4 relative z-10">
+        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br ${gradientVariants[color]} flex items-center justify-center text-white shadow-lg ${shadowVariants[color]} group-hover:scale-110 transition-transform duration-500`}>
+          {React.cloneElement(icon, { size: 18 })}
         </div>
         
-        <div className="flex flex-col">
-          <span className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter leading-none">
+        <div className="flex flex-col min-w-0">
+          <span className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tighter leading-none truncate">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </span>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mt-2 group-hover:text-slate-500 transition-colors">
+          <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mt-1.5 group-hover:text-slate-500 transition-colors truncate">
             {title}
           </p>
         </div>

@@ -110,50 +110,41 @@ export default function ActivityLog() {
           }
         />
 
-        {/* FILTER BAR */}
-        <div className="bg-white dark:bg-slate-900 rounded-[2rem] px-6 py-4 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-            <Search size={18} className="text-slate-400 shrink-0" />
-            <input type="text" placeholder="Cari user atau aktivitas..." value={searchTerm}
+        {/* TOOLBAR: SEARCH & FILTERS - COMPACT */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex-1 min-w-[300px] bg-white dark:bg-slate-900 rounded-2xl px-6 py-3 border border-slate-100 dark:border-slate-800 flex items-center gap-3 shadow-sm focus-within:border-blue-500 transition-all">
+            <Search size={18} className="text-slate-400" />
+            <input 
+              type="text" placeholder="Cari user atau aktivitas..." value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="outline-none flex-1 bg-transparent text-sm text-slate-800 dark:text-white placeholder-slate-400 font-medium" />
+              className="outline-none flex-1 bg-transparent text-sm font-medium dark:text-white" 
+            />
           </div>
+
           <div className="flex items-center gap-2">
-            <Filter size={15} className="text-slate-400" />
-            <select value={filterAksi} onChange={(e) => setFilterAksi(e.target.value)}
-              className="border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 rounded-xl py-2 px-4 text-[11px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
-              <option value="Semua">Semua Aksi</option>
-              <option value="MASUK">Stok Masuk</option>
-              <option value="KELUAR">Stok Keluar Manual</option>
-              <option value="PENGELUARAN">Pengeluaran Pengajuan</option>
-              <option value="TAMBAH">Tambah Data</option>
-              <option value="EDIT">Edit Data</option>
-              <option value="HAPUS">Hapus Data</option>
-              <option value="APPROVE">Approve</option>
-              <option value="REJECT">Reject</option>
-              <option value="LOGIN">Login</option>
-            </select>
-          </div>
+            <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2 shadow-sm">
+              <Filter size={14} className="text-slate-400" />
+              <select value={filterAksi} onChange={(e) => setFilterAksi(e.target.value)}
+                className="bg-transparent border-none text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest outline-none">
+                <option value="Semua">Semua Aksi</option>
+                <option value="MASUK">Stok Masuk</option>
+                <option value="KELUAR">Stok Keluar</option>
+                <option value="TAMBAH">Tambah Data</option>
+                <option value="EDIT">Edit Data</option>
+                <option value="HAPUS">Hapus Data</option>
+                <option value="LOGIN">Login</option>
+              </select>
+            </div>
 
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white text-[11px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-          >
-            {exporting ? (
-              <RefreshCw size={14} className="animate-spin" />
-            ) : (
-              <FileDown size={14} />
-            )}
-            {exporting ? "Mengekspor..." : "Export Excel"}
-          </button>
-
-          {(searchTerm || filterAksi !== "Semua") && (
-            <button onClick={() => { setSearchTerm(""); setFilterAksi("Semua"); }} className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-rose-500 transition-all">
-              <X size={15} />
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50"
+            >
+              {exporting ? <RefreshCw size={14} className="animate-spin" /> : <FileDown size={14} />}
+              {exporting ? "..." : "Export"}
             </button>
-          )}
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-auto">{filteredLogs.length} entri</span>
+          </div>
         </div>
 
         {/* LOG LIST */}
@@ -183,52 +174,37 @@ export default function ActivityLog() {
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tidak ada log aktivitas ditemukan</p>
               </div>
             ) : filteredLogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((log) => {
-              // 🔥 SMART MAPPING: Perbaiki visual log lama agar tetap akurat
               let aksiKey = log.aksi;
               if (log.aksi === "TAMBAH" && log.tipe_data === "STOK KELUAR") aksiKey = "KELUAR";
               if (log.aksi === "TAMBAH" && log.tipe_data === "STOK MASUK")  aksiKey = "MASUK";
               
-              const config = AKSI_CONFIG[aksiKey] || AKSI_CONFIG[log.aksi] || { cls: "bg-slate-50 text-slate-500 border border-slate-200", dot: "bg-slate-400", icon: "📋" };
+              const config = AKSI_CONFIG[aksiKey] || AKSI_CONFIG[log.aksi] || { cls: "bg-slate-50 text-slate-500", icon: <FileText size={14} />, label: log.aksi };
               return (
                 <div
                   key={log.id}
-                  className="px-8 py-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors flex items-start gap-5 cursor-pointer group"
+                  className="px-8 py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all flex items-center gap-6 cursor-pointer group"
                   onClick={() => setSelectedLog(log)}
                 >
-                  {/* Icon */}
-                  <div className={`p-3 rounded-2xl shrink-0 mt-0.5 flex items-center justify-center ${config.cls}`}>
-                    {/* Render icon with bigger size for the left box */}
-                    {typeof config.icon === 'string' ? config.icon : 
-                      <config.icon.type {...config.icon.props} size={20} />
-                    }
+                  <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center text-lg ${config.cls}`}>
+                    {config.icon}
                   </div>
-                  {/* Content */}
+                  
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{log.nama_user}</span>
-                        <span className="text-[9px] font-black px-2.5 py-1 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 uppercase tracking-widest">{log.role}</span>
-                        <span className={`text-[9px] font-black px-2.5 py-1 rounded-xl uppercase tracking-widest ${config.cls}`}>{config.icon} {config.label}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
-                        <Clock size={11} />
-                        {formatRelativeTime(log.created_at)}
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{log.nama_user}</span>
+                      <span className="text-[8px] font-black px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 uppercase tracking-widest">{log.role}</span>
+                      <div className="flex items-center gap-2 ml-auto opacity-40 group-hover:opacity-100 transition-opacity">
+                         {log.ip_address && <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500"><Globe size={10}/> {log.ip_address}</div>}
+                         {log.user_agent && <div className="flex items-center gap-1 text-[9px] font-bold text-slate-500"><Monitor size={10}/> {log.user_agent.includes('Windows') ? 'PC' : 'Mobile'}</div>}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{log.keterangan}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {log.tipe_data && (
-                        <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-900/50 px-2 py-0.5 rounded-lg">{log.tipe_data}</span>
-                      )}
-                      {log.target_id && (
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-0.5 rounded-lg">ID: {log.target_id}</span>
-                      )}
-                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight truncate">{log.keterangan}</p>
                   </div>
-                  {/* Eye icon on hover */}
-                  <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all opacity-0 group-hover:opacity-100 shrink-0 self-center" title="Lihat Detail">
-                    <Eye size={14} />
-                  </button>
+
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] font-black text-slate-800 dark:text-white">{formatRelativeTime(log.created_at)}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">{new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
                 </div>
               );
             })}

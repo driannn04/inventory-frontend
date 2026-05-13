@@ -119,6 +119,7 @@ export default function Topbar({ onMenuClick }) {
         id: Date.now() + Math.random(),
         judul: data.judul,
         pesan: data.pesan,
+        tipe: data.tipe,
         is_read: 0,
         created_at: new Date()
       };
@@ -312,35 +313,36 @@ export default function Topbar({ onMenuClick }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
                 className={`
-                  fixed right-6 top-16 
-                  ${expand ? "w-[420px] h-[80vh]" : "w-96"}
-                  ${isDark ? "bg-slate-800 border-slate-700 shadow-sky-900/20" : "bg-white border-slate-200 shadow-xl"}
-                  rounded-2xl border z-50 flex flex-col
+                  fixed right-4 sm:right-6 top-16 
+                  w-[calc(100vw-2rem)] sm:w-80
+                  ${expand ? "sm:w-[450px] h-[70vh]" : "max-h-[480px]"}
+                  ${isDark ? "bg-slate-900 border-slate-800 shadow-2xl" : "bg-white border-slate-200 shadow-xl"}
+                  rounded-3xl border z-50 flex flex-col
                   transition-all duration-300 overflow-hidden
                 `}
               >
 
                 {/* HEADER */}
-                <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
+                <div className={`flex justify-between items-center px-5 py-4 border-b ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
                   <div className="flex items-center gap-2">
-                    <h2 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                    <h2 className={`text-sm font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
                       Notifikasi
                     </h2>
                     {unreadCount > 0 && (
-                      <span className="text-[9px] font-black text-white bg-red-500 px-1.5 py-0.5 rounded-full">{unreadCount}</span>
+                      <span className="text-[9px] font-black text-white bg-red-500 px-2 py-0.5 rounded-full">{unreadCount}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setExpand(!expand)}
-                      className="text-slate-400 hover:text-sky-600 transition p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700"
+                      className="text-slate-400 hover:text-sky-600 transition p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hidden sm:block"
                       title={expand ? "Perkecil" : "Perbesar"}
                     >
                       {expand ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                     </button>
                     <button
                       onClick={handleReadAll}
-                      className="text-[10px] text-sky-600 font-black flex items-center gap-1 bg-sky-50 dark:bg-sky-900/30 px-2.5 py-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-sky-900/50 transition uppercase tracking-wider"
+                      className="text-[9px] text-sky-600 font-black flex items-center gap-1.5 bg-sky-50 dark:bg-sky-900/30 px-3 py-2 rounded-xl hover:bg-sky-100 dark:hover:bg-sky-900/50 transition uppercase tracking-wider"
                     >
                       <CheckCheck size={12} /> Baca Semua
                     </button>
@@ -387,20 +389,20 @@ export default function Topbar({ onMenuClick }) {
                     }
 
                     return displayNotif.map((n) => {
-                      // Determine icon & color based on notification title/type
+                      // 💡 Visual Hierarchy & Priority Icons
                       let typeIcon = "🔔";
                       let typeBg = "bg-slate-100 dark:bg-slate-700";
                       let typeColor = "text-slate-500";
 
-                      const title = (n.judul || "").toLowerCase();
-                      if (title.includes("masuk") || title.includes("📦")) {
-                        typeIcon = "📦"; typeBg = "bg-emerald-50 dark:bg-emerald-900/30"; typeColor = "text-emerald-600";
-                      } else if (title.includes("keluar") || title.includes("📤")) {
-                        typeIcon = "📤"; typeBg = "bg-rose-50 dark:bg-rose-900/30"; typeColor = "text-rose-600";
-                      } else if (title.includes("pengajuan")) {
+                      const type = (n.tipe || "info").toLowerCase();
+                      if (type === "success") {
+                        typeIcon = "✅"; typeBg = "bg-emerald-50 dark:bg-emerald-900/30"; typeColor = "text-emerald-600";
+                      } else if (type === "warning") {
+                        typeIcon = "📤"; typeBg = "bg-amber-50 dark:bg-amber-900/30"; typeColor = "text-amber-600";
+                      } else if (type === "danger") {
+                        typeIcon = "⚠️"; typeBg = "bg-rose-50 dark:bg-rose-900/30"; typeColor = "text-rose-600";
+                      } else if (type === "info") {
                         typeIcon = "📋"; typeBg = "bg-blue-50 dark:bg-blue-900/30"; typeColor = "text-blue-600";
-                      } else if (title.includes("minimum") || title.includes("⚠️")) {
-                        typeIcon = "⚠️"; typeBg = "bg-amber-50 dark:bg-amber-900/30"; typeColor = "text-amber-600";
                       }
 
                       // Relative time
@@ -420,12 +422,12 @@ export default function Topbar({ onMenuClick }) {
                       return (
                         <div
                           key={n.id}
-                          className={`px-4 py-3.5 border-b text-sm flex gap-3 transition group
-                          ${n.is_read === 0 ? (isDark ? "bg-slate-700/50" : "bg-sky-50/30") : ""}
-                          ${isDark ? 'border-slate-700 hover:bg-slate-700' : 'border-slate-50 hover:bg-slate-50'}`}
+                          className={`px-5 py-4 border-b text-sm flex gap-4 transition group
+                          ${n.is_read === 0 ? (isDark ? "bg-slate-800/50" : "bg-sky-50/20") : ""}
+                          ${isDark ? 'border-slate-800/50 hover:bg-slate-800' : 'border-slate-50 hover:bg-slate-50'}`}
                         >
                           {/* Type Icon */}
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 ${typeBg}`}>
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0 ${typeBg}`}>
                             {typeIcon}
                           </div>
 
@@ -433,26 +435,26 @@ export default function Topbar({ onMenuClick }) {
                             className="flex-1 cursor-pointer min-w-0"
                             onClick={() => handleRead(n.id)}
                           >
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <p className={`font-bold text-[13px] truncate ${isDark ? 'text-white' : 'text-slate-800'} ${n.is_read === 0 ? '' : 'opacity-70'}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className={`font-black text-[12px] truncate uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-800'} ${n.is_read === 0 ? '' : 'opacity-60'}`}>
                                 {n.judul}
                               </p>
                               {n.is_read === 0 && (
-                                <span className="w-2 h-2 bg-sky-500 rounded-full shrink-0"></span>
+                                <span className="w-1.5 h-1.5 bg-sky-500 rounded-full shrink-0"></span>
                               )}
                             </div>
-                            <p className={`text-xs leading-relaxed truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} line-clamp-2`}>
                               {n.pesan}
                             </p>
-                            <p className={`text-[10px] mt-1 font-bold ${n.is_read === 0 ? 'text-sky-500' : 'text-slate-400'}`}>
+                            <p className={`text-[9px] mt-1.5 font-black uppercase tracking-widest ${n.is_read === 0 ? 'text-sky-500' : 'text-slate-400'}`}>
                               {relTime}
                             </p>
                           </div>
                           <button
                             onClick={() => handleDelete(n.id)}
-                            className="text-slate-300 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition self-start opacity-0 group-hover:opacity-100"
+                            className="text-slate-300 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition self-start opacity-0 group-hover:opacity-100"
                           >
-                            <X size={14} />
+                            <X size={12} />
                           </button>
                         </div>
                       );

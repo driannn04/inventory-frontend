@@ -172,13 +172,13 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setOpen(false)} />
-      <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white dark:border-slate-800 w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-fadeIn">
+      <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl" onClick={() => setOpen(false)} />
+      <div className="relative bg-white dark:bg-slate-950 border border-white/20 dark:border-slate-800 w-full max-w-4xl max-h-[90vh] rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden animate-fadeIn">
         
         {/* HEADER */}
         <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="space-y-1">
-            <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-sky-500 dark:from-blue-400 dark:to-sky-400">
+            <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
               {editData ? "🛠️ Detail & Edit Barang" : "📦 Registrasi Barang Baru"}
             </h2>
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
@@ -396,8 +396,9 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
         <div className="p-6 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/80 dark:bg-slate-900/80">
           <button
             onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-500 hover:to-sky-400 text-white font-black uppercase tracking-widest text-sm py-4 rounded-2xl shadow-lg shadow-blue-500/30 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black uppercase tracking-widest text-xs py-5 rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2"
           >
+            {editData ? <Check size={18} /> : <Plus size={18} />}
             {editData ? "Simpan Perubahan Data" : "Registrasi Barang Baru"}
           </button>
         </div>

@@ -3,7 +3,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { getBarang } from "../../services/barangService";
 import { tambahStokMasuk, getStokMasuk } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Search } from "lucide-react";
+import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Search, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../../components/common/PageHeader";
 import { TableSkeleton } from "../../components/common/Skeleton";
@@ -104,103 +104,101 @@ export default function StokMasuk() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-xl"><PlusCircle size={18} /></div>
-              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Tambah Stok</h2>
-            </div>
-
-            {recentItems.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-1">Input Cepat</p>
-                <div className="flex flex-wrap gap-2">
-                  {recentItems.map(item => (
-                    <button key={item.barang_id} onClick={() => setForm({...form, barang_id: item.barang_id})} className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${form.barang_id == item.barang_id ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30" : "bg-white dark:bg-slate-800 text-slate-500 border-slate-100 dark:border-slate-700"}`}>
-                      {item.nama_barang}
-                    </button>
-                  ))}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT: INPUT FORM */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                  <PlusCircle size={20} />
                 </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pilih Barang</label>
-                <select name="barang_id" value={form.barang_id} onChange={handleChange} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all font-bold text-slate-700 dark:text-white">
-                  <option value="">-- Pilih Barang --</option>
-                  {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang} ({b.kode_barang})</option>)}
-                </select>
+                <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Input Stok Masuk</h2>
               </div>
 
-              {/* LIVE PREVIEW CARD */}
-              <AnimatePresence mode="wait">
-                {selectedBarang && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0, y: -10 }}
-                    animate={{ opacity: 1, height: "auto", y: 0 }}
-                    exit={{ opacity: 0, height: 0, y: -10 }}
-                    className="overflow-hidden"
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Barang</label>
+                  <select 
+                    name="barang_id" 
+                    value={form.barang_id} 
+                    onChange={handleChange} 
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 dark:text-white uppercase"
                   >
-                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-4 border border-slate-100 dark:border-slate-800 flex gap-4 items-center mb-2">
-                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white dark:bg-slate-800 shrink-0 border border-slate-200 dark:border-slate-700">
-                        <img 
-                          src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} 
-                          alt="preview" 
-                          className="w-full h-full object-cover"
-                        />
+                    <option value="">-- PILIH BARANG --</option>
+                    {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang} ({b.kode_barang})</option>)}
+                  </select>
+                </div>
+
+                <AnimatePresence mode="wait">
+                  {selectedBarang && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                      className="p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 flex items-center gap-4"
+                    >
+                      <img src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} alt="p" className="w-12 h-12 rounded-lg object-cover bg-white shadow-sm" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black text-blue-600 uppercase truncate">{selectedBarang.nama_barang}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Stok: {selectedBarang.stok} {selectedBarang.satuan}</p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                           <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.kode_barang}</span>
-                           <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[8px] font-black rounded-lg uppercase tracking-widest">{selectedBarang.nama_kategori}</span>
-                        </div>
-                        <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase truncate mb-2">{selectedBarang.nama_barang}</h4>
-                        <div className="flex items-center gap-3">
-                           <div className="flex flex-col">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Stok Saat Ini</span>
-                              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{selectedBarang.stok} <span className="text-[9px] text-slate-400">{selectedBarang.satuan}</span></span>
-                           </div>
-                           <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
-                           <div className="flex flex-col">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Lokasi</span>
-                              <span className="text-xs font-black text-slate-700 dark:text-slate-300">{selectedBarang.lokasi_rak || "-"}</span>
-                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Jumlah</label>
-                <input type="number" name="jumlah" value={form.jumlah} onChange={handleChange} placeholder="0" className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jumlah</label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      name="jumlah" 
+                      value={form.jumlah} 
+                      onChange={handleChange} 
+                      placeholder="0" 
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-800 dark:text-white" 
+                    />
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 uppercase">{selectedBarang?.satuan || "UNIT"}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan</label>
+                  <textarea 
+                    name="keterangan" 
+                    value={form.keterangan} 
+                    onChange={handleChange} 
+                    placeholder="CATATAN..." 
+                    rows={3}
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 dark:text-white uppercase resize-none" 
+                  />
+                </div>
+
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={loading || !form.barang_id || !form.jumlah} 
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-3"
+                >
+                  {loading ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
+                  Simpan Stok Masuk
+                </button>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Keterangan</label>
-                <textarea name="keterangan" value={form.keterangan} onChange={handleChange} placeholder="..." rows={3} className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 transition-all resize-none" />
-              </div>
-              <button onClick={handleSubmit} disabled={loading} className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
-                {loading ? "Menyimpan..." : "Simpan Stok Masuk"}
-              </button>
             </div>
           </div>
 
-          {/* TABLE: RIWAYAT */}
-          <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
-            <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center gap-4">
-              <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest shrink-0">Riwayat Stok Masuk</h2>
-              <div className="relative w-full max-w-[200px]">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Cari barang..." 
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-[10px] outline-none focus:ring-2 focus:ring-blue-500/10 transition-all font-bold"
-                />
+          {/* RIGHT: HISTORY TABLE */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+              <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Riwayat Transaksi</h2>
+                <div className="relative w-full max-w-[250px]">
+                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text" 
+                    placeholder="CARI DATA..." 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[10px] outline-none font-bold uppercase"
+                  />
+                </div>
               </div>
-            </div>
             {loadingData ? (
               <div className="p-8">
                 <TableSkeleton columns={5} rows={5} />
@@ -282,8 +280,9 @@ export default function StokMasuk() {
           </div>
         </div>
       </div>
+    </div>
 
-      <AnimatePresence>
+    <AnimatePresence>
         {selectedItem && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

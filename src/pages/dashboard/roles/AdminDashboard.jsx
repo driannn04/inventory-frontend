@@ -41,10 +41,8 @@ export default function AdminDashboard() {
    const [data, setData] = useState(null);
    const [loading, setLoading] = useState(true);
 
-   // Tiga filter mandiri untuk setiap bagian
-   const [chartRange, setChartRange] = useState("year");
-   const [pieRange, setPieRange] = useState("year");
-   const [topRange, setTopRange] = useState("year");
+   // 💡 UX SIMPLIFICATION: Single global filter for all sections
+   const [globalRange, setGlobalRange] = useState("year");
 
    const [selectedBarang, setSelectedBarang] = useState(null);
    const [showDetail, setShowDetail] = useState(false);
@@ -55,11 +53,11 @@ export default function AdminDashboard() {
          if (document.visibilityState === "visible") loadData();
       }, 30000);
       return () => clearInterval(interval);
-   }, [chartRange, pieRange, topRange]); // Reload jika salah satu filter berubah
+   }, [globalRange]); // Reload only on globalRange change
 
    const loadData = async () => {
       try {
-         const res = await api.get(`/dashboard?chartRange=${chartRange}&pieRange=${pieRange}&topRange=${topRange}`);
+         const res = await api.get(`/dashboard?chartRange=${globalRange}&pieRange=${globalRange}&topRange=${globalRange}`);
          setData(res.data);
       } catch (err) {
          console.error(err);
@@ -101,7 +99,7 @@ export default function AdminDashboard() {
    } = data;
 
    const trendData = (() => {
-      if (chartRange === '7d' || chartRange === '30d') {
+      if (globalRange === '7d' || globalRange === '30d') {
          // Jika harian, pakai label tanggal langsung dari backend
          return barang_masuk_bulanan.map(m => {
             const k = barang_keluar_bulanan.find(x => x.label === m.label);
@@ -136,16 +134,15 @@ export default function AdminDashboard() {
          className="space-y-8 pb-12"
       >
          <div className="flex justify-between items-center px-2">
-            <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Sistem Overview</h2>
-            <div className="flex gap-6">
-               <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><Globe size={12} /> Server: Aktif</span>
-               </div>
-               <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><Database size={12} /> DB: Connected</span>
-               </div>
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Dashboard Utama</h2>
+            
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+               {["7d", "30d", "6m", "year"].map((t) => (
+                  <button key={t} onClick={() => setGlobalRange(t)}
+                     className={`px-4 py-1.5 rounded-lg text-[10px] font-black transition-all ${globalRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+                     {t.toUpperCase()}
+                  </button>
+               ))}
             </div>
          </div>
 
@@ -162,14 +159,6 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-3">
                      <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><BarChart3 size={18} /></div>
                      <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Tren Mutasi Barang</h3>
-                  </div>
-                  <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
-                     {["7d", "30d", "6m", "year"].map((t) => (
-                        <button key={t} onClick={() => setChartRange(t)}
-                           className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${chartRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
-                           {t.toUpperCase()}
-                        </button>
-                     ))}
                   </div>
                </div>
                <div className="h-[300px] w-full min-w-0">
@@ -198,14 +187,6 @@ export default function AdminDashboard() {
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center">
                <div className="flex justify-between items-center mb-6 w-full">
                   <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Alur Pengajuan</h3>
-                  <div className="flex bg-slate-50 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-100 dark:border-slate-700">
-                     {["7d", "30d", "year"].map((t) => (
-                        <button key={t} onClick={() => setPieRange(t)}
-                           className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${pieRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>
-                           {t.toUpperCase()}
-                        </button>
-                     ))}
-                  </div>
                </div>
                <div className="h-[220px] w-full relative min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
@@ -247,14 +228,6 @@ export default function AdminDashboard() {
                         <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest leading-none">Top Mutasi</h3>
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Barang paling sering keluar</p>
                      </div>
-                  </div>
-                  <div className="flex bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
-                     {["7d", "30d", "year"].map((t) => (
-                        <button key={t} onClick={() => setTopRange(t)}
-                           className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all ${topRange === t ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}>
-                           {t.toUpperCase()}
-                        </button>
-                     ))}
                   </div>
                </div>
 
