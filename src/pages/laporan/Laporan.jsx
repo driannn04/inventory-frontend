@@ -6,7 +6,7 @@ import PageHeader from "../../components/common/PageHeader";
 import {
   BarChart3, FileSpreadsheet, FileText, Search,
   Calendar, RefreshCw, Package, Download,
-  TrendingUp, TrendingDown, ClipboardList, ChevronLeft, ChevronRight,
+  TrendingUp, TrendingDown, ChevronLeft, ChevronRight,
   FileSearch, Hash, Layers, Clock
 } from "lucide-react";
 import { TableSkeleton } from "../../components/common/Skeleton";
@@ -56,7 +56,7 @@ export default function Laporan() {
           setLoading(false);
           return;
         }
-        const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar", pengajuan: "/laporan/pengajuan" }[jenis];
+        const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar" }[jenis];
         res = await api.get(`${endpoint}?start=${startDate}&end=${endDate}`);
       }
       setData(res.data);
@@ -78,7 +78,7 @@ export default function Laporan() {
         endpoint = `${base}/stok`;
         filename = `laporan_stok.${format === "excel" ? "xlsx" : "pdf"}`;
       } else {
-        const map = { masuk: "barang-masuk", keluar: "barang-keluar", pengajuan: "pengajuan" };
+        const map = { masuk: "barang-masuk", keluar: "barang-keluar" };
         endpoint = `${base}/${map[jenis]}?start=${startDate}&end=${endDate}`;
         filename = `laporan_${map[jenis]}.${format === "excel" ? "xlsx" : "pdf"}`;
       }
@@ -105,34 +105,41 @@ export default function Laporan() {
       types.push({ value: "masuk", label: "Barang Masuk", desc: "Penerimaan barang dari supplier", icon: TrendingUp, gradient: "from-emerald-500 to-teal-500" });
     }
     types.push({ value: "keluar", label: "Barang Keluar", desc: "Pengeluaran barang per pengajuan", icon: TrendingDown, gradient: "from-rose-500 to-pink-500" });
-    types.push({ value: "pengajuan", label: "Riwayat Pengajuan", desc: "Detail pengajuan dan item barang", icon: ClipboardList, gradient: "from-amber-500 to-orange-500" });
     return types;
   }, [role]);
 
   // Table config per report type
   const getColumns = () => {
     if (jenis === "stok") return ["Kode Barang", "Nama Barang", "Satuan", "Stok"];
-    if (jenis === "pengajuan") return ["No. Pengajuan", "Pemohon", "Unit", "Barang", "Jumlah", "Status"];
-    if (jenis === "masuk") return ["Nama Barang", "Jumlah", "Satuan", "Tanggal", "Keterangan"];
-    return ["Nama Barang", "Jumlah", "Pemohon", "Unit", "Tanggal"];
+    if (jenis === "masuk") return ["Kode Barang", "Nama Barang", "Satuan", "Jumlah", "Keterangan"];
+    return ["Kode Barang", "Nama Barang", "Satuan", "Jumlah", "Penerima / Unit"];
   };
 
   const getRow = (item) => {
     if (jenis === "stok") return { cells: [item.kode_barang, item.nama_barang, item.satuan || "Pcs", item.stok] };
-    if (jenis === "pengajuan") return {
-      cells: [item.nomor_pengajuan, item.pemohon, item.unit || "-", item.nama_barang, `${item.jumlah} ${item.satuan}`, null],
-      status: item.status?.replace(/_/g, " ").toUpperCase()
-    };
-    if (jenis === "masuk") return { cells: [item.nama_barang, item.jumlah, item.satuan || "Pcs", new Date(item.tanggal).toLocaleDateString("id-ID"), item.keterangan || "-"] };
-    return { cells: [item.nama_barang, `${item.jumlah} ${item.satuan || "Pcs"}`, item.pemohon || "-", item.unit || "-", new Date(item.tanggal).toLocaleDateString("id-ID")] };
+    if (jenis === "masuk") return { cells: [item.kode_barang || "-", item.nama_barang, item.satuan || "Pcs", item.jumlah, item.keterangan || "-"] };
+    return { cells: [item.kode_barang || "-", item.nama_barang, item.satuan || "Pcs", item.jumlah, `${item.pemohon || "-"} / ${item.unit || "-"}`] };
   };
-
   // Filtered & searched data
   const filteredData = useMemo(() => {
     if (!searchQuery) return data;
     const q = searchQuery.toLowerCase();
     return data.filter(item => JSON.stringify(item).toLowerCase().includes(q));
   }, [data, searchQuery]);
+
+  // Group data by date for masuk/keluar
+  const groupedByDate = useMemo(() => {
+    if (jenis === "stok") return null;
+    const groups = {};
+    filteredData.forEach(item => {
+      const dateKey = new Date(item.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(item);
+    });
+    return groups;
+  }, [filteredData, jenis]);
+
+  const isGrouped = jenis !== "stok";
 
   // Summary KPIs
   const totalRows = filteredData.length;
@@ -150,7 +157,7 @@ export default function Laporan() {
         <PageHeader icon={<BarChart3 size={22} />} title="Pusat Laporan" subtitle="Analisis & pelaporan data inventaris" />
 
         {/* ============ REPORT TYPE SELECTOR ============ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {reportTypes.map((type) => {
             const Icon = type.icon;
             const active = jenis === type.value;
@@ -312,20 +319,45 @@ export default function Laporan() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {paginatedData.map((item, idx) => {
-                          const row = getRow(item);
-                          const rowNum = (currentPage - 1) * itemsPerPage + idx + 1;
-                          return (
-                            <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                              <td className="px-5 py-3.5 text-slate-400 font-mono text-xs">{rowNum}</td>
-                              {row.cells.map((val, i) => (
-                                <td key={i} className="px-5 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-semibold">
-                                  {val === null && row.status ? <StatusBadge status={row.status} /> : val}
+                        {isGrouped && groupedByDate ? (
+                          Object.entries(groupedByDate).map(([dateText, items], groupIdx) => (
+                            <>
+                              <tr key={`group-${groupIdx}`} className="bg-sky-50 dark:bg-sky-900/20 border-y border-sky-200 dark:border-sky-800">
+                                <td className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs">{groupIdx + 1}</td>
+                                <td colSpan={getColumns().length} className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar size={14} />
+                                    Tanggal {dateText}
+                                  </div>
                                 </td>
-                              ))}
-                            </tr>
-                          );
-                        })}
+                              </tr>
+                              {items.map((item, idx) => {
+                                const row = getRow(item);
+                                return (
+                                  <tr key={`${groupIdx}-${idx}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                                    <td className="px-5 py-3.5 text-slate-400 font-mono text-xs"></td>
+                                    {row.cells.map((val, i) => (
+                                      <td key={i} className="px-5 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-semibold">{val}</td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                            </>
+                          ))
+                        ) : (
+                          paginatedData.map((item, idx) => {
+                            const row = getRow(item);
+                            const rowNum = (currentPage - 1) * itemsPerPage + idx + 1;
+                            return (
+                              <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                                <td className="px-5 py-3.5 text-slate-400 font-mono text-xs">{rowNum}</td>
+                                {row.cells.map((val, i) => (
+                                  <td key={i} className="px-5 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-semibold">{val}</td>
+                                ))}
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>

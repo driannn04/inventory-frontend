@@ -1,63 +1,29 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import { getBarang } from "../../services/barangService";
-import { tambahStokKeluar, getStokKeluar } from "../../services/stokService";
+import { getStokKeluar } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, AlertCircle, MinusCircle, Package, ClipboardCheck, QrCode, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, ExternalLink, Search, Check } from "lucide-react";
+import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, MinusCircle, Package, ClipboardCheck, X, Eye, MapPin, Tag, Calendar, Hash, FileText, ExternalLink, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
 import { TableSkeleton } from "../../components/common/Skeleton";
 
 export default function StokKeluar() {
-  const [barang, setBarang] = useState([]);
   const [riwayat, setRiwayat] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-  const [form, setForm] = useState({ barang_id: "", jumlah: "", keterangan: "" });
-  const selectedBarang = barang.find(b => b.id == form.barang_id);
+  const itemsPerPage = 10;
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => { loadBarang(); loadRiwayat(); }, []);
+  useEffect(() => { loadRiwayat(); }, []);
 
-  const loadBarang = async () => {
-    try { const res = await getBarang(); setBarang(res.data); } catch (err) { console.log(err); }
-  };
   const loadRiwayat = async () => {
     setLoadingData(true);
     try { const res = await getStokKeluar(); setRiwayat(res.data.sort((a, b) => b.id - a.id)); }
     catch (err) { console.error(err); }
     finally { setLoadingData(false); }
-  };
-
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async () => {
-    if (!form.barang_id || !form.jumlah) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Pilih barang dan jumlah dulu!" }));
-      return;
-    }
-    if (Number(form.jumlah) <= 0) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Jumlah harus lebih dari 0!" }));
-      return;
-    }
-    if (selectedBarang && Number(form.jumlah) > selectedBarang.stok) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Stok Tidak Cukup", text: `Tersedia: ${selectedBarang.stok}` }));
-      return;
-    }
-    try {
-      setLoading(true);
-      await tambahStokKeluar({ ...form, barang_id: Number(form.barang_id), jumlah: Number(form.jumlah) });
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "success", title: "Berhasil!", text: "Stok keluar berhasil disimpan" }));
-      loadRiwayat(); loadBarang(); setCurrentPage(1);
-      setForm({ barang_id: "", jumlah: "", keterangan: "" });
-    } catch (err) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menyimpan data" }));
-    } finally { setLoading(false); }
   };
 
   const filtered = riwayat.filter(r => 
@@ -70,11 +36,6 @@ export default function StokKeluar() {
   const indexFirst = indexLast - itemsPerPage;
   const currentData = filtered.slice(indexFirst, indexLast);
   const totalKeluar = riwayat.reduce((s, r) => s + Number(r.jumlah), 0);
-  const dariPengajuan = riwayat.filter(r => r.keterangan?.startsWith("Dari Pengajuan:")).length;
-  
-  const recentItems = [...new Map(riwayat.slice(0, 20).map(r => [r.barang_id, r])).values()].slice(0, 4);
-
-  const inputClass = "w-full px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm dark:text-white outline-none focus:ring-4 focus:ring-rose-500/15 focus:border-rose-500 transition-all placeholder-slate-400";
 
   const DetailRow = ({ icon, label, value, color }) => (
     <div className="flex items-start gap-3 py-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
@@ -95,9 +56,9 @@ export default function StokKeluar() {
         <PageHeader
           icon={<PackageMinus size={22} />}
           title="Stok Keluar"
-          subtitle="Outbound logistics & pencatatan pengeluaran"
+          subtitle="Riwayat pengeluaran barang melalui pengajuan"
           actions={
-            <button onClick={() => { loadRiwayat(); loadBarang(); }} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-700 transition-all active:scale-95">
+            <button onClick={() => { loadRiwayat(); }} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-700 transition-all active:scale-95">
               <RefreshCw size={16} />
             </button>
           }
@@ -119,87 +80,7 @@ export default function StokKeluar() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT: INPUT FORM */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
-                  <MinusCircle size={20} />
-                </div>
-                <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Input Stok Keluar</h2>
-              </div>
-
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Barang</label>
-                  <select 
-                    name="barang_id" 
-                    value={form.barang_id} 
-                    onChange={handleChange} 
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all text-slate-700 dark:text-white uppercase"
-                  >
-                    <option value="">-- PILIH BARANG --</option>
-                    {barang.map(b => <option key={b.id} value={b.id} disabled={b.stok === 0}>{b.nama_barang} ({b.kode_barang})</option>)}
-                  </select>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {selectedBarang && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                      className="p-4 bg-rose-50/50 dark:bg-rose-900/20 rounded-2xl border border-rose-100 dark:border-rose-800 flex items-center gap-4"
-                    >
-                      <img src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} alt="p" className="w-12 h-12 rounded-lg object-cover bg-white shadow-sm" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black text-rose-600 uppercase truncate">{selectedBarang.nama_barang}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Sisa Stok: {selectedBarang.stok} {selectedBarang.satuan}</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jumlah</label>
-                  <div className="relative">
-                    <input 
-                      type="number" 
-                      name="jumlah" 
-                      value={form.jumlah} 
-                      onChange={handleChange} 
-                      placeholder="0" 
-                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-rose-500/20 transition-all text-slate-800 dark:text-white" 
-                    />
-                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 uppercase">{selectedBarang?.satuan || "UNIT"}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan / Alasan</label>
-                  <textarea 
-                    name="keterangan" 
-                    value={form.keterangan} 
-                    onChange={handleChange} 
-                    placeholder="ALASAN..." 
-                    rows={3}
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all text-slate-700 dark:text-white uppercase resize-none" 
-                  />
-                </div>
-
-                <button 
-                  onClick={handleSubmit} 
-                  disabled={loading || !form.barang_id || !form.jumlah || Number(form.jumlah) > selectedBarang?.stok} 
-                  className="w-full py-4 bg-rose-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all disabled:opacity-50 shadow-lg shadow-rose-500/20 flex items-center justify-center gap-3"
-                >
-                  {loading ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
-                  Simpan Stok Keluar
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: HISTORY TABLE */}
-          <div className="lg:col-span-8 space-y-6">
+        <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
                 <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Riwayat Transaksi</h2>
@@ -316,7 +197,6 @@ export default function StokKeluar() {
           </div>
         </div>
       </div>
-    </div>
 
     {/* ========== DETAIL MODAL ========== */}
     <AnimatePresence>

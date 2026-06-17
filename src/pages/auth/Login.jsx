@@ -93,19 +93,19 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex bg-white overflow-hidden selection:bg-blue-600 selection:text-white">
-      
+
       {/* 🚀 LEFT SIDE: VISUAL (DESKTOP ONLY) */}
       <div className="hidden lg:flex w-[55%] relative items-center justify-center overflow-hidden">
         {/* Full-cover warehouse photo */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
           className="absolute inset-0 z-0"
         >
-          <img 
-            src="/pdam_warehouse_new.png" 
-            alt="Gudang PDAM Tirta Pakuan" 
+          <img
+            src="/pdam_warehouse_new.png"
+            alt="Gudang PDAM Tirta Pakuan"
             className="w-full h-full object-cover"
           />
           {/* Blue gradient overlay agar teks terbaca & warna cerah */}
@@ -114,21 +114,21 @@ export default function Login() {
 
         {/* Branding Overlay - REVISED */}
         <div className="absolute top-12 left-12 z-20 flex flex-col items-start gap-4">
-           <div className="bg-white p-3 rounded-2xl shadow-xl border border-white">
-              <img src="/logo-premium.png" alt="Logo PDAM" className="w-12 h-12 object-contain" />
-           </div>
-           <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-[2rem] shadow-2xl max-w-[280px]">
-              <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">PDAM TIRTA PAKUAN <br/> <span className="text-blue-300">Pusat Inventaris</span></h3>
-              <p className="text-[9px] font-bold text-blue-100 uppercase tracking-[0.2em] mt-3 leading-relaxed opacity-80">
-                Sistem Manajemen Gudang & Aset Inventaris Terpadu.
-              </p>
-           </div>
+          <div className="bg-white p-3 rounded-2xl shadow-xl border border-white">
+            <img src="/logo-premium.png" alt="Logo PDAM" className="w-12 h-12 object-contain" />
+          </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-[2rem] shadow-2xl max-w-[280px]">
+            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">PDAM TIRTA PAKUAN <br /> <span className="text-blue-300">Pusat Inventaris</span></h3>
+            <p className="text-[9px] font-bold text-blue-100 uppercase tracking-[0.2em] mt-3 leading-relaxed opacity-80">
+              Sistem Manajemen Gudang & Aset Inventaris Terpadu.
+            </p>
+          </div>
         </div>
       </div>
 
       {/* 🔐 RIGHT SIDE: LOGIN FORM */}
       <div className="w-full lg:w-[45%] flex flex-col items-center justify-center p-6 sm:p-10 relative">
-        
+
         {/* Mobile Background Elements */}
         <div className="lg:hidden absolute inset-0 z-0 overflow-hidden">
           <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-blue-50 blur-[100px] rounded-full opacity-60" />
@@ -137,14 +137,14 @@ export default function Login() {
         <div className="w-full max-w-[360px] relative z-10">
           {/* LOGO AREA */}
           <div className="flex flex-col items-center mb-10 lg:items-start">
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               className="w-14 h-14 bg-blue-50 rounded-2xl p-2 mb-5 border border-blue-100 shadow-sm"
             >
               <img src="/logo-premium.png" alt="Logo PDAM" className="w-full h-full object-contain" />
             </motion.div>
-            
+
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -184,8 +184,8 @@ export default function Login() {
             {/* IDENTITY PREVIEW */}
             <AnimatePresence>
               {userData && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0, scale: 0.95 }} 
+                <motion.div
+                  initial={{ opacity: 0, height: 0, scale: 0.95 }}
                   animate={{ opacity: 1, height: "auto", scale: 1 }}
                   exit={{ opacity: 0, height: 0, scale: 0.95 }}
                   className="bg-blue-600 p-4 rounded-2xl flex items-center gap-4 shadow-xl shadow-blue-600/20"
@@ -194,8 +194,16 @@ export default function Login() {
                     {userData.nama?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0 text-white">
-                     <p className="text-[13px] font-black leading-none truncate mb-1 uppercase tracking-tight">{userData.nama}</p>
-                     <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">{userData.role?.replace('_', ' ')}</p>
+                    <p className="text-[13px] font-black leading-none truncate mb-1 uppercase tracking-tight">{userData.nama}</p>
+                    <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
+                      {userData.role === 'admin'
+                        ? 'ADMIN'
+                        : userData.role === 'gudang'
+                          ? 'PERGUDANGAN'
+                          : userData.role === 'manager'
+                            ? `MANAGER - ${userData.departemen || ''}`
+                            : `${userData.role?.replace('_', ' ')?.toUpperCase()} - ${userData.sub_departemen || userData.departemen || ''}`}
+                    </p>
                   </div>
                   <CheckCircle2 size={20} className="text-blue-200" />
                 </motion.div>
@@ -239,19 +247,19 @@ export default function Login() {
             </motion.button>
           </form>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="mt-10 pt-6 border-t border-slate-50 text-center lg:text-left flex flex-col lg:flex-row lg:items-center gap-3"
           >
-             <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-                &copy; {new Date().getFullYear()} PDAM Tirta Pakuan Bogor
-             </p>
-             <div className="hidden lg:block w-1 h-1 rounded-full bg-slate-200" />
-             <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
-                Dibuat oleh Drian &amp; Aden
-             </p>
+            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+              &copy; {new Date().getFullYear()} PDAM Tirta Pakuan Bogor
+            </p>
+            <div className="hidden lg:block w-1 h-1 rounded-full bg-slate-200" />
+            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
+              Dibuat oleh Drian &amp; Aden
+            </p>
           </motion.div>
         </div>
       </div>

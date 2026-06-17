@@ -7,7 +7,6 @@ import {
   CheckCircle,
   XCircle,
   ArrowDownCircle,
-  ArrowUpCircle,
   RotateCcw,
   Square,
   Play,
@@ -15,7 +14,6 @@ import {
   Settings2,
   Zap,
   Package,
-  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Minus,
@@ -23,7 +21,7 @@ import {
   Loader2
 } from "lucide-react";
 import { scanQR } from "../../services/barangService";
-import { tambahStokMasuk, tambahStokKeluar } from "../../services/stokService";
+import { tambahStokMasuk } from "../../services/stokService";
 import PageHeader from "../../components/common/PageHeader";
 
 export default function ScanQR() {
@@ -39,22 +37,18 @@ export default function ScanQR() {
   const [loadingAction, setLoadingAction] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(true);
 
-  const [status, setStatus] = useState("idle"); // idle | scanning | paused | processing
+  const [status, setStatus] = useState("idle");
   const [modeAuto, setModeAuto] = useState(false);
-  const [tipeAuto, setTipeAuto] = useState("masuk"); // masuk | keluar
   const [jumlah, setJumlah] = useState(1);
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [autoProcessingMsg, setAutoProcessingMsg] = useState("");
   const itemsPerPage = 5;
 
-  // Refs for logic sync
   const modeAutoRef = useRef(modeAuto);
-  const tipeAutoRef = useRef(tipeAuto);
   const jumlahRef = useRef(jumlah);
 
   useEffect(() => { modeAutoRef.current = modeAuto; }, [modeAuto]);
-  useEffect(() => { tipeAutoRef.current = tipeAuto; }, [tipeAuto]);
   useEffect(() => { jumlahRef.current = jumlah; }, [jumlah]);
 
   useEffect(() => {
@@ -117,14 +111,12 @@ export default function ScanQR() {
       setStatus("scanning");
       setError(null);
       
-      // 1. Cek apakah ada kamera
       const devices = await Html5Qrcode.getCameras();
       if (!devices || devices.length === 0) {
         setError("Perangkat kamera tidak ditemukan");
         return;
       }
 
-      // 2. Matikan instance lama jika ada
       if (scannerRef.current) {
         try {
           if (scannerRef.current.isScanning()) await scannerRef.current.stop();
@@ -132,7 +124,6 @@ export default function ScanQR() {
         } catch (e) { console.warn("Cleanup warning:", e); }
       }
 
-      // 3. Tunggu sebentar agar hardware benar-benar lepas
       await new Promise(r => setTimeout(r, 800));
 
       const scanner = new Html5Qrcode("reader");
@@ -180,13 +171,10 @@ export default function ScanQR() {
             if (modeAutoRef.current) {
               setAutoProcessingMsg(`Processing: ${dataBarang.nama_barang}`);
               const qty = parseInt(jumlahRef.current) || 1;
-              if (tipeAutoRef.current === "masuk") {
-                await tambahStokMasuk({ barang_id: dataBarang.id, jumlah: qty, keterangan: "Auto Scan" });
-              } else {
-                await tambahStokKeluar({ barang_id: dataBarang.id, jumlah: qty, keterangan: "Auto Scan" });
-              }
+              
+              await tambahStokMasuk({ barang_id: dataBarang.id, jumlah: qty, keterangan: "Auto Scan" });
 
-              setHistory(prev => [{ ...dataBarang, waktu: new Date().toLocaleTimeString(), aksi: tipeAutoRef.current === "masuk" ? "Masuk" : "Keluar", jumlah: qty }, ...prev]);
+              setHistory(prev => [{ ...dataBarang, waktu: new Date().toLocaleTimeString(), aksi: "Masuk", jumlah: qty }, ...prev]);
               
               setTimeout(() => { 
                 isProcessingRef.current = false;
@@ -216,18 +204,16 @@ export default function ScanQR() {
     }
   };
 
-  const handleManualAction = async (type) => {
+  const handleManualAction = async () => {
     if (!barang) return;
     try {
       setLoadingAction(true);
       const qty = parseInt(jumlah) || 1;
-      if (type === "masuk") {
-        await tambahStokMasuk({ barang_id: barang.id, jumlah: qty, keterangan: "Manual Scan" });
-      } else {
-        await tambahStokKeluar({ barang_id: barang.id, jumlah: qty, keterangan: "Manual Scan" });
-      }
+      
+      await tambahStokMasuk({ barang_id: barang.id, jumlah: qty, keterangan: "Manual Scan" });
+      
       playBeep();
-      setHistory(prev => [{ ...barang, waktu: new Date().toLocaleTimeString(), aksi: type === "masuk" ? "Masuk" : "Keluar", jumlah: qty }, ...prev]);
+      setHistory(prev => [{ ...barang, waktu: new Date().toLocaleTimeString(), aksi: "Masuk", jumlah: qty }, ...prev]);
       
       setBarang(null);
       setJumlah(1);
@@ -308,7 +294,7 @@ export default function ScanQR() {
               )}
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 grid grid-cols-1 gap-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                    <Settings2 size={16} className="text-blue-500" />
@@ -318,17 +304,6 @@ export default function ScanQR() {
                    <button onClick={() => setModeAuto(false)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${!modeAuto ? "bg-white dark:bg-slate-700 text-blue-600 shadow-sm" : "text-slate-400"}`}>Manual</button>
                    <button onClick={() => setModeAuto(true)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${modeAuto ? "bg-blue-600 text-white shadow-lg" : "text-slate-400"}`}>Auto Scan</button>
                 </div>
-              </div>
-
-              <div className="space-y-4">
-                 <div className="flex items-center gap-2">
-                    <Zap size={16} className="text-amber-500" />
-                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Default Action</h2>
-                 </div>
-                 <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
-                    <button onClick={() => setTipeAuto("masuk")} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${tipeAuto === "masuk" ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400"}`}>Stok Masuk</button>
-                    <button onClick={() => setTipeAuto("keluar")} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${tipeAuto === "keluar" ? "bg-red-500 text-white shadow-lg" : "text-slate-400"}`}>Stok Keluar</button>
-                 </div>
               </div>
             </div>
           </div>
@@ -361,14 +336,10 @@ export default function ScanQR() {
                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <button onClick={() => handleManualAction("masuk")} disabled={loadingAction} className="group relative flex flex-col items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white p-5 rounded-[2rem] transition-all shadow-xl shadow-emerald-600/20 active:scale-95">
+                    <div className="grid grid-cols-1 gap-4">
+                      <button onClick={handleManualAction} disabled={loadingAction} className="group relative flex flex-col items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white p-5 rounded-[2rem] transition-all shadow-xl shadow-emerald-600/20 active:scale-95">
                         {loadingAction ? <Loader2 size={24} className="animate-spin" /> : <ArrowDownCircle size={24} />}
-                        <span className="text-[10px] font-black uppercase tracking-[0.1em]">Tambah Stok</span>
-                      </button>
-                      <button onClick={() => handleManualAction("keluar")} disabled={loadingAction} className="group relative flex flex-col items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white p-5 rounded-[2rem] transition-all shadow-xl shadow-rose-600/20 active:scale-95">
-                        {loadingAction ? <Loader2 size={24} className="animate-spin" /> : <ArrowUpCircle size={24} />}
-                        <span className="text-[10px] font-black uppercase tracking-[0.1em]">Kurang Stok</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.1em]">Tambah Stok Masuk</span>
                       </button>
                     </div>
 
@@ -416,7 +387,7 @@ export default function ScanQR() {
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={i} className={`p-4 rounded-2xl border transition-all hover:scale-[1.02] flex justify-between items-center ${item.aksi === "Masuk" ? "bg-emerald-50/30 border-emerald-100/50" : "bg-rose-50/30 border-rose-100/50"}`}>
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.aksi === "Masuk" ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"}`}>
-                            {item.aksi === "Masuk" ? <ArrowDownCircle size={20} /> : <ArrowUpCircle size={20} />}
+                            {item.aksi === "Masuk" ? <ArrowDownCircle size={20} /> : <ArrowDownCircle size={20} />}
                           </div>
                           <div>
                             <p className="font-black text-[11px] uppercase text-slate-800 dark:text-white leading-tight">{item.nama_barang}</p>

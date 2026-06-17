@@ -221,7 +221,7 @@ export default function Topbar({ onMenuClick }) {
       <div className="flex items-center gap-4 md:gap-6">
 
         {/* Hamburger Menu (Mobile Only) */}
-        <button 
+        <button
           onClick={onMenuClick}
           className="p-2 -ml-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden transition-colors"
         >
@@ -255,8 +255,8 @@ export default function Topbar({ onMenuClick }) {
         <button
           onClick={toggleDarkMode}
           className={`p-2 rounded-full transition-all duration-300 ${isDark
-              ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700'
-              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700'
+            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
             }`}
           title={isDark ? "Ganti ke Tema Terang" : "Ganti ke Tema Gelap"}
         >
@@ -358,8 +358,8 @@ export default function Topbar({ onMenuClick }) {
                         key={tab}
                         onClick={() => setNotifFilter(tab === "Belum Dibaca" ? "unread" : null)}
                         className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all ${isActive
-                            ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600"
-                            : "text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
+                          ? "bg-sky-100 dark:bg-sky-900/30 text-sky-600"
+                          : "text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
                           }`}
                       >
                         {tab}
@@ -522,6 +522,15 @@ export default function Topbar({ onMenuClick }) {
                     )}
                   </div>
                   <p className="text-sm font-black text-slate-800 dark:text-white truncate">{user?.nama}</p>
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1 leading-tight">
+                    {user?.role === 'admin'
+                      ? 'ADMIN'
+                      : user?.role === 'gudang'
+                        ? 'PERGUDANGAN'
+                        : user?.role === 'manager'
+                          ? `MANAGER - ${user?.departemen || ''}`
+                          : `${{ staff: 'STAFF', asisten_manager: 'ASISTEN MANAGER' }[user?.role] || user?.role?.replace('_', ' ')?.toUpperCase()} - ${user?.sub_departemen || user?.departemen || ''}`}
+                  </p>
                 </div>
                 <div className="p-2">
                   <Link

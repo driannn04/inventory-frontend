@@ -123,8 +123,22 @@ export default function UserManagement() {
   };
 
   const handleSave = async () => {
-    if (!form.nama || !form.role_id || !form.id_dept || !form.id_subdept) {
-      alert("Nama, Role, Departemen, dan Sub-Departemen wajib diisi!");
+    const selectedRole = roles.find(r => r.id === Number(form.role_id));
+    const roleName = selectedRole ? selectedRole.nama_role : "";
+
+    const isDeptRequired = roleName !== "admin";
+    const isSubDeptRequired = roleName === "staff" || roleName === "asisten_manager";
+
+    if (!form.nama || !form.role_id) {
+      alert("Nama dan Role wajib diisi!");
+      return;
+    }
+    if (isDeptRequired && !form.id_dept) {
+      alert("Departemen wajib diisi!");
+      return;
+    }
+    if (isSubDeptRequired && !form.id_subdept) {
+      alert("Sub-Departemen wajib diisi!");
       return;
     }
     if (!editingData && !form.password) {

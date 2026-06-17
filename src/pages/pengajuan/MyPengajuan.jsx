@@ -53,7 +53,7 @@ export default function MyPengajuan() {
   const filtered = data.filter(item => {
     const matchStatus = filterStatus ? item.status === filterStatus : true;
     const matchSearch = (item.nomor_pengajuan?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (item.keperluan?.toLowerCase() || "").includes(search.toLowerCase());
+      (item.catatan?.toLowerCase() || "").includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
 
@@ -174,7 +174,7 @@ export default function MyPengajuan() {
                           </span>
                         </td>
                         <td className="px-8 py-5">
-                          <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight line-clamp-1">{item.keperluan || "Tanpa Keterangan"}</p>
+                          <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight line-clamp-1">{item.catatan || "Tanpa Keterangan"}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{item.jumlah_item} Item Barang</p>
                           {item.sub_dept_pengaju && (
                             <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">

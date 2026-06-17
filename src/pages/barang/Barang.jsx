@@ -276,7 +276,6 @@ export default function Barang() {
                               <button onClick={() => handleShowQR(item)} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-emerald-600 transition-all shadow-sm"><QrCode size={14} /></button>
                             </>
                           )}
-                          <Link to={`/barang/${item.id}/kartu-stok`} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-blue-600 transition-all shadow-sm"><ScrollText size={14} /></Link>
                         </div>
                       </td>
                     </tr>
@@ -339,7 +338,7 @@ export default function Barang() {
                     </div>
                   </div>
                   <div className="mt-4 px-2">
-                    {role === 'staff' ? (
+                    {role === 'staff' && (
                       <button 
                         onClick={() => navigate("/buat-pengajuan", { state: { directItem: item } })}
                         disabled={Number(item.stok_tersedia) <= 0}
@@ -350,8 +349,6 @@ export default function Barang() {
                       >
                         <Plus size={14} /> Ajukan Barang
                       </button>
-                    ) : (
-                      <Link to={`/barang/${item.id}/kartu-stok`} className="w-full py-3 bg-white dark:bg-slate-900 text-blue-600 border-2 border-blue-50 dark:border-blue-900/50 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-2 active:scale-95"><ScrollText size={14} /> Kartu Stok</Link>
                     )}
                   </div>
                 </motion.div>

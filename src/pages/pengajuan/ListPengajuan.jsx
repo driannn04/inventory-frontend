@@ -3,8 +3,8 @@ import MainLayout from "../../components/layout/MainLayout";
 import { getPengajuan } from "../../services/pengajuanService";
 import { getRole, getUserId } from "../../utils/auth";
 import { useNavigate } from "react-router-dom";
-import { 
-  ClipboardList, Plus, RefreshCw, Search, ChevronLeft, ChevronRight, 
+import {
+  ClipboardList, Plus, RefreshCw, Search, ChevronLeft, ChevronRight,
   Eye, ShieldCheck, User, Package, CheckCircle, XCircle, LayoutGrid, ListFilter
 } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
@@ -12,16 +12,16 @@ import { TableSkeleton } from "../../components/common/Skeleton";
 
 const STATUS_CONFIG = {
   pending_asisten_manager: { label: "Menunggu Asmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
-  pending_manager:    { label: "Menunggu Manager",  cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-  pending_gudang:     { label: "Menunggu Gudang",   cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-  completed:          { label: "Selesai",            cls: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-900/50" },
-  rejected:           { label: "Ditolak",            cls: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50" },
+  pending_manager: { label: "Menunggu Manager", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+  pending_gudang: { label: "Menunggu Gudang", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+  completed: { label: "Selesai", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-900/50" },
+  rejected: { label: "Ditolak", cls: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50" },
 };
 
 const URGENCY_CONFIG = {
   darurat: "bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50",
   penting: "bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50",
-  normal:  "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50",
+  normal: "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50",
 };
 
 export default function ListPengajuan() {
@@ -46,8 +46,8 @@ export default function ListPengajuan() {
   };
 
   const filtered = data.filter(item => {
-    const matchSearch = (item.nomor_pengajuan?.toLowerCase() || "").includes(search.toLowerCase()) || 
-                       (item.nama?.toLowerCase() || "").includes(search.toLowerCase());
+    const matchSearch = (item.nomor_pengajuan?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (item.nama?.toLowerCase() || "").includes(search.toLowerCase());
     const matchStatus = filterStatus ? item.status === filterStatus : true;
     const matchMine = filterMine ? item.user_id === userId : true;
     return matchSearch && matchStatus && matchMine;
@@ -82,7 +82,7 @@ export default function ListPengajuan() {
               <button onClick={loadData} disabled={loading} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 transition-all">
                 <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               </button>
-              {(role === "staff" || role === "admin" || role === "asisten_manager" || role === "manager") && (
+              {(role === "staff" || role === "asisten_manager" || role === "manager") && (
                 <button onClick={() => navigate("/buat-pengajuan")} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white px-5 py-3 rounded-2xl shadow-lg shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all font-black text-xs uppercase tracking-widest">
                   <Plus size={16} /> Buat Pengajuan
                 </button>
@@ -94,12 +94,12 @@ export default function ListPengajuan() {
         {/* MINIMALIST INTERACTIVE STAT CARDS — Global List */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {stats.map((s) => (
-            <button 
-              key={s.key} 
+            <button
+              key={s.key}
               onClick={() => { setFilterStatus(s.key); setCurrentPage(1); }}
               className={`relative overflow-hidden p-4 rounded-2xl border transition-all duration-300 text-left group
-                ${filterStatus === s.key 
-                  ? "bg-white dark:bg-slate-900 border-blue-500 ring-4 ring-blue-500/5 shadow-md shadow-blue-500/5 scale-[1.02]" 
+                ${filterStatus === s.key
+                  ? "bg-white dark:bg-slate-900 border-blue-500 ring-4 ring-blue-500/5 shadow-md shadow-blue-500/5 scale-[1.02]"
                   : "bg-white/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm"}`}
             >
               <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export default function ListPengajuan() {
         {/* SEARCH & FILTERS BAR */}
         <div className="relative">
           <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
+          <input
             type="text" placeholder="Cari nomor pengajuan atau nama pemohon..." value={search}
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all font-medium dark:text-white shadow-sm"
@@ -133,81 +133,80 @@ export default function ListPengajuan() {
         {/* TABLE AREA */}
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
           {loading ? (
-             <div className="p-8"><TableSkeleton columns={7} rows={5} /></div>
+            <div className="p-8"><TableSkeleton columns={7} rows={5} /></div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[900px]">
-              <thead>
-                <tr className="bg-slate-50/30 dark:bg-slate-800/30 border-b border-slate-50 dark:border-slate-800">
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemohon</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Urgensi</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                {currentData.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-24 text-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                          <ClipboardList size={28} className="text-slate-300 dark:text-slate-600" />
-                        </div>
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tidak ada pengajuan ditemukan</p>
-                      </div>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[900px]">
+                <thead>
+                  <tr className="bg-slate-50/30 dark:bg-slate-800/30 border-b border-slate-50 dark:border-slate-800">
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemohon</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Urgensi</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Aksi</th>
                   </tr>
-                ) : currentData.map((item, idx) => {
-                  const badge = STATUS_CONFIG[item.status] || { label: item.status, cls: "bg-slate-50 text-slate-600" };
-                  const urgency = URGENCY_CONFIG[item.urgensi] || URGENCY_CONFIG.normal;
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group border-b border-slate-50 dark:border-slate-800 last:border-0">
-                      <td className="px-8 py-5 text-[11px] font-bold text-slate-400">{indexFirst + idx + 1}</td>
-                      <td className="px-8 py-5">
-                        <span className="font-black text-blue-600 dark:text-blue-400 text-[11px] font-mono uppercase tracking-tight bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                          {item.nomor_pengajuan}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{item.nama}</p>
-                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border mt-1 inline-block ${
-                          item.pengaju_role === 'manager' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                          item.pengaju_role === 'asisten_manager' ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                          'bg-slate-50 text-slate-500 border-slate-200'
-                        }`}>
-                          {{ staff: 'Staff', admin: 'Admin', asisten_manager: 'Asmen', manager: 'Manager', gudang: 'Gudang' }[item.pengaju_role] || item.pengaju_role || 'Staff'}
-                        </span>
-                        {item.sub_dept_pengaju && (
-                          <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                            Unit: {item.sub_dept_pengaju}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        {new Date(item.tanggal_pengajuan).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${urgency}`}>{item.urgensi || "normal"}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${badge.cls}`}>{badge.label}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex justify-center items-center">
-                          <button onClick={() => navigate(`/pengajuan/${item.id}`)} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm active:scale-95">
-                            <Eye size={15} />
-                          </button>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                  {currentData.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-24 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                            <ClipboardList size={28} className="text-slate-300 dark:text-slate-600" />
+                          </div>
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tidak ada pengajuan ditemukan</p>
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  ) : currentData.map((item, idx) => {
+                    const badge = STATUS_CONFIG[item.status] || { label: item.status, cls: "bg-slate-50 text-slate-600" };
+                    const urgency = URGENCY_CONFIG[item.urgensi] || URGENCY_CONFIG.normal;
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group border-b border-slate-50 dark:border-slate-800 last:border-0">
+                        <td className="px-8 py-5 text-[11px] font-bold text-slate-400">{indexFirst + idx + 1}</td>
+                        <td className="px-8 py-5">
+                          <span className="font-black text-blue-600 dark:text-blue-400 text-[11px] font-mono uppercase tracking-tight bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                            {item.nomor_pengajuan}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <p className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">{item.nama}</p>
+                          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border mt-1 inline-block ${item.pengaju_role === 'manager' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            item.pengaju_role === 'asisten_manager' ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                              'bg-slate-50 text-slate-500 border-slate-200'
+                            }`}>
+                            {{ staff: 'Staff', admin: 'Admin', asisten_manager: 'Asmen', manager: 'Manager', gudang: 'Gudang' }[item.pengaju_role] || item.pengaju_role || 'Staff'}
+                          </span>
+                          {item.sub_dept_pengaju && (
+                            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                              Unit: {item.sub_dept_pengaju}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400">
+                          {new Date(item.tanggal_pengajuan).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${urgency}`}>{item.urgensi || "normal"}</span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${badge.cls}`}>{badge.label}</span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <div className="flex justify-center items-center">
+                            <button onClick={() => navigate(`/pengajuan/${item.id}`)} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm active:scale-95">
+                              <Eye size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
 
           {/* DYNAMIC SLIDING WINDOW PAGINATION */}
@@ -218,7 +217,7 @@ export default function ListPengajuan() {
               </span>
               <div className="flex items-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all shadow-sm"><ChevronLeft size={16} /></button>
-                
+
                 <div className="flex px-1 gap-1.5 items-center">
                   {(() => {
                     const pages = [];
@@ -233,9 +232,9 @@ export default function ListPengajuan() {
                       p === "..." ? (
                         <span key={`sep-${i}`} className="px-1 text-slate-400 font-black">...</span>
                       ) : (
-                        <button 
-                          key={p} 
-                          onClick={() => setCurrentPage(p)} 
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
                           className={`w-10 h-10 rounded-xl text-[11px] font-black transition-all ${currentPage === p ? "bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/25" : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50"}`}
                         >
                           {p}

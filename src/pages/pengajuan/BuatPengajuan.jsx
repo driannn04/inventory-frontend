@@ -382,7 +382,7 @@ export default function BuatPengajuan() {
             </AnimatePresence>
 
             {/* THE CART LIST */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-xl border border-white/40 dark:border-slate-800 flex flex-col max-h-[70vh]">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-xl border border-white/40 dark:border-slate-800 flex flex-col">
               <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-600/20"><ClipboardList size={18} /></div>
@@ -391,7 +391,7 @@ export default function BuatPengajuan() {
                 {cart.length > 0 && <button onClick={() => setCart([])} className="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline">Hapus Semua</button>}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-4">
+              <div className="max-h-[350px] overflow-y-auto p-8 custom-scrollbar space-y-4">
                 {cart.length === 0 ? (
                   <div className="py-20 text-center opacity-40">
                     <Package size={48} className="mx-auto mb-4 text-slate-300" />
@@ -417,52 +417,52 @@ export default function BuatPengajuan() {
                   ))
                 )}
               </div>
+            </div>
 
-              {/* NOTES & URGENSI — Inside the sticky right panel now */}
-              <div className="p-8 border-t border-slate-100 dark:border-slate-800 bg-slate-50/20 space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileText size={14} className="text-amber-500" />
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Keterangan / Keperluan</label>
-                  </div>
-                  <textarea rows={2} value={catatan} onChange={(e) => setCatatan(e.target.value)}
-                    className={`${inputClass} resize-none mb-4`} placeholder="Bekerja untuk unit..." />
-                  
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle size={14} className="text-rose-500" />
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tingkat Urgensi</label>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["normal", "penting", "darurat"].map(val => (
-                      <button key={val} onClick={() => setUrgensi(val)}
-                        className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all border-2 
-                          ${urgensi === val ? 
-                            (val === 'normal' ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10" : 
-                             val === 'penting' ? "bg-amber-50 border-amber-500 text-amber-600 shadow-lg shadow-amber-500/10" : 
-                             "bg-rose-50 border-rose-500 text-rose-600 shadow-lg shadow-rose-500/10") 
-                            : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200"}`}>
-                        {val}
-                      </button>
-                    ))}
-                  </div>
+            {/* FORM DETAIL */}
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-[2.5rem] shadow-xl border border-white/40 dark:border-slate-800 p-8 space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText size={14} className="text-amber-500" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Keterangan / Keperluan</label>
                 </div>
-
-                <div className="pt-2">
-                  <div className="group relative">
-                    <button 
-                      onClick={handleSubmit} 
-                      disabled={loading || cart.length === 0}
-                      className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-700 to-sky-600 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                      {loading ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
-                      {location.state?.editMode ? "Simpan Perubahan" : "Ajukan Pengajuan"}
+                <textarea rows={2} value={catatan} onChange={(e) => setCatatan(e.target.value)}
+                  className={`${inputClass} resize-none mb-4`} placeholder="Bekerja untuk unit..." />
+                
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle size={14} className="text-rose-500" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tingkat Urgensi</label>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {["normal", "penting", "darurat"].map(val => (
+                    <button key={val} onClick={() => setUrgensi(val)}
+                      className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all border-2 
+                        ${urgensi === val ? 
+                          (val === 'normal' ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10" : 
+                           val === 'penting' ? "bg-amber-50 border-amber-500 text-amber-600 shadow-lg shadow-amber-500/10" : 
+                           "bg-rose-50 border-rose-500 text-rose-600 shadow-lg shadow-rose-500/10") 
+                          : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200"}`}>
+                      {val}
                     </button>
-                    {cart.length === 0 && (
-                      <span className="absolute -top-12 left-1/2 -translate-x-1/2 w-max px-3 py-2 bg-slate-800 text-white text-[10px] font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        Belum ada barang di daftar
-                      </span>
-                    )}
-                  </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <div className="group relative">
+                  <button 
+                    onClick={handleSubmit} 
+                    disabled={loading || cart.length === 0}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-700 to-sky-600 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {loading ? <RefreshCw className="animate-spin" size={18} /> : <Send size={18} />}
+                    {location.state?.editMode ? "Simpan Perubahan" : "Ajukan Pengajuan"}
+                  </button>
+                  {cart.length === 0 && (
+                    <span className="absolute -top-12 left-1/2 -translate-x-1/2 w-max px-3 py-2 bg-slate-800 text-white text-[10px] font-bold rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      Belum ada barang di daftar
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
