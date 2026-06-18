@@ -82,6 +82,38 @@ export default function UserManagement() {
     }
   };
 
+  const handleRoleChange = (roleId) => {
+    const selectedRole = roles.find(r => r.id === Number(roleId));
+    let newJabatanId = form.jabatan_id;
+    
+    let newSubDeptId = form.id_subdept;
+    
+    if (selectedRole) {
+      const roleName = selectedRole.nama_role;
+      let matchingJabatans = jabatans;
+      
+      if (roleName === "manager") {
+        matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
+      } else if (roleName === "asisten_manager") {
+        matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("asisten manager"));
+      } else if (roleName === "staff") {
+        matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
+      }
+      
+      if (matchingJabatans.length === 1) {
+        newJabatanId = matchingJabatans[0].id;
+      } else if (!matchingJabatans.find(j => j.id === Number(newJabatanId))) {
+        newJabatanId = "";
+      }
+
+      if (roleName !== "staff" && roleName !== "asisten_manager") {
+        newSubDeptId = "";
+      }
+    }
+    
+    setForm(prev => ({ ...prev, role_id: roleId, jabatan_id: newJabatanId, id_subdept: newSubDeptId }));
+  };
+
   const openCreate = async () => {
     setEditingData(null);
     setForm({ 
@@ -247,6 +279,21 @@ export default function UserManagement() {
     const matchRole = filterRole ? item.role === filterRole : true;
     return matchSearch && matchRole;
   });
+
+  const getFilteredJabatans = () => {
+    const selectedRole = roles.find(r => r.id === Number(form.role_id));
+    if (!selectedRole) return jabatans;
+    
+    const roleName = selectedRole.nama_role;
+    if (roleName === "manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
+    if (roleName === "asisten_manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("asisten manager"));
+    if (roleName === "staff") return jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
+    return jabatans;
+  };
+  const filteredJabatans = getFilteredJabatans();
+
+  const selectedRoleObj = roles.find(r => r.id === Number(form.role_id));
+  const isSubDeptDisabled = selectedRoleObj && selectedRoleObj.nama_role !== "staff" && selectedRoleObj.nama_role !== "asisten_manager";
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const currentData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -599,7 +646,7 @@ export default function UserManagement() {
                       <div className="relative">
                         <Shield size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
-                          value={form.role_id} onChange={(e) => setForm({ ...form, role_id: e.target.value })}
+                          value={form.role_id} onChange={(e) => handleRoleChange(e.target.value)}
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none"
                         >
                           <option value="">Pilih Role</option>
@@ -620,7 +667,7 @@ export default function UserManagement() {
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none"
                         >
                           <option value="">Pilih Jabatan</option>
-                          {jabatans.map(j => (
+                          {filteredJabatans.map(j => (
                             <option key={j.id} value={j.id}>{j.nama_jabatan}</option>
                           ))}
                         </select>
@@ -650,7 +697,7 @@ export default function UserManagement() {
                       <div className="relative">
                         <Layers size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
-                          disabled={!form.id_dept}
+                          disabled={!form.id_dept || isSubDeptDisabled}
                           value={form.id_subdept} 
                           onChange={(e) => setForm({ ...form, id_subdept: e.target.value })}
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none disabled:opacity-50"
