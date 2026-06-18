@@ -103,7 +103,8 @@ export default function KartuStok() {
     try {
       const res = await exportKartuStokExcel(id, buildParams());
       const kode = data?.barang?.kode_barang || id;
-      triggerDownload(res.data, `kartu_stok_${kode}.xlsx`);
+      const ts = new Date().toISOString().replace(/T/, '_').replace(/:/g, '-').split('.')[0];
+      triggerDownload(res.data, `kartu_stok_${kode}_${ts}.xlsx`);
     } catch (err) {
       setError(err?.response?.data?.message || "Gagal export Excel");
     } finally {

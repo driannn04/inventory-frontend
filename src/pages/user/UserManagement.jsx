@@ -82,11 +82,11 @@ export default function UserManagement() {
     }
   };
 
-  const handleRoleChange = (roleId) => {
+  const handleRoleChange = async (roleId) => {
     const selectedRole = roles.find(r => r.id === Number(roleId));
     let newJabatanId = form.jabatan_id;
-    
     let newSubDeptId = form.id_subdept;
+    let newDeptId = form.id_dept;
     
     if (selectedRole) {
       const roleName = selectedRole.nama_role;
@@ -96,7 +96,7 @@ export default function UserManagement() {
         matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
       } else if (roleName === "asisten_manager") {
         matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("asisten manager"));
-      } else if (roleName === "staff") {
+      } else if (roleName === "staff" || roleName === "admin" || roleName === "gudang") {
         matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
       }
       
@@ -109,9 +109,33 @@ export default function UserManagement() {
       if (roleName !== "staff" && roleName !== "asisten_manager") {
         newSubDeptId = "";
       }
+
+      if (roleName === "admin") {
+         const qhse = departments.find(d => d.nama_dept.toUpperCase() === "QHSE");
+         if (qhse) {
+             newDeptId = qhse.id;
+             try {
+                const res = await getSubDepartments(qhse.id);
+                setSubDepartments(res.data);
+                const itSub = res.data.find(s => s.nama_sub.toUpperCase() === "IT");
+                if (itSub) newSubDeptId = itSub.id;
+             } catch(err){}
+         }
+      } else if (roleName === "gudang") {
+         const perlengkapan = departments.find(d => d.nama_dept.toUpperCase() === "PERLENGKAPAN");
+         if (perlengkapan) {
+             newDeptId = perlengkapan.id;
+             try {
+                const res = await getSubDepartments(perlengkapan.id);
+                setSubDepartments(res.data);
+                const gudangSub = res.data.find(s => s.nama_sub.toUpperCase() === "PERGUDANGAN");
+                if (gudangSub) newSubDeptId = gudangSub.id;
+             } catch(err){}
+         }
+      }
     }
     
-    setForm(prev => ({ ...prev, role_id: roleId, jabatan_id: newJabatanId, id_subdept: newSubDeptId }));
+    setForm(prev => ({ ...prev, role_id: roleId, jabatan_id: newJabatanId, id_dept: newDeptId, id_subdept: newSubDeptId }));
   };
 
   const openCreate = async () => {
@@ -287,12 +311,13 @@ export default function UserManagement() {
     const roleName = selectedRole.nama_role;
     if (roleName === "manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
     if (roleName === "asisten_manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("asisten manager"));
-    if (roleName === "staff") return jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
+    if (roleName === "staff" || roleName === "admin" || roleName === "gudang") return jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
     return jabatans;
   };
   const filteredJabatans = getFilteredJabatans();
 
   const selectedRoleObj = roles.find(r => r.id === Number(form.role_id));
+  const isDeptDisabled = selectedRoleObj && (selectedRoleObj.nama_role === "admin" || selectedRoleObj.nama_role === "gudang");
   const isSubDeptDisabled = selectedRoleObj && selectedRoleObj.nama_role !== "staff" && selectedRoleObj.nama_role !== "asisten_manager";
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -681,9 +706,10 @@ export default function UserManagement() {
                       <div className="relative">
                         <Building2 size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
+                          disabled={isDeptDisabled}
                           value={form.id_dept} 
                           onChange={(e) => handleDeptChange(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none disabled:opacity-50"
                         >
                           <option value="">Pilih Departemen</option>
                           {departments.map(d => (

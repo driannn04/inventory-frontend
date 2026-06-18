@@ -63,7 +63,8 @@ export default function ActivityLog() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `Audit_Log_Inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const ts = new Date().toISOString().replace(/T/, '_').replace(/:/g, '-').split('.')[0];
+      link.setAttribute("download", `Audit_Log_Inventory_${ts}.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.remove();

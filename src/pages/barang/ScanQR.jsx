@@ -144,7 +144,7 @@ export default function ScanQR() {
           fps: 15, 
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minSize = Math.min(viewfinderWidth, viewfinderHeight);
-            const size = Math.floor(minSize * 0.75);
+            const size = Math.floor(minSize * 0.6);
             return { width: size, height: size };
           },
           aspectRatio: 1.0,
@@ -248,21 +248,13 @@ export default function ScanQR() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           <div className="lg:col-span-7 space-y-6">
-            <div className="relative rounded-[2.5rem] overflow-hidden bg-slate-900 shadow-2xl border-[6px] border-white dark:border-slate-800 aspect-video md:aspect-auto md:h-[450px] flex items-center justify-center">
+            <div className="relative rounded-[2rem] overflow-hidden bg-slate-900 shadow-2xl border-[4px] border-white dark:border-slate-800 md:h-[600px] flex items-center justify-center">
               <div id="reader" className="w-full h-full object-cover" />
               
               <AnimatePresence>
                 {status === "scanning" && !autoProcessingMsg && !barang && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                    <div className="w-64 h-48 border-2 border-white/20 rounded-3xl relative overflow-hidden">
-                       <div className="absolute inset-0 bg-blue-500/5"></div>
-                       <div className="scan-laser-modern"></div>
-                       <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-xl"></div>
-                       <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500 rounded-tr-xl"></div>
-                       <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500 rounded-bl-xl"></div>
-                       <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500 rounded-br-xl"></div>
-                    </div>
-                    <p className="mt-6 text-white/60 text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 px-4 py-2 rounded-full backdrop-blur-md">Focus barcode in frame</p>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute bottom-6 left-0 right-0 pointer-events-none flex justify-center">
+                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] bg-black/40 px-4 py-2 rounded-full backdrop-blur-md">Arahkan kamera ke QR Code</p>
                   </motion.div>
                 )}
               </AnimatePresence>

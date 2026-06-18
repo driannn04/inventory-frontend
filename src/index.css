@@ -78,3 +78,17 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(6, 182, 212, 0.4);
 }
+
+/* ===== QR Scanner Frame Cleanup ===== */
+#reader {
+  border: none !important;
+}
+
+#reader video {
+  border-radius: 1rem;
+}
+
+/* Hide the library's built-in dashboard text */
+#reader__dashboard_section {
+  display: none !important;
+}

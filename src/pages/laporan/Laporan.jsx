@@ -74,13 +74,14 @@ export default function Laporan() {
     try {
       const base = `/export/${format}`;
       let endpoint, filename;
+      const ts = new Date().toISOString().replace(/T/, '_').replace(/:/g, '-').split('.')[0];
       if (jenis === "stok") {
         endpoint = `${base}/stok`;
-        filename = `laporan_stok.${format === "excel" ? "xlsx" : "pdf"}`;
+        filename = `laporan_stok_${ts}.${format === "excel" ? "xlsx" : "pdf"}`;
       } else {
         const map = { masuk: "barang-masuk", keluar: "barang-keluar" };
         endpoint = `${base}/${map[jenis]}?start=${startDate}&end=${endDate}`;
-        filename = `laporan_${map[jenis]}.${format === "excel" ? "xlsx" : "pdf"}`;
+        filename = `laporan_${map[jenis]}_${ts}.${format === "excel" ? "xlsx" : "pdf"}`;
       }
       const res = await api.get(endpoint, { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([res.data]));
