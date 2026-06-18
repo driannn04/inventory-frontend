@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import MainLayout from "../../components/layout/MainLayout";
-import { 
-  getUsers, createUser, updateUser, deleteUser, resetPassword, 
-  getRoles, getNextNup, getJabatans, getDepartments, getSubDepartments 
+import {
+  getUsers, createUser, updateUser, deleteUser, resetPassword,
+  getRoles, getNextNup, getJabatans, getDepartments, getSubDepartments
 } from "../../services/userService";
 import PageHeader from "../../components/common/PageHeader";
 import {
@@ -87,11 +87,11 @@ export default function UserManagement() {
     let newJabatanId = form.jabatan_id;
     let newSubDeptId = form.id_subdept;
     let newDeptId = form.id_dept;
-    
+
     if (selectedRole) {
       const roleName = selectedRole.nama_role;
       let matchingJabatans = jabatans;
-      
+
       if (roleName === "manager") {
         matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
       } else if (roleName === "asisten_manager") {
@@ -99,7 +99,7 @@ export default function UserManagement() {
       } else if (roleName === "staff" || roleName === "admin" || roleName === "gudang") {
         matchingJabatans = jabatans.filter(j => j.nama_jabatan.toLowerCase() === "staff");
       }
-      
+
       if (matchingJabatans.length === 1) {
         newJabatanId = matchingJabatans[0].id;
       } else if (!matchingJabatans.find(j => j.id === Number(newJabatanId))) {
@@ -111,38 +111,38 @@ export default function UserManagement() {
       }
 
       if (roleName === "admin") {
-         const qhse = departments.find(d => d.nama_dept.toUpperCase() === "QHSE");
-         if (qhse) {
-             newDeptId = qhse.id;
-             try {
-                const res = await getSubDepartments(qhse.id);
-                setSubDepartments(res.data);
-                const itSub = res.data.find(s => s.nama_sub.toUpperCase() === "IT");
-                if (itSub) newSubDeptId = itSub.id;
-             } catch(err){}
-         }
+        const qhse = departments.find(d => d.nama_dept.toUpperCase() === "QHSE");
+        if (qhse) {
+          newDeptId = qhse.id;
+          try {
+            const res = await getSubDepartments(qhse.id);
+            setSubDepartments(res.data);
+            const itSub = res.data.find(s => s.nama_sub.toUpperCase() === "IT");
+            if (itSub) newSubDeptId = itSub.id;
+          } catch (err) { }
+        }
       } else if (roleName === "gudang") {
-         const perlengkapan = departments.find(d => d.nama_dept.toUpperCase() === "PERLENGKAPAN");
-         if (perlengkapan) {
-             newDeptId = perlengkapan.id;
-             try {
-                const res = await getSubDepartments(perlengkapan.id);
-                setSubDepartments(res.data);
-                const gudangSub = res.data.find(s => s.nama_sub.toUpperCase() === "PERGUDANGAN");
-                if (gudangSub) newSubDeptId = gudangSub.id;
-             } catch(err){}
-         }
+        const perlengkapan = departments.find(d => d.nama_dept.toUpperCase() === "PERLENGKAPAN");
+        if (perlengkapan) {
+          newDeptId = perlengkapan.id;
+          try {
+            const res = await getSubDepartments(perlengkapan.id);
+            setSubDepartments(res.data);
+            const gudangSub = res.data.find(s => s.nama_sub.toUpperCase() === "PERGUDANGAN");
+            if (gudangSub) newSubDeptId = gudangSub.id;
+          } catch (err) { }
+        }
       }
     }
-    
+
     setForm(prev => ({ ...prev, role_id: roleId, jabatan_id: newJabatanId, id_dept: newDeptId, id_subdept: newSubDeptId }));
   };
 
   const openCreate = async () => {
     setEditingData(null);
-    setForm({ 
-      nup: "OTOMATIS", nama: "", email: "", password: "", role_id: "", 
-      no_telp: "", jabatan_id: "", id_dept: "", id_subdept: "" 
+    setForm({
+      nup: "OTOMATIS", nama: "", email: "", password: "", role_id: "",
+      no_telp: "", jabatan_id: "", id_dept: "", id_subdept: ""
     });
     setSubDepartments([]);
     setShowPassword(false);
@@ -151,7 +151,7 @@ export default function UserManagement() {
 
   const openEdit = async (item) => {
     setEditingData(item);
-    
+
     // Jika ada departemen, ambil sub-departemennya dulu
     if (item.id_dept) {
       try {
@@ -224,7 +224,7 @@ export default function UserManagement() {
             title: "User Ditambahkan!",
             html: `User baru berhasil dibuat dengan NUP: <b class="text-blue-600">${res.data.nup}</b>`,
             icon: "success",
-            confirmButtonText: "Mantap",
+            confirmButtonText: "Tutup",
             confirmButtonColor: "#2563eb",
             customClass: { popup: "rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl" }
           });
@@ -247,8 +247,8 @@ export default function UserManagement() {
         text: `Yakin ingin menghapus user "${item.nama}"? Data akan dihapus permanen.`,
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#e11d48", 
-        cancelButtonColor: "#94a3b8", 
+        confirmButtonColor: "#e11d48",
+        cancelButtonColor: "#94a3b8",
         confirmButtonText: "Ya, Hapus",
         cancelButtonText: "Batal",
         customClass: { popup: "rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl" }
@@ -307,7 +307,7 @@ export default function UserManagement() {
   const getFilteredJabatans = () => {
     const selectedRole = roles.find(r => r.id === Number(form.role_id));
     if (!selectedRole) return jabatans;
-    
+
     const roleName = selectedRole.nama_role;
     if (roleName === "manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("manager") && !j.nama_jabatan.toLowerCase().includes("asisten"));
     if (roleName === "asisten_manager") return jabatans.filter(j => j.nama_jabatan.toLowerCase().includes("asisten manager"));
@@ -386,7 +386,7 @@ export default function UserManagement() {
               asisten_manager: { color: "from-violet-600 to-purple-600", icon: <UserCog size={18} />, label: "Asisten Manager" }
             };
             const config = configs[r.nama_role] || { color: "from-slate-600 to-slate-500", icon: <UserCog size={18} />, label: r.nama_role };
-            
+
             return (
               <div key={r.id} className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${config.color} text-white flex items-center justify-center mb-4 shadow-lg opacity-80 group-hover:opacity-100 transition-opacity`}>
@@ -405,32 +405,32 @@ export default function UserManagement() {
         <div className="flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
             <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
+            <input
               type="text" placeholder="Cari NUP, nama, email, jabatan..." value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl text-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all font-medium dark:text-white shadow-sm"
             />
           </div>
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm shrink-0">
-             <div className="pl-3 pr-1 text-slate-400 border-r border-slate-100 dark:border-slate-800 mr-1">
-               <Shield size={14} />
-             </div>
-             <select 
-               value={filterRole} 
-               onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
-               className="bg-transparent dark:text-slate-200 py-2 pr-8 pl-1 text-[11px] font-black uppercase tracking-widest outline-none transition-all cursor-pointer"
-             >
-               <option value="">Semua Role</option>
-               {roles.map(r => (
-                 <option key={r.id} value={r.nama_role}>
-                   {{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}
-                 </option>
-               ))}
-             </select>
+            <div className="pl-3 pr-1 text-slate-400 border-r border-slate-100 dark:border-slate-800 mr-1">
+              <Shield size={14} />
+            </div>
+            <select
+              value={filterRole}
+              onChange={(e) => { setFilterRole(e.target.value); setCurrentPage(1); }}
+              className="bg-transparent dark:text-slate-200 py-2 pr-8 pl-1 text-[11px] font-black uppercase tracking-widest outline-none transition-all cursor-pointer"
+            >
+              <option value="">Semua Role</option>
+              {roles.map(r => (
+                <option key={r.id} value={r.nama_role}>
+                  {{ admin: "Admin", staff: "Staff", gudang: "Gudang", manager: "Manager", asisten_manager: "Asisten Manager" }[r.nama_role] || r.nama_role}
+                </option>
+              ))}
+            </select>
           </div>
           {(search || filterRole) && (
-            <button 
-              onClick={() => { setSearch(""); setFilterRole(""); setCurrentPage(1); }} 
+            <button
+              onClick={() => { setSearch(""); setFilterRole(""); setCurrentPage(1); }}
               className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-rose-500 transition-all shadow-sm shrink-0"
             >
               <X size={18} />
@@ -577,11 +577,11 @@ export default function UserManagement() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsModalOpen(false)}
             ></motion.div>
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -707,7 +707,7 @@ export default function UserManagement() {
                         <Building2 size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
                           disabled={isDeptDisabled}
-                          value={form.id_dept} 
+                          value={form.id_dept}
                           onChange={(e) => handleDeptChange(e.target.value)}
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none disabled:opacity-50"
                         >
@@ -724,7 +724,7 @@ export default function UserManagement() {
                         <Layers size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                         <select
                           disabled={!form.id_dept || isSubDeptDisabled}
-                          value={form.id_subdept} 
+                          value={form.id_subdept}
                           onChange={(e) => setForm({ ...form, id_subdept: e.target.value })}
                           className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-sky-500/10 transition appearance-none disabled:opacity-50"
                         >
@@ -767,7 +767,7 @@ export default function UserManagement() {
                 </div>
                 <h3 className="text-xl font-black dark:text-white">Reset Password</h3>
                 <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-bold">{resetTarget.nama}</p>
-                
+
                 <div className="w-full mt-6 space-y-4">
                   <input
                     type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
