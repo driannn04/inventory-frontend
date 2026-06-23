@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
     Boxes, 
     ArrowDownLeft, 
@@ -14,6 +14,9 @@ import {
     ArrowUpCircle,
     BarChart3,
     ScanLine,
+    Plus,
+    X,
+    Search,
     ArrowUpRight as ArrowUpRightLink
 } from "lucide-react";
 import {
@@ -35,6 +38,14 @@ export default function GudangDashboard() {
     const [loading, setLoading] = useState(true);
 
     const [chartRange, setChartRange] = useState("year");
+    const [selectedBarang, setSelectedBarang] = useState(null);
+    const [showDetail, setShowDetail] = useState(false);
+
+    // StatCard Modal States
+    const [activeStatModal, setActiveStatModal] = useState(null);
+    const [modalData, setModalData] = useState([]);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         loadData();
@@ -52,6 +63,39 @@ export default function GudangDashboard() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const openDetail = (item) => {
+        setSelectedBarang(item);
+        setShowDetail(true);
+    };
+
+    const handleStatCardClick = async (type) => {
+        setActiveStatModal(type);
+        setModalData([]);
+        setModalLoading(true);
+        setSearchQuery("");
+        try {
+            if (type === "item_katalog") {
+                const res = await api.get("/barang");
+                setModalData(res.data);
+            } else if (type === "stok_tersedia") {
+                const res = await api.get("/barang");
+                const sorted = [...res.data].sort((a, b) => b.stok - a.stok);
+                setModalData(sorted);
+            } else if (type === "stok_menipis") {
+                const res = await api.get("/barang");
+                const low = res.data.filter(b => b.stok <= b.stok_minimum);
+                setModalData(low);
+            } else if (type === "approval_pending") {
+                const res = await api.get("/pengajuan");
+                setModalData(res.data);
+            }
+        } catch (err) {
+            console.error("Gagal memuat detail modal:", err);
+        } finally {
+            setModalLoading(false);
         }
     };
 
@@ -81,7 +125,8 @@ export default function GudangDashboard() {
         mutasi_terbaru, 
         status_pengajuan,
         barang_masuk_bulanan,
-        barang_keluar_bulanan
+        barang_keluar_bulanan,
+        barang_terbaru
     } = data;
 
     // Hitung antrian rilis gudang
@@ -128,10 +173,10 @@ export default function GudangDashboard() {
 
             {/* SUMMARY CARDS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard title="Stok Tersedia" value={summary?.total_stok || 0} icon={<Boxes />} color="blue" />
-                <StatCard title="Stok Menipis" value={summary?.stok_kritis || 0} icon={<AlertTriangle />} color="red" />
-                <StatCard title="Antrean Rilis" value={pendingGudang} icon={<ListChecks />} color="blue" />
-                <StatCard title="Total Item" value={summary?.total_barang || 0} icon={<Package />} color="green" />
+                <StatCard title="Stok Tersedia" value={summary?.total_stok || 0} icon={<Boxes />} color="blue" onClick={() => handleStatCardClick("stok_tersedia")} />
+                <StatCard title="Stok Menipis" value={summary?.stok_kritis || 0} icon={<AlertTriangle />} color="red" onClick={() => handleStatCardClick("stok_menipis")} />
+                <StatCard title="Antrean Rilis" value={pendingGudang} icon={<ListChecks />} color="blue" onClick={() => handleStatCardClick("approval_pending")} />
+                <StatCard title="Total Item" value={summary?.total_barang || 0} icon={<Package />} color="green" onClick={() => handleStatCardClick("item_katalog")} />
             </div>
 
             {/* ROW 1: CHART (Kiri) & QUICK ACTIONS (Kanan) */}
@@ -157,12 +202,12 @@ export default function GudangDashboard() {
                             <AreaChart data={trendData} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                                 <defs>
                                    <linearGradient id="colorMasuk" x1="0" y1="0" x2="0" y2="1">
-                                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                    </linearGradient>
                                    <linearGradient id="colorKeluar" x1="0" y1="0" x2="0" y2="1">
-                                       <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1} />
-                                       <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                                    </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.05} />
@@ -249,7 +294,7 @@ export default function GudangDashboard() {
                 </div>
             </div>
 
-            {/* ROW 2: MUTASI (KIRI 8) & STOK KRITIS (KANAN 4) */}
+            {/* ROW 2: MUTASI (KIRI 8) & KATALOG TERBARU (KANAN 4) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
                 
                 {/* MUTASI TERBARU (KIRI) */}
@@ -311,46 +356,246 @@ export default function GudangDashboard() {
                     </div>
                 </div>
 
-                {/* CRITICAL STOCK TABLE (KANAN) */}
+                {/* KATALOG TERBARU (KANAN) */}
                 <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
-                    <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-rose-50/20">
+                    <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-emerald-50/20">
                         <div className="flex items-center gap-3">
-                            <AlertTriangle size={18} className="text-rose-500" />
-                            <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Peringatan Stok Menipis</h3>
+                            <Plus size={18} className="text-emerald-500" />
+                            <h3 className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Katalog Terbaru</h3>
                         </div>
                     </div>
                     
-                    <div className="p-4 flex-1 overflow-x-auto custom-scrollbar">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-[9px] font-black text-slate-400 uppercase tracking-widest rounded-lg">
-                                <tr>
-                                    <th className="px-4 py-4 rounded-l-lg">Barang</th>
-                                    <th className="px-4 py-4 rounded-r-lg text-right">Fisik</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                {stok_rendah?.map((item, i) => (
-                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-4 py-5">
-                                            <div className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight line-clamp-2 max-w-[120px]">{item.nama_barang}</div>
-                                            <div className="text-[8px] font-bold text-slate-400 uppercase mt-1">Min: {item.stok_minimum}</div>
-                                        </td>
-                                        <td className="px-4 py-5 text-right">
-                                            <div className="inline-flex items-center gap-1.5 text-[10px] font-black text-rose-500 bg-rose-50 dark:bg-rose-900/40 px-2 py-1 rounded-md border border-rose-100 dark:border-rose-900/30">
-                                                {item.stok}
-                                                <ArrowUpRightLink size={10}/>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {!stok_rendah?.length && (
-                                    <tr><td colSpan={2} className="py-20 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest italic opacity-50">Stok aman</td></tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="p-4 flex-1 overflow-y-auto custom-scrollbar space-y-4">
+                        {barang_terbaru?.length > 0 ? (
+                            barang_terbaru.map((item, i) => (
+                                <div key={i} onClick={() => openDetail(item)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border border-transparent hover:border-slate-100 dark:hover:border-slate-700/50 cursor-pointer">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center border border-slate-200/50 dark:border-slate-700 shrink-0">
+                                        {item.foto ? (
+                                            <img src={`${UPLOAD_URL}/${item.foto}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        ) : (
+                                            <Package className="text-slate-300" size={16} />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase truncate leading-tight tracking-tight">
+                                            {item.nama_barang}
+                                        </h4>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{item.kode_barang}</span>
+                                            <span className="text-[8px] font-black text-emerald-500 uppercase">{item.stok} {item.satuan}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center py-10 opacity-40">
+                                <Package size={32} className="text-slate-300 mb-3" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kosong</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* MODAL PREVIEW DETAIL BARANG */}
+            <AnimatePresence>
+                {showDetail && selectedBarang && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
+                            onClick={() => setShowDetail(false)}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 dark:border-slate-800"
+                        >
+                            {/* Foto Header */}
+                            <div className="h-64 bg-slate-100 dark:bg-slate-800 relative overflow-hidden group">
+                                {selectedBarang.foto ? (
+                                    <img src={`${UPLOAD_URL}/${selectedBarang.foto}`} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                                        <Package size={64} />
+                                        <p className="text-[10px] font-black uppercase mt-4 tracking-widest">Tidak ada foto</p>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                                <div className="absolute bottom-6 left-8 right-8">
+                                    <span className="px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg mb-2 inline-block">
+                                        {selectedBarang.kategori || "Tanpa Kategori"}
+                                    </span>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-tight leading-none">
+                                        {selectedBarang.nama_barang}
+                                    </h3>
+                                </div>
+                                <button onClick={() => setShowDetail(false)} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl transition-all">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Info Content */}
+                            <div className="p-8 space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Kode Barang</p>
+                                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{selectedBarang.kode_barang}</p>
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lokasi Rak</p>
+                                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{selectedBarang.lokasi_rak || "Belum Diatur"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 p-6 rounded-[2rem] border border-blue-100/50 dark:border-blue-800">
+                                    <div>
+                                        <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-1">Stok Real-Time</p>
+                                        <h4 className="text-3xl font-black text-blue-600 leading-none">{selectedBarang.stok} <span className="text-sm uppercase">{selectedBarang.satuan}</span></h4>
+                                    </div>
+                                    <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${selectedBarang.stok <= 5 ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'}`}>
+                                        {selectedBarang.stok <= 5 ? 'Stok Kritis' : 'Stok Aman'}
+                                    </div>
+                                </div>
+
+                                <button 
+                                    onClick={() => {
+                                        setShowDetail(false);
+                                        navigate('/barang');
+                                    }}
+                                    className="w-full py-4 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+                                >
+                                    Buka Di Katalog Lengkap
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* MODAL DETAIL HAK AKSES / STATISTIK */}
+            <AnimatePresence>
+                {activeStatModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
+                            onClick={() => setActiveStatModal(null)}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-white/20 dark:border-slate-800 flex flex-col max-h-[85vh]"
+                        >
+                            {/* Header */}
+                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                                        {activeStatModal === "item_katalog" && "Detail Katalog Barang"}
+                                        {activeStatModal === "stok_tersedia" && "Daftar Stok Tersedia"}
+                                        {activeStatModal === "stok_menipis" && "Peringatan Stok Menipis"}
+                                        {activeStatModal === "approval_pending" && "Antrean Rilis Pending"}
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                        {activeStatModal === "item_katalog" && "Daftar seluruh item inventaris yang terdaftar"}
+                                        {activeStatModal === "stok_tersedia" && "Data stok logistik diurutkan dari yang terbanyak"}
+                                        {activeStatModal === "stok_menipis" && "Daftar barang dengan stok di bawah batas minimum"}
+                                        {activeStatModal === "approval_pending" && "Permintaan rilis pengajuan barang oleh gudang"}
+                                    </p>
+                                </div>
+                                <button onClick={() => setActiveStatModal(null)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="p-6 pb-0">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Cari data..." 
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all dark:text-white"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Content List */}
+                            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                                {modalLoading ? (
+                                    <div className="space-y-4 py-8">
+                                        <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse w-full"></div>
+                                        <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse w-5/6"></div>
+                                        <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse w-4/5"></div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {activeStatModal !== "approval_pending" ? (
+                                            // Render list of items
+                                            modalData
+                                                .filter(item => item.nama_barang?.toLowerCase().includes(searchQuery.toLowerCase()) || item.kode_barang?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                .map((item, i) => (
+                                                    <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center border border-slate-200/50 dark:border-slate-700 shrink-0">
+                                                                {item.foto ? (
+                                                                    <img src={`${UPLOAD_URL}/${item.foto}`} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <Package className="text-slate-300" size={18} />
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight line-clamp-1">{item.nama_barang}</h4>
+                                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Rak: {item.lokasi_rak || "Belum Diatur"} • {item.kode_barang}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <span className={`inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${
+                                                                item.stok <= item.stok_minimum 
+                                                                    ? "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-100 dark:border-rose-900/20"
+                                                                    : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20"
+                                                            }`}>
+                                                                {item.stok} {item.satuan}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                        ) : (
+                                            // Render list of pending approvals (Filter to pending_gudang for Gudang dashboard)
+                                            modalData
+                                                .filter(p => p.status === "pending_gudang")
+                                                .filter(p => p.nomor_pengajuan?.toLowerCase().includes(searchQuery.toLowerCase()) || p.nama?.toLowerCase().includes(searchQuery.toLowerCase()) || p.kegiatan?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                                .map((p, i) => (
+                                                    <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                        <div>
+                                                            <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">{p.nomor_pengajuan}</h4>
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Oleh: {p.nama} • {p.kegiatan}</p>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <span className="inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20">
+                                                                Pending Rilis
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                        )}
+
+                                        {!modalLoading && modalData.length === 0 && (
+                                            <div className="py-12 text-center text-xs text-slate-400 font-bold uppercase tracking-widest italic opacity-50">
+                                                Tidak ada data untuk ditampilkan
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }

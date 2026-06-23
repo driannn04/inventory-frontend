@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-export default function StatCard({ title, value, icon, color, trend }) {
+export default function StatCard({ title, value, icon, color, trend, onClick }) {
   const colorVariants = {
     blue: "from-blue-600 to-sky-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30",
     sky: "from-sky-500 to-cyan-500 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 border-sky-100 dark:border-sky-900/30",
@@ -29,7 +29,8 @@ export default function StatCard({ title, value, icon, color, trend }) {
   return (
     <motion.div 
       whileHover={{ y: -4, scale: 1.02 }}
-      className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-5 sm:p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 group overflow-hidden"
+      onClick={onClick}
+      className={`relative bg-white dark:bg-slate-900 rounded-[2rem] p-5 sm:p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 group overflow-hidden ${onClick ? 'cursor-pointer select-none active:scale-[0.99]' : ''}`}
     >
       <div className="flex items-center gap-3 sm:gap-4 relative z-10">
         <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br ${gradientVariants[color]} flex items-center justify-center text-white shadow-lg ${shadowVariants[color]} group-hover:scale-110 transition-transform duration-500`}>
