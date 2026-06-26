@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import CommandPalette from "../common/CommandPalette";
+import api from "../../utils/api";
 
 export default function MainLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const syncProfile = async () => {
+      try {
+        const res = await api.get("/users/profile/me");
+        localStorage.setItem("user", JSON.stringify(res.data));
+        window.dispatchEvent(new Event("refreshPermissions"));
+      } catch (err) {
+        console.error("Gagal sinkronisasi profil:", err);
+      }
+    };
+    syncProfile();
+  }, []);
 
   return (
     <div className="flex bg-[#eef2f7] dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-300 relative overflow-hidden">

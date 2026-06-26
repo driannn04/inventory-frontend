@@ -29,3 +29,8 @@
         return localStorage.getItem("token");
 
         };
+
+        export const getPermissions = () => {
+          const user = getUser();
+          return user?.permissions || [];
+        };

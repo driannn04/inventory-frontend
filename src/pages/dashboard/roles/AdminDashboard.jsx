@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
    const [selectedBarang, setSelectedBarang] = useState(null);
    const [showDetail, setShowDetail] = useState(false);
-   
+
    // StatCard Modal States
    const [activeStatModal, setActiveStatModal] = useState(null);
    const [modalData, setModalData] = useState([]);
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
       >
          <div className="flex justify-between items-center px-2">
             <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Dashboard Utama</h2>
-            
+
             <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                {["7d", "30d", "6m", "year"].map((t) => (
                   <button key={t} onClick={() => setGlobalRange(t)}
@@ -223,7 +223,7 @@ export default function AdminDashboard() {
             </div>
             <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center">
                <div className="flex justify-between items-center mb-6 w-full">
-                  <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Alur Pengajuan</h3>
+                  <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest">Status Pengajuan</h3>
                </div>
                <div className="h-[220px] w-full relative min-w-0">
                   <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
                                  </div>
                               </div>
                               <div className="h-1.5 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
-                                 <motion.div 
+                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${percentage}%` }}
                                     transition={{ duration: 1, ease: "easeOut" }}
@@ -363,12 +363,12 @@ export default function AdminDashboard() {
          <AnimatePresence>
             {showDetail && selectedBarang && (
                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
+                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md"
                      onClick={() => setShowDetail(false)}
                   />
-                  <motion.div 
+                  <motion.div
                      initial={{ scale: 0.9, opacity: 0, y: 20 }}
                      animate={{ scale: 1, opacity: 1, y: 0 }}
                      exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                            </div>
                         </div>
 
-                        <button 
+                        <button
                            onClick={() => {
                               setShowDetail(false);
                               navigate('/barang');
@@ -434,16 +434,16 @@ export default function AdminDashboard() {
                   </motion.div>
                </div>
             )}
-            
+
             {/* MODAL DETAIL HAK AKSES / STATISTIK */}
             {activeStatModal && (
                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                  <motion.div 
+                  <motion.div
                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md" 
+                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-md"
                      onClick={() => setActiveStatModal(null)}
                   />
-                  <motion.div 
+                  <motion.div
                      initial={{ scale: 0.9, opacity: 0, y: 20 }}
                      animate={{ scale: 1, opacity: 1, y: 0 }}
                      exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -474,9 +474,9 @@ export default function AdminDashboard() {
                      <div className="p-6 pb-0">
                         <div className="relative">
                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                           <input 
-                              type="text" 
-                              placeholder="Cari data..." 
+                           <input
+                              type="text"
+                              placeholder="Cari data..."
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
                               className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all dark:text-white"
@@ -514,11 +514,10 @@ export default function AdminDashboard() {
                                              </div>
                                           </div>
                                           <div className="text-right shrink-0">
-                                             <span className={`inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${
-                                                item.stok <= item.stok_minimum 
-                                                   ? "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-100 dark:border-rose-900/20"
-                                                   : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20"
-                                             }`}>
+                                             <span className={`inline-block px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${item.stok <= item.stok_minimum
+                                                ? "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-100 dark:border-rose-900/20"
+                                                : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20"
+                                                }`}>
                                                 {item.stok} {item.satuan}
                                              </span>
                                           </div>

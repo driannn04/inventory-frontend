@@ -10,6 +10,7 @@ export const resetPassword = (id, data) => api.put(`/users/${id}/reset-password`
 
 // Roles & Utility
 export const getRoles = () => api.get("/users/roles");
+export const updateRolePermissions = (roleId, permissions) => api.put(`/users/roles/${roleId}/permissions`, { permissions });
 export const getNextNup = () => api.get("/users/next-nup");
 export const getJabatans = () => api.get("/users/jabatans");
 export const getDepartments = () => api.get("/users/departments");

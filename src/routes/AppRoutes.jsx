@@ -26,6 +26,7 @@ import ProfilUser from "../pages/profil/ProfilUser";
 import PusatBantuan from "../pages/bantuan/PusatBantuan";
 import ListNotifikasi from "../pages/notifikasi/ListNotifikasi";
 import Settings from "../pages/admin/Settings";
+import MenuPermissions from "../pages/admin/MenuPermissions";
 import NotFound from "../pages/error/NotFound";
 import AccessDenied from "../pages/error/AccessDenied";
 import Maintenance from "../pages/error/Maintenance";
@@ -124,6 +125,12 @@ export default function AppRoutes() {
         <Route path="/settings" element={
           <ProtectedRoute roles={["admin"]}>
             <Settings />
+          </ProtectedRoute>
+        }/>
+
+        <Route path="/kelola-akses" element={
+          <ProtectedRoute roles={["admin"]}>
+            <MenuPermissions />
           </ProtectedRoute>
         }/>
         <Route path="/kategori" element={

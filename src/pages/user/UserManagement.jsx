@@ -294,12 +294,13 @@ export default function UserManagement() {
   };
 
   const filtered = data.filter(item => {
+    const searchLower = search.toLowerCase();
     const matchSearch =
-      item.nup?.toLowerCase().includes(search.toLowerCase()) ||
-      item.nama?.toLowerCase().includes(search.toLowerCase()) ||
-      item.email?.toLowerCase().includes(search.toLowerCase()) ||
-      item.jabatan?.toLowerCase().includes(search.toLowerCase()) ||
-      item.departemen?.toLowerCase().includes(search.toLowerCase());
+      (item.nup || "").toLowerCase().includes(searchLower) ||
+      (item.nama || "").toLowerCase().includes(searchLower) ||
+      (item.email || "").toLowerCase().includes(searchLower) ||
+      (item.jabatan || "").toLowerCase().includes(searchLower) ||
+      (item.departemen || "").toLowerCase().includes(searchLower);
     const matchRole = filterRole ? item.role === filterRole : true;
     return matchSearch && matchRole;
   });
