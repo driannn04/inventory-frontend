@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { 
-    FileText, 
-    PlusCircle, 
-    Clock, 
-    CheckCircle2, 
+import {
+    FileText,
+    PlusCircle,
+    Clock,
+    CheckCircle2,
     ClipboardList,
     AlertCircle,
     Boxes,
@@ -33,7 +33,7 @@ export default function StaffDashboard() {
         try {
             const res = await api.get("/pengajuan/my-stats");
             setStats(res.data);
-            
+
             const resList = await api.get("/pengajuan");
             setRecentRequests(resList.data.slice(0, 5));
         } catch (err) {
@@ -52,31 +52,30 @@ export default function StaffDashboard() {
     }, []);
 
     const STATUS_UI = {
-        pending_asisten_manager:   { label: "Menunggu Asisten Manager",   color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-100 dark:border-amber-900/30", dot: "bg-amber-500 shadow-amber-500/20", line: "bg-amber-400", step: 1 },
+        pending_asisten_manager: { label: "Menunggu Asisten Manager", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-100 dark:border-amber-900/30", dot: "bg-amber-500 shadow-amber-500/20", line: "bg-amber-400", step: 1 },
         pending_manager: { label: "Menunggu Manager", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 2 },
-        pending_gudang:  { label: "Menunggu Gudang",  color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 3 },
-        completed:       { label: "Selesai",          color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-100 dark:border-emerald-900/30", dot: "bg-emerald-500 shadow-emerald-500/20", line: "bg-emerald-400", step: 4 },
-        rejected:        { label: "Ditolak",          color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-900/20", border: "border-rose-100 dark:border-rose-900/30", dot: "bg-rose-500 shadow-rose-500/20", line: "bg-rose-400", step: 0 },
+        pending_gudang: { label: "Menunggu Gudang", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 3 },
+        completed: { label: "Selesai", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-100 dark:border-emerald-900/30", dot: "bg-emerald-500 shadow-emerald-500/20", line: "bg-emerald-400", step: 4 },
+        rejected: { label: "Ditolak", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-900/20", border: "border-rose-100 dark:border-rose-900/30", dot: "bg-rose-500 shadow-rose-500/20", line: "bg-rose-400", step: 0 },
     };
 
     if (loading) return (
-       <div className="pt-4 pb-12 space-y-8">
-          <div className="flex justify-between items-center px-2">
-             <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-             {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-[2rem] animate-pulse"></div>)}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-             <div className="lg:col-span-8 h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
-             <div className="lg:col-span-4 h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
-          </div>
-       </div>
+        <div className="pt-4 pb-12 space-y-8">
+            <div className="flex justify-between items-center px-2">
+                <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-[2rem] animate-pulse"></div>)}
+            </div>
+            <div className="grid grid-cols-1 gap-8">
+                <div className="h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
+            </div>
+        </div>
     );
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 pb-12"
         >
@@ -90,7 +89,7 @@ export default function StaffDashboard() {
             {/* ── GREETING BANNER (Match PDAM Theme) ── */}
             <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/30 rounded-[2.5rem] p-6 shadow-sm shadow-blue-500/5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-600 to-sky-400"></div>
-                
+
                 <div className="flex items-center gap-4 relative z-10 pl-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-400 rounded-2xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
                         <Zap size={24} />
@@ -98,11 +97,11 @@ export default function StaffDashboard() {
                     <div>
                         <h3 className="text-sm md:text-base font-black text-sky-950 dark:text-white uppercase tracking-tight">Pusat Kendali Pengajuan Barang</h3>
                         <div className="flex items-center gap-3 mt-0.5">
-                             <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest leading-none">Divisi Staff — PDAM Tirta Pakuan</p>
-                             <span className="w-1 h-1 bg-blue-200 rounded-full"></span>
-                             <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
+                            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest leading-none">Divisi Staff — PDAM Tirta Pakuan</p>
+                            <span className="w-1 h-1 bg-blue-200 rounded-full"></span>
+                            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
                                 <Calendar size={10} /> {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
-                             </p>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -126,11 +125,11 @@ export default function StaffDashboard() {
                 <StatCard title="Batal" value={stats.rejected} icon={<AlertCircle />} color="red" />
             </div>
 
-            {/* ── MAIN CONTENT GRID (8:4 Balanced) ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                
-                {/* TRACKING BERKAS AKTIF (Kiri 8) */}
-                <div className="lg:col-span-8 flex flex-col h-full">
+            {/* ── MAIN CONTENT GRID ── */}
+            <div className="grid grid-cols-1 gap-8 items-stretch">
+
+                {/* TRACKING BERKAS AKTIF */}
+                <div className="flex flex-col h-full">
                     <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col flex-1">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
@@ -150,8 +149,8 @@ export default function StaffDashboard() {
                                 {recentRequests.map((r, i) => {
                                     const ui = STATUS_UI[r.status] || { label: r.status, color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-100", step: 0 };
                                     return (
-                                        <motion.div 
-                                            key={i} 
+                                        <motion.div
+                                            key={i}
                                             whileHover={{ x: 4 }}
                                             onClick={() => navigate(`/pengajuan/${r.id}`)}
                                             className={`p-6 border ${ui.border} ${ui.bg} rounded-[2rem] group cursor-pointer transition-all flex flex-col md:flex-row items-center gap-6`}
@@ -197,58 +196,7 @@ export default function StaffDashboard() {
                 </div>
 
                 {/* QUICK TOOLS (Kanan 4) */}
-                <div className="lg:col-span-4 flex flex-col gap-8">
-                    
-                    {/* PANDUAN ALUR KERJA */}
-                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex-1">
-                        <h3 className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                             <ListChecks size={14} /> Alur Persetujuan Berkas
-                        </h3>
-                        <div className="space-y-4">
-                            {[
-                                { step: "01", label: "Staff", desc: "Input barang & urgensi" },
-                                { step: "02", label: "Asmen", desc: "Validasi & Verifikasi" },
-                                { step: "03", label: "Manager", desc: "Persetujuan Akhir" },
-                                { step: "04", label: "Gudang", desc: "Barang dikeluarkan" },
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-3">
-                                    <span className="text-[10px] font-black text-blue-500/30 font-mono">{item.step}</span>
-                                    <div>
-                                        <p className="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase leading-none">{item.label}</p>
-                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">{item.desc}</p>
-                                    </div>
-                                    {i < 3 && <ChevronRight size={10} className="ml-auto text-slate-200" />}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
 
-                    {/* PUSAT BANTUAN */}
-                    <div className="bg-gradient-to-br from-blue-600 to-sky-500 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-lg shadow-blue-500/20 border border-blue-500/50">
-                        <HelpCircle size={120} className="absolute -bottom-6 -right-6 text-white/10 group-hover:scale-110 transition-transform duration-700" />
-                        
-                        <div className="relative z-10">
-                            <h3 className="text-base font-black uppercase tracking-tight leading-dense">Bantuan <br/> Operasional?</h3>
-                            <div className="mt-6 space-y-4">
-                                <div className="flex gap-3">
-                                    <div className="w-1.5 h-1.5 bg-sky-300 rounded-full mt-1.5 shrink-0"></div>
-                                    <p className="text-[10px] font-bold text-blue-50 leading-relaxed uppercase tracking-wider">Pastikan kode barang sesuai katalog fisik PDAM.</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="w-1.5 h-1.5 bg-sky-300 rounded-full mt-1.5 shrink-0"></div>
-                                    <p className="text-[10px] font-bold text-blue-50 leading-relaxed uppercase tracking-wider">Pantau status approval Asmen sebelum ke Gudang.</p>
-                                </div>
-                            </div>
-                            <button 
-                                onClick={() => navigate("/bantuan")}
-                                className="w-full mt-8 py-3.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all backdrop-blur-sm"
-                            >
-                                Baca Panduan SOP
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
             </div>
         </motion.div>
     );
