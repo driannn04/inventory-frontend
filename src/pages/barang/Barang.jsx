@@ -31,13 +31,13 @@ export default function Barang() {
   const [qrId, setQrId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  
+
   const [showTrace, setShowTrace] = useState(false);
   const [traceId, setTraceId] = useState(null);
   const [traceName, setTraceName] = useState("");
-  const itemsPerPage = 10; 
+  const itemsPerPage = 10;
 
-  useEffect(() => { 
+  useEffect(() => {
     loadBarang();
   }, []);
 
@@ -46,7 +46,7 @@ export default function Barang() {
     if (location.state?.category) {
       setFilterKategori(location.state.category);
       setCurrentPage(1);
-      
+
       // Bersihkan state setelah digunakan agar tidak ter-filter terus saat navigasi manual
       const timer = setTimeout(() => {
         window.history.replaceState({}, document.title);
@@ -99,8 +99,8 @@ export default function Barang() {
   const categories = [...new Set(barang.map(b => b.nama_kategori))];
 
   const filteredBarang = barang.filter((item) => {
-    const matchSearch = (item.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
-                       (item.kode_barang?.toLowerCase() || "").includes(search.toLowerCase());
+    const matchSearch = (item.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (item.kode_barang?.toLowerCase() || "").includes(search.toLowerCase());
     const matchKategori = filterKategori ? item.nama_kategori === filterKategori : true;
     const matchStatus =
       filterStatus === "all" ? true :
@@ -149,12 +149,12 @@ export default function Barang() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((s) => (
-            <button 
-              key={s.key} 
+            <button
+              key={s.key}
               onClick={() => { setFilterStatus(s.key); setCurrentPage(1); }}
               className={`p-4 rounded-3xl border transition-all duration-300 text-left
-                ${filterStatus === s.key 
-                  ? "bg-white dark:bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5 scale-[1.02]" 
+                ${filterStatus === s.key
+                  ? "bg-white dark:bg-slate-900 border-blue-500 shadow-md shadow-blue-500/5 scale-[1.02]"
                   : "bg-white/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 hover:border-slate-200"}`}
             >
               <div className="flex items-center gap-3">
@@ -176,10 +176,10 @@ export default function Barang() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex-1 min-w-[300px] bg-white dark:bg-slate-900 rounded-2xl px-6 py-3 border border-slate-100 dark:border-slate-800 flex items-center gap-3 shadow-sm focus-within:border-blue-500 transition-all">
             <Search size={18} className="text-slate-400" />
-            <input 
+            <input
               type="text" placeholder="Cari nama atau kode barang..." value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="outline-none flex-1 bg-transparent text-sm font-medium dark:text-white" 
+              className="outline-none flex-1 bg-transparent text-sm font-medium dark:text-white"
             />
           </div>
 
@@ -249,7 +249,7 @@ export default function Barang() {
                             </div>
                             {/* RESERVED (TABLE VIEW) */}
                             {Number(item.stok) - Number(item.stok_tersedia) > 0 && (
-                              <button 
+                              <button
                                 onClick={() => { setTraceId(item.id); setTraceName(item.nama_barang); setShowTrace(true); }}
                                 className="px-3 py-2 flex flex-col items-center min-w-[60px] bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 transition-colors"
                               >
@@ -269,7 +269,7 @@ export default function Barang() {
                       )}
                       <td className="px-8 py-3">
                         <div className="flex justify-center items-center gap-2">
-                           {(role === 'admin' || role === 'gudang') && (
+                          {(role === 'admin' || role === 'gudang') && (
                             <>
                               <button onClick={() => handleEdit(item)} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-blue-600 transition-all shadow-sm"><Pencil size={14} /></button>
                               <button onClick={() => handleDelete(item.id)} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-rose-600 transition-all shadow-sm"><Trash2 size={14} /></button>
@@ -296,7 +296,7 @@ export default function Barang() {
                     {Number(item.stok_tersedia) <= 0 && (
                       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center z-10"><span className="bg-rose-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Habis</span></div>
                     )}
-                    
+
                     {/* RESTORE ADMIN ACTIONS OVERLAY */}
                     {(role === 'admin' || role === 'gudang') && (
                       <div className="absolute top-3 right-3 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
@@ -315,11 +315,11 @@ export default function Barang() {
                           <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Ready</span>
                         </div>
                         <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 opacity-50"></div>
-                        
+
                         {/* RESERVED INFO */}
                         {Number(item.stok) - Number(item.stok_tersedia) > 0 && (
                           <>
-                            <button 
+                            <button
                               onClick={() => { setTraceId(item.id); setTraceName(item.nama_barang); setShowTrace(true); }}
                               className="flex flex-col items-center hover:scale-110 transition-transform cursor-pointer group/trace"
                             >
@@ -339,12 +339,12 @@ export default function Barang() {
                   </div>
                   <div className="mt-4 px-2">
                     {role === 'staff' && (
-                      <button 
+                      <button
                         onClick={() => navigate("/buat-pengajuan", { state: { directItem: item } })}
                         disabled={Number(item.stok_tersedia) <= 0}
                         className={`w-full py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2
-                          ${Number(item.stok_tersedia) > 0 
-                            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95' 
+                          ${Number(item.stok_tersedia) > 0
+                            ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:scale-95'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}`}
                       >
                         <Plus size={14} /> Ajukan Barang
