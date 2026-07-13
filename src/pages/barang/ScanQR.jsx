@@ -31,6 +31,7 @@ export default function ScanQR() {
   const isProcessingRef = useRef(false);
   const cooldownTimerRef = useRef(null);
   const scannerReadyRef = useRef(false);
+  const activeStreamRef = useRef(null);
 
   const [barang, setBarang] = useState(null);
   const [error, setError] = useState(null);
@@ -53,8 +54,26 @@ export default function ScanQR() {
 
   useEffect(() => {
     beepRef.current = new Audio("/beep.mp3");
+
+    // Intercept getUserMedia to capture camera stream reference
+    const originalGetUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
+    if (originalGetUserMedia) {
+      navigator.mediaDevices.getUserMedia = async (constraints) => {
+        const stream = await originalGetUserMedia(constraints);
+        activeStreamRef.current = stream;
+        return stream;
+      };
+    }
+
     startScanner();
-    return () => handleCleanup();
+
+    return () => {
+      // Restore original getUserMedia
+      if (originalGetUserMedia && navigator.mediaDevices) {
+        navigator.mediaDevices.getUserMedia = originalGetUserMedia;
+      }
+      handleCleanup();
+    };
   }, []);
 
   const handleCleanup = async () => {
@@ -62,6 +81,19 @@ export default function ScanQR() {
     if (cooldownTimerRef.current) {
       clearTimeout(cooldownTimerRef.current);
     }
+
+    // Stop active camera stream tracks immediately and synchronously
+    if (activeStreamRef.current) {
+      try {
+        activeStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+        });
+      } catch (e) {
+        console.error("Error stopping active stream tracks:", e);
+      }
+      activeStreamRef.current = null;
+    }
+
     if (scannerRef.current) {
       try {
         if (scannerRef.current.isScanning()) {
@@ -131,23 +163,21 @@ export default function ScanQR() {
       setIsCameraActive(true);
       scannerReadyRef.current = true;
 
+      // Limit formats to QR code only to speed up processing and lower CPU usage
       const formatsToSupport = [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.QR_CODE
       ];
 
       await scanner.start(
         { facingMode: "environment" },
         { 
-          fps: 15, 
+          fps: 25, // Increased from 15 to 25 FPS for much smoother scanning
           qrbox: (viewfinderWidth, viewfinderHeight) => {
             const minSize = Math.min(viewfinderWidth, viewfinderHeight);
-            const size = Math.floor(minSize * 0.6);
+            const size = Math.floor(minSize * 0.75); // Expanded scan area from 60% to 75% for easier alignment
             return { width: size, height: size };
           },
-          aspectRatio: 1.0,
+          // Removed aspectRatio: 1.0 constraint to allow the camera's native aspect ratio (improves focus/sharpness)
           formatsToSupport
         },
         async (decodedText) => {
