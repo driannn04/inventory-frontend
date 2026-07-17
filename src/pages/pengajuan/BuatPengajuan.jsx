@@ -428,24 +428,6 @@ export default function BuatPengajuan() {
                 </div>
                 <textarea rows={2} value={catatan} onChange={(e) => setCatatan(e.target.value)}
                   className={`${inputClass} resize-none mb-4`} placeholder="Bekerja untuk unit..." />
-                
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle size={14} className="text-rose-500" />
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tingkat Urgensi</label>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {["normal", "penting", "darurat"].map(val => (
-                    <button key={val} onClick={() => setUrgensi(val)}
-                      className={`py-2 px-1 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all border-2 
-                        ${urgensi === val ? 
-                          (val === 'normal' ? "bg-blue-50 border-blue-500 text-blue-600 shadow-lg shadow-blue-500/10" : 
-                           val === 'penting' ? "bg-amber-50 border-amber-500 text-amber-600 shadow-lg shadow-amber-500/10" : 
-                           "bg-rose-50 border-rose-500 text-rose-600 shadow-lg shadow-rose-500/10") 
-                          : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-slate-200"}`}>
-                      {val}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div className="pt-2">

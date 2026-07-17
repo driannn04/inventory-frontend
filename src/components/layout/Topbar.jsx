@@ -81,7 +81,7 @@ export default function Topbar({ onMenuClick }) {
   useEffect(() => {
     loadNotif();
 
-    setOrgName("PDAM Tirta Pakuan");
+    setOrgName("Tirta Pakuan");
   }, []);
 
   // =============================

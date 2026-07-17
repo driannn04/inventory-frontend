@@ -152,7 +152,6 @@ export default function ApprovalPengajuan() {
                   <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor</th>
                   <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pemohon</th>
                   <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Urgensi</th>
                   <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                   <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Aksi</th>
                 </tr>
@@ -160,20 +159,19 @@ export default function ApprovalPengajuan() {
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                 {currentData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-24 text-center">
+                    <td colSpan={6} className="py-24 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
                           <ClipboardCheck size={28} className="text-slate-300 dark:text-slate-600" />
                         </div>
                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                          {data.length === 0 ? "Semua pengajuan sudah ditangani âœ…" : "Tidak ada antrian yang sesuai filter"}
+                          {data.length === 0 ? "Semua pengajuan sudah ditangani ✅" : "Tidak ada antrian yang sesuai filter"}
                         </p>
                       </div>
                     </td>
                   </tr>
                 ) : currentData.map((item, idx) => {
                   const badge = STATUS_CONFIG[item.status] || { label: item.status, cls: "bg-slate-50 text-slate-600" };
-                  const urgency = URGENCY_CONFIG[item.urgensi] || URGENCY_CONFIG.normal;
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                       <td className="px-8 py-5 text-[11px] font-bold text-slate-400">{indexFirst + idx + 1}</td>
@@ -199,9 +197,6 @@ export default function ApprovalPengajuan() {
                       </td>
                       <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400">
                         {new Date(item.tanggal_pengajuan).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${urgency}`}>{item.urgensi || "normal"}</span>
                       </td>
                       <td className="px-8 py-5">
                         <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${badge.cls}`}>{badge.label}</span>

@@ -366,7 +366,7 @@ export default function Sidebar({ onClose }) {
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] text-center opacity-40">
           PDAM Tirta Pakuan &copy; 2026
         </p>
-        <p className="text-[10px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.2em] text-center opacity-40">By Drian</p>
+        <p className="text-[10px] font-black text-slate-400  uppercase tracking-[0.1em] text-center opacity-40">By Drian</p>
       </div>
 
       {/* Global CSS injected for custom elegant scrollbar hiding if needed */}

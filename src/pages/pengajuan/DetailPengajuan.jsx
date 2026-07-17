@@ -302,16 +302,6 @@ export default function DetailPengajuan() {
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="flex flex-col items-end gap-4">
-                                    <div className={`px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-[0.1em] shadow-2xl transition-all scale-105 active:scale-100
-                                ${data[0]?.urgensi === 'darurat' ? 'bg-rose-600 text-white shadow-rose-500/40' :
-                                            data[0]?.urgensi === 'penting' ? 'bg-amber-500 text-white shadow-amber-500/40' :
-                                                'bg-gradient-to-r from-blue-700 to-sky-600 text-white shadow-blue-500/40'}`}>
-                                        {data[0]?.urgensi === 'darurat' ? 'URGENSI DARURAT' :
-                                            data[0]?.urgensi === 'penting' ? 'URGENSI PENTING' : 'URGENSI NORMAL'}
-                                    </div>
-                                </div>
                             </div>
 
                             {catatan_pengajuan && (
@@ -417,13 +407,13 @@ export default function DetailPengajuan() {
                                             <th className="px-8 py-4">Nama Barang</th>
                                             <th className="px-8 py-4 text-center">Unit</th>
                                             <th className="px-8 py-4 text-center">Status Stok</th>
-                                            <th className="px-8 py-4 text-right pr-12">Jumlah Diminta</th>
+                                            <th className="px-8 py-4 text-right">Jumlah Diminta</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                                         {data.map((item, index) => (
                                             <tr key={index} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
-                                                <td className="px-8 py-5">
+                                                <td className="px-8 py-5 max-w-[200px] sm:max-w-xs md:max-w-md">
                                                     <div className="flex items-center gap-4">
                                                         <ImagePreview
                                                             src={item.foto ? `${UPLOAD_URL}/${item.foto}` : "/no-image.png"}
@@ -442,7 +432,7 @@ export default function DetailPengajuan() {
                                                         Tersedia: {item.stok_tersedia}
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-5 text-right pr-12">
+                                                <td className="px-8 py-5 text-right">
                                                     <span className="text-lg font-black text-blue-600">{item.jumlah}</span>
                                                 </td>
                                             </tr>

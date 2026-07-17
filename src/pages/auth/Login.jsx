@@ -1,37 +1,16 @@
-import { useState, useEffect } from "react";
-import { loginUser, checkNup } from "../../services/authService";
+import { useState } from "react";
+import { loginUser } from "../../services/authService";
 import { logUserLogin } from "../../services/auditService";
-import { User, Lock, Eye, EyeOff, Loader2, ArrowRightCircle, CheckCircle2 } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2, ArrowRightCircle } from "lucide-react";
 import Swal from "sweetalert2";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function Login() {
   const [nup, setNup] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [userData, setUserData] = useState(null);
-  const [isVerifyingNup, setIsVerifyingNup] = useState(false);
 
-  // ✅ Real-time NUP Verification
-  useEffect(() => {
-    if (nup.length >= 2) {
-      const timeoutId = setTimeout(async () => {
-        setIsVerifyingNup(true);
-        try {
-          const res = await checkNup(nup);
-          setUserData(res.data);
-        } catch (err) {
-          setUserData(null);
-        } finally {
-          setIsVerifyingNup(false);
-        }
-      }, 600);
-      return () => clearTimeout(timeoutId);
-    } else {
-      setUserData(null);
-    }
-  }, [nup]);
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
@@ -105,7 +84,7 @@ export default function Login() {
         >
           <img
             src="/pdam_warehouse_new.png"
-            alt="Gudang PDAM Tirta Pakuan"
+            alt="Gudang Tirta Pakuan"
             className="w-full h-full object-cover"
           />
           {/* Blue gradient overlay agar teks terbaca & warna cerah */}
@@ -118,7 +97,7 @@ export default function Login() {
             <img src="/logo-premium.png" alt="Logo PDAM" className="w-12 h-12 object-contain" />
           </div>
           <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-[2rem] shadow-2xl max-w-[280px]">
-            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight">PDAM TIRTA PAKUAN <br /> <span className="text-blue-300">Pusat Inventaris</span></h3>
+            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight"> <br /> <span className="text-blue-300">Pusat Inventaris</span></h3>
             <p className="text-[9px] font-bold text-blue-100 uppercase tracking-[0.2em] mt-3 leading-relaxed opacity-80">
               Sistem Manajemen Gudang & Aset Inventaris Terpadu.
             </p>
@@ -155,7 +134,7 @@ export default function Login() {
                 Akses <span className="text-blue-600">Masuk</span>
               </h1>
               <p className="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-[0.2em] leading-relaxed">
-                Silakan masuk untuk mengelola data inventaris gudang PDAM Tirta Pakuan Bogor.
+                Silakan masuk untuk mengelola data inventaris gudang Tirta Pakuan Bogor.
               </p>
             </motion.div>
           </div>
@@ -164,7 +143,6 @@ export default function Login() {
             <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
               <div className="flex justify-between items-center px-1 mb-1.5">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">NUP Pegawai</label>
-                {isVerifyingNup && <Loader2 size={10} className="animate-spin text-blue-600" />}
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-300">
@@ -173,42 +151,13 @@ export default function Login() {
                 <input
                   type="text"
                   placeholder="Masukkan NUP"
-                  className={`w-full bg-slate-50 border-2 ${userData ? 'border-blue-500 bg-white' : 'border-slate-100'} pl-13 pr-6 py-3.5 rounded-xl text-xs font-bold focus:bg-white focus:border-blue-600 transition-all outline-none text-slate-800 placeholder-slate-300`}
+                  className="w-full bg-slate-50 border-2 border-slate-100 pl-13 pr-6 py-3.5 rounded-xl text-xs font-bold focus:bg-white focus:border-blue-600 transition-all outline-none text-slate-800 placeholder-slate-300"
                   value={nup}
                   onChange={(e) => setNup(e.target.value)}
                   required
                 />
               </div>
             </motion.div>
-
-            {/* IDENTITY PREVIEW */}
-            <AnimatePresence>
-              {userData && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, height: "auto", scale: 1 }}
-                  exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                  className="bg-blue-600 p-4 rounded-2xl flex items-center gap-4 shadow-xl shadow-blue-600/20"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center font-black text-lg backdrop-blur-md">
-                    {userData.nama?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0 text-white">
-                    <p className="text-[13px] font-black leading-none truncate mb-1 uppercase tracking-tight">{userData.nama}</p>
-                    <p className="text-[9px] font-bold opacity-80 uppercase tracking-widest">
-                      {userData.role === 'admin'
-                        ? 'ADMIN'
-                        : userData.role === 'gudang'
-                          ? 'PERGUDANGAN'
-                          : userData.role === 'manager'
-                            ? `MANAGER - ${userData.departemen || ''}`
-                            : `${userData.role?.replace('_', ' ')?.toUpperCase()} - ${userData.sub_departemen || userData.departemen || ''}`}
-                    </p>
-                  </div>
-                  <CheckCircle2 size={20} className="text-blue-200" />
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 mb-1.5 block">Kata Sandi</label>
@@ -242,7 +191,7 @@ export default function Login() {
               disabled={isLoading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black text-sm uppercase tracking-[0.2em] py-5 mt-4 rounded-2xl shadow-2xl shadow-blue-600/30 active:scale-[0.97] transition-all duration-300 disabled:opacity-70 group flex items-center justify-center gap-3"
             >
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Masuk ke Sistem"}
+              {isLoading ? <Loader2 size={18} className="animate-spin" /> : "Masuk"}
               {!isLoading && <ArrowRightCircle size={18} className="group-hover:translate-x-1 transition-transform" />}
             </motion.button>
           </form>
@@ -254,7 +203,7 @@ export default function Login() {
             className="mt-10 pt-6 border-t border-slate-50 text-center lg:text-left flex flex-col lg:flex-row lg:items-center gap-3"
           >
             <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} PDAM Tirta Pakuan Bogor
+              &copy; {new Date().getFullYear()} Tirta Pakuan Bogor
             </p>
             <div className="hidden lg:block w-1 h-1 rounded-full bg-slate-200" />
             <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">
