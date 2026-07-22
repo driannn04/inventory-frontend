@@ -60,7 +60,7 @@ export default function PusatBantuan() {
               Standar Operasional <br /> Prosedur (SOP) Digital
             </h1>
             <p className="text-blue-50 font-medium text-sm md:text-base leading-relaxed opacity-90">
-              Pusat informasi resmi alur pengajuan barang inventaris PDAM Tirta Pakuan Bogor. Pahami aturan dan prosedur untuk memperlancar proses permintaan barang Anda.
+              Pusat informasi resmi alur pengajuan barang inventaris PERUMDA Tirta Pakuan Bogor. Pahami aturan dan prosedur untuk memperlancar proses permintaan barang Anda.
             </p>
           </div>
         </motion.div>

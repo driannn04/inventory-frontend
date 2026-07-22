@@ -149,7 +149,7 @@ export default function DetailPengajuan() {
                 // Trigger update badge di Sidebar secara otomatis
                 window.dispatchEvent(new Event('refreshSidebarBadge'));
                 if (role === "staff") navigate("/pengajuan-saya");
-                else navigate("/list-pengajuan");
+                else navigate("/semua-pengajuan");
             } catch (err) {
                 Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal membatalkan pengajuan" });
             } finally {
@@ -193,9 +193,11 @@ export default function DetailPengajuan() {
     };
 
     // Deteksi siapa yang menolak berdasarkan history
-    const rejectedByRole = currentStatus === "rejected"
-        ? history.find(h => h.status === 'rejected')?.role || null
+    const rejectLog = currentStatus === "rejected"
+        ? history.find(h => h.status === 'rejected') || null
         : null;
+
+    const rejectedByRole = rejectLog?.role || null;
 
     const isPastAsistenManager = ["pending_manager", "pending_gudang", "completed"].includes(currentStatus);
     const isPastManager = ["pending_gudang", "completed"].includes(currentStatus);
@@ -257,7 +259,7 @@ export default function DetailPengajuan() {
                         <button
                             onClick={() => {
                                 if (role === "staff") navigate("/pengajuan-saya");
-                                else navigate("/list-pengajuan");
+                                else navigate("/semua-pengajuan");
                             }}
                             className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-800 transition-all active:scale-95 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm"
                         >
@@ -292,8 +294,10 @@ export default function DetailPengajuan() {
                                         }`}>
                                         {currentStatus === "completed" ? "SELESAI" :
                                             currentStatus === "rejected" ? "DITOLAK" :
-                                                currentStatus?.startsWith("pending") ? "MENUNGGU" :
-                                                    currentStatus?.replaceAll("_", " ")}
+                                                currentStatus === "pending_asisten_manager" ? "MENUNGGU ASMEN" :
+                                                    currentStatus === "pending_manager" ? "MENUNGGU MANAGER" :
+                                                        currentStatus === "pending_gudang" ? "MENUNGGU GUDANG" :
+                                                            currentStatus?.replaceAll("_", " ").toUpperCase()}
                                     </h2>
                                     <div className="flex items-center gap-4 pt-2">
                                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -310,6 +314,17 @@ export default function DetailPengajuan() {
                                     <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic pr-4">"{catatan_pengajuan}"</p>
                                 </div>
                             )}
+
+                            {currentStatus === "rejected" && rejectLog && (
+                                <div className="mt-4 p-6 bg-rose-50/50 dark:bg-rose-950/20 rounded-[2rem] border border-rose-100/50 dark:border-rose-900/30 group transition-colors hover:border-rose-200">
+                                    <p className="text-[9px] font-black text-rose-500 dark:text-rose-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <XCircle size={12} /> Alasan Penolakan oleh {rejectLog.role === 'asisten_manager' ? 'Asisten Manager' : rejectLog.role === 'manager' ? 'Manager' : rejectLog.role === 'gudang' ? 'Petugas Gudang' : rejectLog.role} ({rejectLog.nama})
+                                    </p>
+                                    <p className="text-sm font-black text-rose-700 dark:text-rose-300 leading-relaxed italic pr-4">
+                                        "{rejectLog.catatan || "Tidak ada alasan penolakan tertulis."}"
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* APPROVAL ACTIONS */}
@@ -317,7 +332,7 @@ export default function DetailPengajuan() {
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl border-2 border-blue-500 p-8">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20"><ShieldCheck size={20} /></div>
-                                    <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Validasi Persetujuan Anda</h2>
+                                    <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Konfirmasi Persetujuan Anda</h2>
                                 </div>
 
                                 {showReject ? (
@@ -478,7 +493,7 @@ export default function DetailPengajuan() {
                         </div>
 
                         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10">Peta Persetujuan Digital</h3>
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10">Peta Persetujuan</h3>
                             <div className="space-y-10 relative">
                                 <div className="absolute left-6 top-3 bottom-3 w-0.5 bg-slate-100 dark:bg-slate-800 h-[calc(100%-24px)] border-dashed"></div>
 
@@ -532,7 +547,7 @@ export default function DetailPengajuan() {
                         {/* <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-3 mb-6">
                                 <History size={16} className="text-slate-400" />
-                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Riwayat Persetujuan Digital</h3>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Riwayat Persetujuan</h3>
                             </div>
                             <div className="space-y-6">
                                 {history.length === 0 ? (

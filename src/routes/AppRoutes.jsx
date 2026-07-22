@@ -76,11 +76,12 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
-        <Route path="/list-pengajuan" element={
+        <Route path="/semua-pengajuan" element={
           <ProtectedRoute roles={["staff","admin","asisten_manager","manager","gudang"]}>
             <ListPengajuan />
           </ProtectedRoute>
         }/>
+        <Route path="/list-pengajuan" element={<Navigate to="/semua-pengajuan" replace />} />
 
         <Route path="/pengajuan-saya" element={
           <ProtectedRoute roles={["staff","admin","asisten_manager","manager"]}>
@@ -94,11 +95,12 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }/>
 
-        <Route path="/approval" element={
+        <Route path="/persetujuan-pengajuan" element={
           <ProtectedRoute roles={["admin","asisten_manager","manager","gudang"]}>
             <ApprovalPengajuan />
           </ProtectedRoute>
         }/>
+        <Route path="/approval" element={<Navigate to="/persetujuan-pengajuan" replace />} />
 
         <Route path="/scan" element={
           <ProtectedRoute roles={["admin","gudang"]}>

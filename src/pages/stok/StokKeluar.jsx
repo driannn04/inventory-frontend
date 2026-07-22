@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import MainLayout from "../../components/layout/MainLayout";
 import { getStokKeluar } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, MinusCircle, Package, ClipboardCheck, X, Eye, MapPin, Tag, Calendar, Hash, FileText, ExternalLink, Search } from "lucide-react";
+import { PackageMinus, RefreshCw, ChevronLeft, ChevronRight, MinusCircle, Package, ClipboardCheck, X, Eye, MapPin, Tag, Calendar, Hash, FileText, ExternalLink, Search, RotateCcw, History, Filter, User, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
@@ -15,6 +15,9 @@ export default function StokKeluar() {
   const itemsPerPage = 10;
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [periodPreset, setPeriodPreset] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => { loadRiwayat(); }, []);
@@ -26,10 +29,102 @@ export default function StokKeluar() {
     finally { setLoadingData(false); }
   };
 
-  const filtered = riwayat.filter(r => 
-    (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
-    (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase())
-  );
+  const handlePreset = (preset) => {
+    setPeriodPreset(preset);
+    setCurrentPage(1);
+    const now = new Date();
+    
+    if (preset === "all") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "today") {
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === "month") {
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const firstDay = `${yyyy}-${mm}-01`;
+      const lastDayObj = new Date(yyyy, now.getMonth() + 1, 0);
+      const lastDd = String(lastDayObj.getDate()).padStart(2, "0");
+      const lastDay = `${yyyy}-${mm}-${lastDd}`;
+      setStartDate(firstDay);
+      setEndDate(lastDay);
+    } else if (preset === "year") {
+      const yyyy = now.getFullYear();
+      setStartDate(`${yyyy}-01-01`);
+      setEndDate(`${yyyy}-12-31`);
+    }
+  };
+
+  const handleDateChange = (type, val) => {
+    setPeriodPreset("custom");
+    setCurrentPage(1);
+
+    const s = type === "start" ? val : startDate;
+    const e = type === "end" ? val : endDate;
+
+    if (s && e) {
+      const dStart = new Date(s);
+      const dEnd = new Date(e);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (dStart > dEnd) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal mulai tidak boleh melebihi tanggal akhir." }));
+        return;
+      }
+
+      if (dStart > today || dEnd > today) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal tidak boleh melebihi hari ini." }));
+        return;
+      }
+    }
+
+    if (type === "start") setStartDate(val);
+    if (type === "end") setEndDate(val);
+  };
+
+  const handleResetFilter = () => {
+    setSearch("");
+    setStartDate("");
+    setEndDate("");
+    setPeriodPreset("all");
+    setCurrentPage(1);
+  };
+
+  const filtered = riwayat.filter(r => {
+    const matchSearch = 
+      (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
+      (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (r.nomor_pengajuan?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (r.keterangan?.toLowerCase() || "").includes(search.toLowerCase());
+
+    if (!matchSearch) return false;
+
+    if (startDate || endDate) {
+      if (!r.tanggal) return false;
+      const rDate = new Date(r.tanggal);
+      rDate.setHours(0, 0, 0, 0);
+
+      if (startDate) {
+        const sDate = new Date(startDate);
+        sDate.setHours(0, 0, 0, 0);
+        if (rDate < sDate) return false;
+      }
+
+      if (endDate) {
+        const eDate = new Date(endDate);
+        eDate.setHours(23, 59, 59, 999);
+        if (rDate > eDate) return false;
+      }
+    }
+
+    return true;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const indexLast = currentPage * itemsPerPage;
@@ -82,17 +177,73 @@ export default function StokKeluar() {
 
         <div className="space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-              <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Riwayat Transaksi</h2>
-                <div className="relative w-full max-w-[250px]">
-                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="CARI DATA..." 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[10px] outline-none font-bold uppercase"
-                  />
+              <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <History size={16} className="text-rose-500" /> Riwayat Transaksi
+                  </h2>
+                  <div className="relative w-full sm:w-[220px]">
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="CARI DATA..." 
+                      value={search}
+                      onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[10px] outline-none font-bold uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* FILTER BAR */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[
+                      { id: "all", label: "Semua" },
+                      { id: "today", label: "Hari Ini" },
+                      { id: "month", label: "Bulan Ini" },
+                      { id: "year", label: "Tahun Ini" },
+                    ].map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => handlePreset(p.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                          periodPreset === p.id 
+                            ? "bg-rose-600 text-white shadow-md shadow-rose-500/20" 
+                            : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700/60">
+                      <Calendar size={12} className="text-slate-400" />
+                      <input 
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => handleDateChange("start", e.target.value)}
+                        className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                      <span className="text-[9px] font-black text-slate-400">s/d</span>
+                      <input 
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => handleDateChange("end", e.target.value)}
+                        className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                    </div>
+                    {(startDate || endDate || search || periodPreset !== "all") && (
+                      <button
+                        onClick={handleResetFilter}
+                        className="p-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 hover:bg-rose-100 transition-colors"
+                        title="Reset Filter"
+                      >
+                        <RotateCcw size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             {loadingData ? (
@@ -101,15 +252,15 @@ export default function StokKeluar() {
               </div>
             ) : (
               <div className="overflow-x-auto flex-1">
-                <table className="w-full text-left min-w-[700px]">
+                <table className="w-full text-left min-w-[750px]">
                   <thead className="border-b border-slate-50 dark:border-slate-800">
                     <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
                       <th className="px-8 py-5 w-[5%]">#</th>
                       <th className="px-8 py-5 w-[30%]">Barang</th>
                       <th className="px-8 py-5 w-[12%] text-center">Jumlah</th>
+                      <th className="px-8 py-5 w-[25%] text-center">Nomor Pengajuan</th>
                       <th className="px-8 py-5 w-[18%]">Tanggal</th>
-                      <th className="px-8 py-5 w-[25%] text-center">Tujuan / PIC</th>
-                      <th className="px-8 py-5 w-[10%] text-center">Status</th>
+                      <th className="px-8 py-5 w-[10%] text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -132,25 +283,23 @@ export default function StokKeluar() {
                         <td className="px-8 py-5 text-center">
                           <span className="text-[11px] font-black text-rose-600 bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-900/50 px-3 py-1.5 rounded-xl">-{r.jumlah}</span>
                         </td>
+                        <td className="px-8 py-5 text-center">
+                          {r.nomor_pengajuan ? (
+                            <span className="font-mono text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-900/55 px-2.5 py-1.5 rounded-lg uppercase tracking-tight">
+                              {r.nomor_pengajuan}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-1 rounded-md uppercase tracking-wider">
+                              Manual / Awal
+                            </span>
+                          )}
+                        </td>
                         <td className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400">
                           {new Date(r.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                         </td>
-                        <td className="px-8 py-5">
-                          {r.pengajuan_id ? (
-                            <div className="flex flex-col items-center gap-1">
-                              <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-900/50 px-2 py-1 rounded-lg uppercase tracking-widest leading-none">Via Pengajuan</span>
-                              <span className="text-[10px] text-slate-400 font-bold">{r.pengaju || "Sistem"}</span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-1 text-center">
-                              <span className="text-[10px] font-black text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-2 py-1 rounded-lg uppercase tracking-widest leading-none">Manual Keluar</span>
-                              <span className="text-[10px] text-slate-400 truncate max-w-[120px]" title={r.keterangan || "Tanpa Keterangan"}>{r.keterangan || "-"}</span>
-                            </div>
-                          )}
-                        </td>
                         <td className="px-8 py-5 text-center">
-                          <button className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all opacity-0 group-hover:opacity-100" title="Lihat Detail">
-                            <Eye size={14} />
+                          <button className="flex items-center gap-1.5 mx-auto bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 transition-all text-[9px] font-black uppercase tracking-widest">
+                            <Eye size={12} /> Detail
                           </button>
                         </td>
                       </tr>

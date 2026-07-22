@@ -28,6 +28,11 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [isSavingCat, setIsSavingCat] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    setErrors({});
+  }, [open]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +103,9 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
       setIsAddingCat(false);
       setNewCatName("");
       showSuccess("Kategori baru ditambahkan");
+      if (errors.kategori_id) {
+        setErrors(prev => ({ ...prev, kategori_id: null }));
+      }
     } catch (err) {
       showError(err.response?.data?.message || "Gagal menambah kategori");
     } finally {
@@ -115,6 +123,10 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
       ...form,
       [name]: value
     });
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handleImage = (e) => {
@@ -126,14 +138,40 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
   };
 
   const handleSubmit = async () => {
+    // VALIDASI FRONTEND LENGKAP DENGAN INLINE ERROR
+    const tempErrors = {};
+    if (!form.nama_barang || !form.nama_barang.trim()) {
+      tempErrors.nama_barang = "Nama barang wajib diisi!";
+    }
+    if (!form.kategori_id) {
+      tempErrors.kategori_id = "Kategori barang wajib dipilih!";
+    }
+    if (!form.satuan || !form.satuan.trim()) {
+      tempErrors.satuan = "Satuan barang wajib dipilih atau diisi!";
+    }
+    if (form.stok_minimum === "" || form.stok_minimum === null || form.stok_minimum === undefined) {
+      tempErrors.stok_minimum = "Batas minimum stok wajib diisi!";
+    } else if (Number(form.stok_minimum) < 0) {
+      tempErrors.stok_minimum = "Batas minimum stok tidak boleh negatif!";
+    }
+    if (!editData) {
+      if (form.stok === "" || form.stok === null || form.stok === undefined) {
+        tempErrors.stok = "Stok awal fisik wajib diisi!";
+      } else if (Number(form.stok) < 0) {
+        tempErrors.stok = "Stok awal fisik tidak boleh negatif!";
+      }
+    }
+    if (!form.lokasi_rak || !form.lokasi_rak.trim()) {
+      tempErrors.lokasi_rak = "Lokasi rak / gudang wajib diisi!";
+    }
+
+    if (Object.keys(tempErrors).length > 0) {
+      setErrors(tempErrors);
+      return; // Stop, keep modal open
+    }
+
     try {
       const formData = new FormData();
-
-      // VALIDASI FRONTEND (Proteksi Tambahan)
-      if (!form.nama_barang.trim()) return showError("Nama barang tidak boleh kosong");
-      if (!form.kategori_id) return showError("Pilih kategori barang");
-      if (!form.satuan) return showError("Pilih atau isi satuan barang");
-      if (form.stok_minimum < 0) return showError("Stok minimum tidak boleh negatif");
 
       // Jika input satuan baru (Lainnya), simpan ke tabel satuan agar muncul di dropdown selanjutnya
       if (isOtherSatuan && form.satuan) {
@@ -146,7 +184,7 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
       }
 
       Object.keys(form).forEach((key) => {
-        if (form[key] !== null) {
+        if (form[key] !== null && form[key] !== undefined) {
           formData.append(key, form[key]);
         }
       });
@@ -163,8 +201,9 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
       setOpen(false);
 
     } catch (err) {
-      console.log(err);
-      showError(err.response?.data?.message || "Gagal menyimpan data barang");
+      console.error(err);
+      const errorMsg = err.response?.data?.message || err.response?.data?.sqlMessage || err.message || "Gagal menyimpan data barang";
+      showError(errorMsg);
     }
   };
 
@@ -245,10 +284,17 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                   name="nama_barang"
                   value={form.nama_barang}
                   onChange={handleChange}
-                  className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-800 dark:text-white font-bold placeholder-slate-300 dark:placeholder-slate-600"
+                  className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-slate-800 dark:text-white font-bold placeholder-slate-300 dark:placeholder-slate-600
+                    ${errors.nama_barang 
+                      ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                      : "border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500"
+                    }`}
                   placeholder="Contoh: Pipa Rucika 3 Inch"
                   maxLength={100}
                 />
+                {errors.nama_barang && (
+                  <p className="text-[10px] font-bold text-rose-500 mt-1.5 pl-1">{errors.nama_barang}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-5">
@@ -287,7 +333,11 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                       name="kategori_id"
                       value={form.kategori_id}
                       onChange={handleChange}
-                      className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer"
+                      className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer
+                        ${errors.kategori_id 
+                          ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                          : "border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500"
+                        }`}
                     >
                       <option value="">-- Pilih Kategori --</option>
                       {categories.map((cat) => (
@@ -296,6 +346,9 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                         </option>
                       ))}
                     </select>
+                  )}
+                  {errors.kategori_id && (
+                    <p className="text-[10px] font-bold text-rose-500 mt-1.5 pl-1">{errors.kategori_id}</p>
                   )}
                 </div>
                 <div>
@@ -312,8 +365,15 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                           setIsOtherSatuan(false);
                           setForm({ ...form, [e.target.name]: e.target.value });
                         }
+                        if (errors.satuan) {
+                          setErrors(prev => ({ ...prev, satuan: null }));
+                        }
                       }}
-                      className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer"
+                      className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium appearance-none cursor-pointer
+                        ${errors.satuan 
+                          ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                          : "border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500"
+                        }`}
                     >
                       <option value="">-- Pilih Satuan --</option>
                       {satuanList.map((s) => (
@@ -330,8 +390,15 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                           onChange={(e) => {
                             setOtherValue(e.target.value);
                             setForm({ ...form, satuan: e.target.value });
+                            if (errors.satuan) {
+                              setErrors(prev => ({ ...prev, satuan: null }));
+                            }
                           }}
-                          className="w-full bg-blue-50/30 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-blue-700 dark:text-blue-300 font-bold placeholder-blue-300"
+                          className={`w-full bg-blue-50/30 dark:bg-blue-900/10 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-blue-700 dark:text-blue-300 font-bold placeholder-blue-300
+                            ${errors.satuan 
+                              ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                              : "border-blue-200 dark:border-blue-800 focus:ring-blue-500/20 focus:border-blue-500"
+                            }`}
                           placeholder="Masukkan satuan baru..."
                           maxLength={20}
                           autoFocus
@@ -340,6 +407,9 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                           * Satuan baru akan disimpan ke database
                         </p>
                       </div>
+                    )}
+                    {errors.satuan && (
+                      <p className="text-[10px] font-bold text-rose-500 mt-0.5 pl-1">{errors.satuan}</p>
                     )}
                   </div>
                 </div>
@@ -353,11 +423,18 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                     name="stok_minimum"
                     value={form.stok_minimum}
                     onChange={handleChange}
-                    className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-bold placeholder-slate-300 dark:placeholder-slate-600"
+                    className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-slate-700 dark:text-slate-200 font-bold placeholder-slate-300 dark:placeholder-slate-600
+                      ${errors.stok_minimum 
+                        ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                        : "border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500"
+                      }`}
                     placeholder="Contoh: 10"
                     min="0"
                     onKeyDown={(e) => ["e", "E", "-", "+"].includes(e.key) && e.preventDefault()}
                   />
+                  {errors.stok_minimum && (
+                    <p className="text-[10px] font-bold text-rose-500 mt-1.5 pl-1">{errors.stok_minimum}</p>
+                  )}
                 </div>
                 {!editData && (
                   <div className="animate-fadeIn">
@@ -367,11 +444,18 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                       name="stok"
                       value={form.stok}
                       onChange={handleChange}
-                      className="w-full bg-blue-50/30 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-blue-700 dark:text-blue-300 font-bold placeholder-blue-300"
+                      className={`w-full bg-blue-50/30 dark:bg-blue-900/10 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-blue-700 dark:text-blue-300 font-bold placeholder-blue-300
+                        ${errors.stok 
+                          ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                          : "border-blue-200 dark:border-blue-800 focus:ring-blue-500/20 focus:border-blue-500"
+                        }`}
                       placeholder="Contoh: 100"
                       min="0"
                       onKeyDown={(e) => ["e", "E", "-", "+"].includes(e.key) && e.preventDefault()}
                     />
+                    {errors.stok && (
+                      <p className="text-[10px] font-bold text-rose-500 mt-1.5 pl-1">{errors.stok}</p>
+                    )}
                   </div>
                 )}
                 <div className={!editData ? "col-span-2" : "col-span-1"}>
@@ -381,10 +465,17 @@ export default function BarangModal({ open, setOpen, reload, editData }) {
                     name="lokasi_rak"
                     value={form.lokasi_rak}
                     onChange={handleChange}
-                    className="w-full bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-5 py-3.5 rounded-2xl text-sm focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium uppercase placeholder-slate-300 dark:placeholder-slate-600"
+                    className={`w-full bg-slate-50/50 dark:bg-slate-800/50 border px-5 py-3.5 rounded-2xl text-sm focus:ring-4 transition-all outline-none text-slate-700 dark:text-slate-200 font-medium uppercase placeholder-slate-300 dark:placeholder-slate-600
+                      ${errors.lokasi_rak 
+                        ? "border-rose-500 focus:ring-rose-500/20 focus:border-rose-500" 
+                        : "border-slate-200 dark:border-slate-700 focus:ring-sky-500/20 focus:border-sky-500"
+                      }`}
                     placeholder="Contoh: RAK-01-A"
                     maxLength={30}
                   />
+                  {errors.lokasi_rak && (
+                    <p className="text-[10px] font-bold text-rose-500 mt-1.5 pl-1">{errors.lokasi_rak}</p>
+                  )}
                 </div>
               </div>
 

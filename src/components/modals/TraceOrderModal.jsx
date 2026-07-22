@@ -123,7 +123,12 @@ export default function TraceOrderModal({ open, setOpen, barangId, barangName })
                                       ${order.status === 'pending_asisten_manager' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                                         order.status === 'pending_manager' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                                         'bg-sky-50 text-sky-600 border border-sky-100'}`}>
-                                      {order.status?.replace('pending_', 'Menunggu ')}
+                                       {order.status === 'pending_asisten_manager' ? 'Menunggu Persetujuan Asmen' :
+                                        order.status === 'pending_manager' ? 'Menunggu Persetujuan Manager' :
+                                        order.status === 'pending_gudang' ? 'Menunggu Persetujuan Gudang' :
+                                        order.status === 'completed' ? 'Pengajuan Selesai' :
+                                        order.status === 'rejected' ? 'Pengajuan Ditolak' :
+                                        order.status?.replace('pending_', 'Menunggu ')}
                                    </span>
                                    <div className="flex items-center gap-1.5 text-slate-400">
                                       <Calendar size={10} />

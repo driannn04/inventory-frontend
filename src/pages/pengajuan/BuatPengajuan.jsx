@@ -29,91 +29,91 @@ export default function BuatPengajuan() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => { 
-    loadBarang(); 
-    
+  useEffect(() => {
+    loadBarang();
+
     // ✅ EDIT MODE HANDLING
     if (location.state?.editMode) {
-        const { existingData, editId } = location.state;
-        
-        // Map data dari format detail ke format cart
-        const mappedCart = existingData.map(item => ({
-            id: item.barang_id || item.id, // backend join pake barang_id
-            nama: item.nama_barang,
-            satuan: item.satuan,
-            stok: item.stok_tersedia || 0, // Fallback
-            stok_tersedia: item.stok_tersedia || 0,
-            foto: item.foto,
-            jumlah: item.jumlah
-        }));
+      const { existingData, editId } = location.state;
 
-        setCart(mappedCart);
-        setCatatan(existingData[0]?.catatan || "");
-        setUrgensi(existingData[0]?.urgensi || "normal");
+      // Map data dari format detail ke format cart
+      const mappedCart = existingData.map(item => ({
+        id: item.barang_id || item.id, // backend join pake barang_id
+        nama: item.nama_barang,
+        satuan: item.satuan,
+        stok: item.stok_tersedia || 0, // Fallback
+        stok_tersedia: item.stok_tersedia || 0,
+        foto: item.foto,
+        jumlah: item.jumlah
+      }));
 
-        Swal.fire({
-            icon: "info",
-            title: "Mode Edit",
-            text: "Silakan ubah rincian pengajuan Anda",
-            timer: 2000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
+      setCart(mappedCart);
+      setCatatan(existingData[0]?.catatan || "");
+      setUrgensi(existingData[0]?.urgensi || "normal");
+
+      Swal.fire({
+        icon: "info",
+        title: "Mode Edit",
+        text: "Silakan ubah rincian pengajuan Anda",
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
     }
-    
+
     // ✅ AUTO-ADD FROM CATALOG STATE (If not edit mode)
     else if (location.state?.directItem) {
-        const item = location.state.directItem;
-        
-        // Pengecekan stok tersedia sebelum auto-add
-        const available = Number(item.stok_tersedia ?? item.stok ?? 0);
-        
-        if (available <= 0) {
-            Swal.fire({
-                icon: "error",
-                title: "Gagal Menambahkan",
-                text: `Maaf, stok "${item.nama_barang}" sudah habis (dalam antrean).`
-            });
-            window.history.replaceState({}, document.title);
-            return;
-        }
+      const item = location.state.directItem;
 
-        setTimeout(() => {
-            const newItem = {
-                id: item.id,
-                nama: item.nama_barang,
-                satuan: item.satuan,
-                stok: item.stok,
-                stok_tersedia: available,
-                foto: item.foto,
-                jumlah: 1
-            };
-            
-            setCart(prev => {
-                if (prev.find(i => i.id === item.id)) return prev;
-                return [...prev, newItem];
-            });
-            
-            Swal.fire({
-                icon: "success",
-                title: "Barang Terpilih",
-                text: `${item.nama_barang} otomatis ditambahkan ke daftar`,
-                timer: 2000,
-                showConfirmButton: false,
-                toast: true,
-                position: 'top-end'
-            });
-            window.history.replaceState({}, document.title);
-        }, 300);
+      // Pengecekan stok tersedia sebelum auto-add
+      const available = Number(item.stok_tersedia ?? item.stok ?? 0);
+
+      if (available <= 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Gagal Menambahkan",
+          text: `Maaf, stok "${item.nama_barang}" sudah habis (dalam antrean).`
+        });
+        window.history.replaceState({}, document.title);
+        return;
+      }
+
+      setTimeout(() => {
+        const newItem = {
+          id: item.id,
+          nama: item.nama_barang,
+          satuan: item.satuan,
+          stok: item.stok,
+          stok_tersedia: available,
+          foto: item.foto,
+          jumlah: 1
+        };
+
+        setCart(prev => {
+          if (prev.find(i => i.id === item.id)) return prev;
+          return [...prev, newItem];
+        });
+
+        Swal.fire({
+          icon: "success",
+          title: "Barang Terpilih",
+          text: `${item.nama_barang} otomatis ditambahkan ke daftar`,
+          timer: 2000,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+        window.history.replaceState({}, document.title);
+      }, 300);
     }
   }, []);
 
   const loadBarang = async () => {
     setLoadingBarang(true);
-    try { 
-      const res = await getBarang(); 
-      setBarang(res.data); 
+    try {
+      const res = await getBarang();
+      setBarang(res.data);
     }
     catch (err) { console.log(err); }
     finally { setLoadingBarang(false); }
@@ -126,8 +126,8 @@ export default function BuatPengajuan() {
     const cleanStr = str.toLowerCase();
     let pIdx = 0;
     for (let i = 0; i < cleanStr.length; i++) {
-        if (cleanStr[i] === cleanPattern[pIdx]) pIdx++;
-        if (pIdx === cleanPattern.length) return true;
+      if (cleanStr[i] === cleanPattern[pIdx]) pIdx++;
+      if (pIdx === cleanPattern.length) return true;
     }
     return false;
   };
@@ -146,12 +146,12 @@ export default function BuatPengajuan() {
     const newTotal = exist ? exist.jumlah + jumlah : jumlah;
 
     if (newTotal > selectedBarang.stok_tersedia) {
-      Swal.fire({ 
-         icon: "error", 
-         title: "Melebihi Stok! 🚫", 
-         text: exist 
-            ? `Daftar Anda sudah ada ${exist.jumlah}. Jika ditambah ${jumlah} jadinya ${newTotal}, tetapi sisa stok hanya ${selectedBarang.stok_tersedia} ${selectedBarang.satuan}.`
-            : `Anda meminta ${jumlah}, tetapi sisa tersedia untuk ${selectedBarang.nama_barang} hanya ${selectedBarang.stok_tersedia} ${selectedBarang.satuan}.`
+      Swal.fire({
+        icon: "error",
+        title: "Melebihi Stok! 🚫",
+        text: exist
+          ? `Daftar Anda sudah ada ${exist.jumlah}. Jika ditambah ${jumlah} jadinya ${newTotal}, tetapi sisa stok hanya ${selectedBarang.stok_tersedia} ${selectedBarang.satuan}.`
+          : `Anda meminta ${jumlah}, tetapi sisa tersedia untuk ${selectedBarang.nama_barang} hanya ${selectedBarang.stok_tersedia} ${selectedBarang.satuan}.`
       });
       return;
     }
@@ -202,7 +202,7 @@ export default function BuatPengajuan() {
         await createPengajuan(payload);
         Swal.fire({ icon: "success", title: "Berhasil!", text: "Pengajuan berhasil dikirim", timer: 2000, showConfirmButton: false });
       }
-      navigate("/list-pengajuan");
+      navigate("/semua-pengajuan");
     } catch (err) {
       Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal mengirim pengajuan" });
     } finally {
@@ -221,17 +221,17 @@ export default function BuatPengajuan() {
           title={location.state?.editMode ? "Ubah Pengajuan" : (getRole() === "staff" ? "Katalog & Pesan Barang" : "Buat Pengajuan")}
           subtitle={location.state?.editMode ? `Mengubah rincian berkas pengajuan` : "Pilih barang kebutuhan operasional dari katalog"}
           actions={
-            <button onClick={() => navigate("/list-pengajuan")} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-800 transition-all active:scale-95 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm">
+            <button onClick={() => navigate("/semua-pengajuan")} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-slate-800 transition-all active:scale-95 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-sm">
               <X size={16} /> Batal
             </button>
           }
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* LEFT COLUMN: ITEM SELECTOR */}
           <div className="lg:col-span-7 space-y-6">
-            
+
             {/* SELECTION AREA */}
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
               <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/30">
@@ -246,12 +246,12 @@ export default function BuatPengajuan() {
                 {/* SEARCH BAR */}
                 <div className="relative group">
                   <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Cari barang kebutuhan Anda..." 
+                  <input
+                    type="text"
+                    placeholder="Cari barang kebutuhan Anda..."
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setSelectedBarang(null); }}
-                    className={`${inputClass} pl-14 pr-12 h-14 text-base shadow-sm group-hover:border-blue-200`} 
+                    className={`${inputClass} pl-14 pr-12 h-14 text-base shadow-sm group-hover:border-blue-200`}
                   />
                   {search && (
                     <button onClick={() => { setSearch(""); setSelectedBarang(null); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-rose-500 transition-colors"><X size={18} /></button>
@@ -288,26 +288,26 @@ export default function BuatPengajuan() {
                         const isOutOfStock = available <= 0;
                         const isLowStock = available > 0 && available <= 5;
                         const isInCart = cart.some(c => c.id === item.id);
-                        
+
                         return (
                           <div key={item.id}
                             onClick={() => { if (!isOutOfStock) { setSelectedBarang(item); setJumlah(1); } }}
                             className={`group relative rounded-[2rem] border-2 transition-all p-3 flex flex-col items-center text-center gap-3
                               ${isOutOfStock ? "bg-slate-50 dark:bg-slate-800/20 border-slate-50 dark:border-slate-800 opacity-60 grayscale cursor-not-allowed" : "bg-white dark:bg-slate-900 border-slate-50 dark:border-slate-800 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-500/10 cursor-pointer active:scale-95"}`}>
-                            
+
                             <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-800">
                               <img src={item.foto ? `${UPLOAD_URL}/${item.foto}` : "/no-image.png"} alt={item.nama_barang} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
                               <div className="absolute top-2 right-2">
                                 <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-1 rounded-lg backdrop-blur-md shadow-sm border
-                                  ${isOutOfStock ? "bg-rose-500/90 text-white border-rose-400" : 
-                                    isLowStock ? "bg-amber-500/90 text-white border-amber-400" : 
-                                    "bg-emerald-500/90 text-white border-emerald-400"}`}>
+                                  ${isOutOfStock ? "bg-rose-500/90 text-white border-rose-400" :
+                                    isLowStock ? "bg-amber-500/90 text-white border-amber-400" :
+                                      "bg-emerald-500/90 text-white border-emerald-400"}`}>
                                   {isOutOfStock ? "Stok Habis" : isLowStock ? `Sisa ${available}` : `Tersedia ${available}`}
                                 </span>
                               </div>
                               {isOutOfStock && (
                                 <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[1px]">
-                                   <span className="bg-white/10 border border-white/20 px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-widest">Stok Habis</span>
+                                  <span className="bg-white/10 border border-white/20 px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-widest">Stok Habis</span>
                                 </div>
                               )}
                             </div>
@@ -344,14 +344,14 @@ export default function BuatPengajuan() {
 
           {/* RIGHT COLUMN: CART & SUMMARY (STICKY) */}
           <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
-            
+
             {/* QUICK QUANTITY MODAL-LIKE PICKER (Only if item selected) */}
             <AnimatePresence>
               {selectedBarang && (
                 <div className="bg-gradient-to-br from-blue-700 to-sky-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-600/30 relative overflow-hidden">
                   <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
                   <div className="absolute -left-8 -bottom-8 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl" />
-                  
+
                   <div className="relative z-10 space-y-5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -367,10 +367,10 @@ export default function BuatPengajuan() {
                     </div>
 
                     <div className="flex items-center justify-center gap-5 pt-2">
-                       <button onClick={() => setJumlah(prev => Math.max(1, prev - 1))} className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"><Minus size={20} /></button>
-                       <input type="number" value={jumlah} onChange={(e) => setJumlah(Math.min(selectedBarang.stok_tersedia, Math.max(1, parseInt(e.target.value) || 1)))} 
-                          className="bg-transparent text-4xl font-black w-24 text-center outline-none" />
-                       <button onClick={() => setJumlah(prev => Math.min(selectedBarang.stok_tersedia, prev + 1))} className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"><Plus size={20} /></button>
+                      <button onClick={() => setJumlah(prev => Math.max(1, prev - 1))} className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"><Minus size={20} /></button>
+                      <input type="number" value={jumlah} onChange={(e) => setJumlah(Math.min(selectedBarang.stok_tersedia, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="bg-transparent text-4xl font-black w-24 text-center outline-none" />
+                      <button onClick={() => setJumlah(prev => Math.min(selectedBarang.stok_tersedia, prev + 1))} className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"><Plus size={20} /></button>
                     </div>
 
                     <button onClick={addBarang} className="w-full py-4 bg-white text-blue-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-black/10 hover:bg-blue-50 transition-all transform active:scale-95">
@@ -401,18 +401,18 @@ export default function BuatPengajuan() {
                   cart.map((item, idx) => (
                     <div key={item.id} className="group relative flex items-center gap-4 p-4 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 transition-all hover:border-blue-400">
                       <ImagePreview src={item.foto ? `${UPLOAD_URL}/${item.foto}` : "/no-image.png"} alt={item.nama} size="sm" />
-                       <div className="flex-1 min-w-0">
-                          <p className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-tight truncate leading-none mb-1">{item.nama}</p>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 py-0.5 rounded-lg">{item.jumlah} {item.satuan}</span>
-                             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Sisa: {item.stok_tersedia}</span>
-                          </div>
-                       </div>
-                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button onClick={() => updateCartQty(item.id, -1)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"><Minus size={12} /></button>
-                         <button onClick={() => updateCartQty(item.id, 1)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"><Plus size={12} /></button>
-                         <button onClick={() => removeItem(item.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-1"><Trash2 size={14} /></button>
-                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-tight truncate leading-none mb-1">{item.nama}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/40 px-2.5 py-0.5 rounded-lg">{item.jumlah} {item.satuan}</span>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Sisa: {item.stok_tersedia}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => updateCartQty(item.id, -1)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"><Minus size={12} /></button>
+                        <button onClick={() => updateCartQty(item.id, 1)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"><Plus size={12} /></button>
+                        <button onClick={() => removeItem(item.id)} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-1"><Trash2 size={14} /></button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -427,13 +427,13 @@ export default function BuatPengajuan() {
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Keterangan / Keperluan</label>
                 </div>
                 <textarea rows={2} value={catatan} onChange={(e) => setCatatan(e.target.value)}
-                  className={`${inputClass} resize-none mb-4`} placeholder="Bekerja untuk unit..." />
+                  className={`${inputClass} resize-none mb-4`} placeholder="Isi Keterangan Keperluan Anda" />
               </div>
 
               <div className="pt-2">
                 <div className="group relative">
-                  <button 
-                    onClick={handleSubmit} 
+                  <button
+                    onClick={handleSubmit}
                     disabled={loading || cart.length === 0}
                     className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-blue-700 to-sky-600 text-white py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
                   >

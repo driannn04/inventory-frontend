@@ -35,7 +35,7 @@ export default function Topbar({ onMenuClick }) {
   const [expand, setExpand] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [isDark, setIsDark] = useState(() => localStorage.getItem('darkMode') === 'true');
-  const [orgName, setOrgName] = useState("PDAM Inv");
+  const [orgName, setOrgName] = useState("PERUMDA Inv");
   const [showProfile, setShowProfile] = useState(false);
   const [notifFilter, setNotifFilter] = useState(null);
 

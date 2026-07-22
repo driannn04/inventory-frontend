@@ -93,13 +93,13 @@ export default function Login() {
 
         {/* Branding Overlay - REVISED */}
         <div className="absolute top-12 left-12 z-20 flex flex-col items-start gap-4">
-          <div className="bg-white p-3 rounded-2xl shadow-xl border border-white">
-            <img src="/logo-premium.png" alt="Logo PDAM" className="w-12 h-12 object-contain" />
+          <div className="bg-gradient-to-br from-blue-600 to-sky-400 p-3 rounded-2xl shadow-xl border border-blue-500/30">
+            <img src="/logo-premium.png" alt="Logo PERUMDA" className="w-12 h-12 object-contain" />
           </div>
           <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-[2rem] shadow-2xl max-w-[280px]">
-            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight"> <br /> <span className="text-blue-300">Pusat Inventaris</span></h3>
+            <h3 className="text-lg font-black text-white uppercase tracking-tight leading-tight"> <br /> <span className="text-blue-300">SIPBAR</span></h3>
             <p className="text-[9px] font-bold text-blue-100 uppercase tracking-[0.2em] mt-3 leading-relaxed opacity-80">
-              Sistem Manajemen Gudang & Aset Inventaris Terpadu.
+              Sistem Informasi Pengajuan & Persetujuan Barang.
             </p>
           </div>
         </div>
@@ -119,9 +119,9 @@ export default function Login() {
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="w-14 h-14 bg-blue-50 rounded-2xl p-2 mb-5 border border-blue-100 shadow-sm"
+              className="w-14 h-14 bg-gradient-to-br from-blue-600 to-sky-400 rounded-2xl p-2 mb-5 border border-blue-500/20 shadow-sm"
             >
-              <img src="/logo-premium.png" alt="Logo PDAM" className="w-full h-full object-contain" />
+              <img src="/logo-premium.png" alt="Logo PERUMDA" className="w-full h-full object-contain" />
             </motion.div>
 
             <motion.div
@@ -133,8 +133,8 @@ export default function Login() {
               <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none uppercase">
                 Akses <span className="text-blue-600">Masuk</span>
               </h1>
-              <p className="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-[0.2em] leading-relaxed">
-                Silakan masuk untuk mengelola data inventaris gudang Tirta Pakuan Bogor.
+              <p className="text-[9px] font-bold text-slate-400 mt-3 uppercase tracking-[0.2em] leading-relaxed">
+                Silakan masuk untuk mengelola pengajuan & persetujuan barang (SIPBAR) PERUMDA Tirta Pakuan.
               </p>
             </motion.div>
           </div>

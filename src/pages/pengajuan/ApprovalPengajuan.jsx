@@ -29,9 +29,9 @@ export default function ApprovalPengajuan() {
   };
 
   const STATUS_CONFIG = {
-    pending_asisten_manager: { label: "Menunggu Asmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
-    pending_manager:    { label: "Menunggu Manager",  cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-    pending_gudang:     { label: "Menunggu Gudang",   cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+    pending_asisten_manager: { label: "Menunggu Persetujuan Asmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
+    pending_manager:    { label: "Menunggu Persetujuan Manager",  cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+    pending_gudang:     { label: "Menunggu Persetujuan Gudang",   cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
   };
 
   useEffect(() => { 
@@ -70,16 +70,23 @@ export default function ApprovalPengajuan() {
   const currentData = filtered.slice(indexFirst, indexLast);
 
   const getAvailableStatuses = () => {
-    const base = [{ key: "", label: "Semua", color: "from-slate-600 to-slate-500", icon: <LayoutGrid size={16} /> }];
-    if (role === 'asisten_manager') return [...base, { label: "Menunggu Anda", key: "pending_asisten_manager", color: "from-blue-600 to-sky-500", icon: <ShieldCheck size={16} /> }];
-    if (role === 'manager') return [...base, { label: "Menunggu Anda", key: "pending_manager", color: "from-blue-600 to-sky-500", icon: <User size={16} /> }];
-    if (role === 'gudang') return [...base, { label: "Menunggu Anda", key: "pending_gudang", color: "from-blue-700 to-sky-600", icon: <Package size={16} /> }];
+    if (role === 'asisten_manager') {
+      return [{ key: "", label: "Menunggu Persetujuan Asmen", color: "from-amber-500 to-orange-500", icon: <ShieldCheck size={16} /> }];
+    }
+    if (role === 'manager') {
+      return [{ key: "", label: "Menunggu Persetujuan Manager", color: "from-blue-600 to-sky-500", icon: <User size={16} /> }];
+    }
+    if (role === 'gudang') {
+      return [{ key: "", label: "Menunggu Persetujuan Gudang", color: "from-indigo-600 to-purple-500", icon: <Package size={16} /> }];
+    }
     
+    // Admin sees all tabs
+    const base = [{ key: "", label: "Semua", color: "from-slate-600 to-slate-500", icon: <LayoutGrid size={16} /> }];
     return [
       ...base,
-      { label: "Asisten Manager", key: "pending_asisten_manager", color: "from-amber-500 to-orange-500", icon: <ShieldCheck size={16} /> },
-      { label: "Manager", key: "pending_manager", color: "from-blue-600 to-sky-500", icon: <User size={16} /> },
-      { label: "Gudang", key: "pending_gudang", color: "from-indigo-600 to-purple-500", icon: <Package size={16} /> }
+      { label: "Menunggu Persetujuan Asmen", key: "pending_asisten_manager", color: "from-amber-500 to-orange-500", icon: <ShieldCheck size={16} /> },
+      { label: "Menunggu Persetujuan Manager", key: "pending_manager", color: "from-blue-600 to-sky-500", icon: <User size={16} /> },
+      { label: "Menunggu Persetujuan Gudang", key: "pending_gudang", color: "from-indigo-600 to-purple-500", icon: <Package size={16} /> }
     ];
   };
 
@@ -91,7 +98,7 @@ export default function ApprovalPengajuan() {
 
         <PageHeader
           icon={<ClipboardCheck size={22} />}
-          title="Antrian Persetujuan"
+          title="Persetujuan Pengajuan"
           subtitle={`Terdapat ${data.length} pengajuan yang memerlukan tindakan Anda`}
           actions={
             <button onClick={loadData} disabled={loading} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 transition-all">
@@ -119,7 +126,7 @@ export default function ApprovalPengajuan() {
                   <span className={`text-lg font-black leading-none ${filterStatus === s.key ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-200"}`}>
                     {s.key === "" ? data.length : data.filter(d => d.status === s.key).length}
                   </span>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 truncate">{s.label}</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 leading-tight">{s.label}</p>
                 </div>
               </div>
               {filterStatus === s.key && (

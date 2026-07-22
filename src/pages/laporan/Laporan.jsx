@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import MainLayout from "../../components/layout/MainLayout";
 import api from "../../utils/api";
 import { getRole } from "../../utils/auth";
@@ -25,7 +25,8 @@ const StatusBadge = ({ status }) => {
 
 export default function Laporan() {
   const role = getRole();
-  const [jenis, setJenis] = useState("stok");
+  const defaultJenis = (role === "admin" || role === "gudang") ? "stok" : "keluar";
+  const [jenis, setJenis] = useState(defaultJenis);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [data, setData] = useState([]);
@@ -35,29 +36,82 @@ export default function Laporan() {
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 15;
 
-  // Quick date presets
-  const setPreset = (days) => {
+  // Helper: get local date string YYYY-MM-DD (bukan UTC)
+  const toLocalDateStr = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  };
+
+  // Quick date presets — auto-fetch setelah tanggal di-set
+  const setPreset = async (days) => {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - days);
-    setStartDate(start.toISOString().split("T")[0]);
-    setEndDate(end.toISOString().split("T")[0]);
+    const s = toLocalDateStr(start);
+    const e = toLocalDateStr(end);
+    setStartDate(s);
+    setEndDate(e);
+    // Auto fetch with the new dates
+    setLoading(true);
+    try {
+      const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar" }[jenis];
+      const res = await api.get(`${endpoint}?start=${s}&end=${e}`);
+      setData(res.data);
+      setLoaded(true);
+      setCurrentPage(1);
+      setSearchQuery("");
+    } catch (err) {
+      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Gagal", text: "Gagal mengambil data laporan." }));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const fetchLaporan = async () => {
+  const fetchLaporan = async (overrideStart, overrideEnd) => {
     setLoading(true);
+    const s = (typeof overrideStart === "string") ? overrideStart : startDate;
+    const e = (typeof overrideEnd === "string") ? overrideEnd : endDate;
+
+    if (jenis !== "stok") {
+      if (!s || !e) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Tentukan rentang tanggal terlebih dahulu." }));
+        setLoading(false);
+        return;
+      }
+
+      const dStart = new Date(s);
+      const dEnd = new Date(e);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Format Salah", text: "Format tanggal tidak valid." }));
+        setLoading(false);
+        return;
+      }
+
+      if (dStart > dEnd) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal mulai tidak boleh melebihi tanggal akhir." }));
+        setLoading(false);
+        return;
+      }
+
+      if (dStart > today || dEnd > today) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal tidak boleh melebihi hari ini." }));
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       let res;
       if (jenis === "stok") {
         res = await api.get("/laporan/stok");
       } else {
-        if (!startDate || !endDate) {
-          import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Oops!", text: "Tentukan rentang tanggal terlebih dahulu." }));
-          setLoading(false);
-          return;
-        }
         const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar" }[jenis];
-        res = await api.get(`${endpoint}?start=${startDate}&end=${endDate}`);
+        res = await api.get(`${endpoint}?start=${s}&end=${e}`);
       }
       setData(res.data);
       setLoaded(true);
@@ -69,6 +123,26 @@ export default function Laporan() {
       setLoading(false);
     }
   };
+
+  // Auto-fetch data on mount or when report type (jenis) changes
+  useEffect(() => {
+    if (jenis === "stok") {
+      fetchLaporan();
+    } else {
+      if (startDate && endDate) {
+        const dStart = new Date(startDate);
+        const dEnd = new Date(endDate);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (dStart <= dEnd && dStart <= today && dEnd <= today) {
+          fetchLaporan(startDate, endDate);
+          return;
+        }
+      }
+      // Set default preset of last 30 days which also fetches data
+      setPreset(30);
+    }
+  }, [jenis]);
 
   const handleExport = async (format) => {
     try {
@@ -99,12 +173,14 @@ export default function Laporan() {
 
   // Report type cards
   const reportTypes = useMemo(() => {
-    const types = [
-      { value: "stok", label: "Stok Saat Ini", desc: "Posisi stok barang terkini", icon: Package, gradient: "from-blue-500 to-cyan-500" },
-    ];
-    if (role === "admin" || role === "gudang") {
+    const isAdminOrGudang = role === "admin" || role === "gudang";
+    const types = [];
+    
+    if (isAdminOrGudang) {
+      types.push({ value: "stok", label: "Stok Saat Ini", desc: "Posisi stok barang terkini", icon: Package, gradient: "from-blue-500 to-cyan-500" });
       types.push({ value: "masuk", label: "Barang Masuk", desc: "Penerimaan barang dari supplier", icon: TrendingUp, gradient: "from-emerald-500 to-teal-500" });
     }
+    
     types.push({ value: "keluar", label: "Barang Keluar", desc: "Pengeluaran barang per pengajuan", icon: TrendingDown, gradient: "from-rose-500 to-pink-500" });
     return types;
   }, [role]);
@@ -128,18 +204,6 @@ export default function Laporan() {
     return data.filter(item => JSON.stringify(item).toLowerCase().includes(q));
   }, [data, searchQuery]);
 
-  // Group data by date for masuk/keluar
-  const groupedByDate = useMemo(() => {
-    if (jenis === "stok") return null;
-    const groups = {};
-    filteredData.forEach(item => {
-      const dateKey = new Date(item.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(item);
-    });
-    return groups;
-  }, [filteredData, jenis]);
-
   const isGrouped = jenis !== "stok";
 
   // Summary KPIs
@@ -147,8 +211,29 @@ export default function Laporan() {
   const totalQty = filteredData.reduce((sum, i) => sum + (parseInt(i.jumlah || i.stok) || 0), 0);
   const uniqueItems = new Set(filteredData.map(i => i.nama_barang || i.kode_barang)).size;
 
-  const totalPages = Math.ceil(totalRows / itemsPerPage);
-  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(totalRows / itemsPerPage));
+  const paginatedData = useMemo(
+    () => filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [filteredData, currentPage, itemsPerPage]
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  // Group paginated slice by date for masuk/keluar
+  const groupedByDate = useMemo(() => {
+    if (jenis === "stok") return null;
+    const groups = {};
+    paginatedData.forEach(item => {
+      const dateKey = new Date(item.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(item);
+    });
+    return groups;
+  }, [paginatedData, jenis]);
 
   const needsDateFilter = jenis !== "stok";
 
@@ -321,30 +406,34 @@ export default function Laporan() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {isGrouped && groupedByDate ? (
-                          Object.entries(groupedByDate).map(([dateText, items], groupIdx) => (
-                            <>
-                              <tr key={`group-${groupIdx}`} className="bg-sky-50 dark:bg-sky-900/20 border-y border-sky-200 dark:border-sky-800">
-                                <td className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs">{groupIdx + 1}</td>
-                                <td colSpan={getColumns().length} className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs">
-                                  <div className="flex items-center gap-2">
-                                    <Calendar size={14} />
-                                    Tanggal {dateText}
-                                  </div>
-                                </td>
-                              </tr>
-                              {items.map((item, idx) => {
-                                const row = getRow(item);
-                                return (
-                                  <tr key={`${groupIdx}-${idx}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-5 py-3.5 text-slate-400 font-mono text-xs"></td>
-                                    {row.cells.map((val, i) => (
-                                      <td key={i} className="px-5 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-semibold">{val}</td>
-                                    ))}
-                                  </tr>
-                                );
-                              })}
-                            </>
-                          ))
+                          (() => {
+                            let rowCounter = (currentPage - 1) * itemsPerPage;
+                            return Object.entries(groupedByDate).map(([dateText, items], groupIdx) => (
+                              <>
+                                <tr key={`group-${groupIdx}`} className="bg-sky-50 dark:bg-sky-900/20 border-y border-sky-200 dark:border-sky-800">
+                                  <td className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs"></td>
+                                  <td colSpan={getColumns().length} className="px-5 py-3 text-sky-700 dark:text-sky-400 font-black text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar size={14} />
+                                      Tanggal {dateText}
+                                    </div>
+                                  </td>
+                                </tr>
+                                {items.map((item, idx) => {
+                                  rowCounter += 1;
+                                  const row = getRow(item);
+                                  return (
+                                    <tr key={`${groupIdx}-${idx}`} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                                      <td className="px-5 py-3.5 text-slate-400 font-mono text-xs">{rowCounter}</td>
+                                      {row.cells.map((val, i) => (
+                                        <td key={i} className="px-5 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-semibold">{val}</td>
+                                      ))}
+                                    </tr>
+                                  );
+                                })}
+                              </>
+                            ));
+                          })()
                         ) : (
                           paginatedData.map((item, idx) => {
                             const row = getRow(item);

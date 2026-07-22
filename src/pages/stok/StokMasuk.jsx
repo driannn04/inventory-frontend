@@ -3,7 +3,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { getBarang } from "../../services/barangService";
 import { tambahStokMasuk, getStokMasuk } from "../../services/stokService";
 import { UPLOAD_URL } from "../../utils/api";
-import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Search, Check } from "lucide-react";
+import { PackagePlus, RefreshCw, ChevronLeft, ChevronRight, PlusCircle, Package, X, Eye, MapPin, Tag, Calendar, Hash, Layers, FileText, Search, Check, RotateCcw, History, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../../components/common/PageHeader";
 import { TableSkeleton } from "../../components/common/Skeleton";
@@ -17,6 +17,11 @@ export default function StokMasuk() {
   const itemsPerPage = 5;
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [periodPreset, setPeriodPreset] = useState("all");
+  const [isOpenBarangDropdown, setIsOpenBarangDropdown] = useState(false);
+  const [searchBarang, setSearchBarang] = useState("");
 
   const [form, setForm] = useState({ barang_id: "", jumlah: "", keterangan: "" });
   const selectedBarang = barang.find(b => b.id == form.barang_id);
@@ -32,6 +37,73 @@ export default function StokMasuk() {
   };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handlePreset = (preset) => {
+    setPeriodPreset(preset);
+    setCurrentPage(1);
+    const now = new Date();
+    
+    if (preset === "all") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "today") {
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === "month") {
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const firstDay = `${yyyy}-${mm}-01`;
+      const lastDayObj = new Date(yyyy, now.getMonth() + 1, 0);
+      const lastDd = String(lastDayObj.getDate()).padStart(2, "0");
+      const lastDay = `${yyyy}-${mm}-${lastDd}`;
+      setStartDate(firstDay);
+      setEndDate(lastDay);
+    } else if (preset === "year") {
+      const yyyy = now.getFullYear();
+      setStartDate(`${yyyy}-01-01`);
+      setEndDate(`${yyyy}-12-31`);
+    }
+  };
+
+  const handleDateChange = (type, val) => {
+    setPeriodPreset("custom");
+    setCurrentPage(1);
+
+    const s = type === "start" ? val : startDate;
+    const e = type === "end" ? val : endDate;
+
+    if (s && e) {
+      const dStart = new Date(s);
+      const dEnd = new Date(e);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (dStart > dEnd) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal mulai tidak boleh melebihi tanggal akhir." }));
+        return;
+      }
+
+      if (dStart > today || dEnd > today) {
+        import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Tanggal Salah", text: "Tanggal tidak boleh melebihi hari ini." }));
+        return;
+      }
+    }
+
+    if (type === "start") setStartDate(val);
+    if (type === "end") setEndDate(val);
+  };
+
+  const handleResetFilter = () => {
+    setSearch("");
+    setStartDate("");
+    setEndDate("");
+    setPeriodPreset("all");
+    setCurrentPage(1);
+  };
 
   const handleSubmit = async () => {
     if (!form.barang_id || !form.jumlah) {
@@ -49,10 +121,34 @@ export default function StokMasuk() {
     } finally { setLoading(false); }
   };
 
-  const filtered = riwayat.filter(r => 
-    (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
-    (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase())
-  );
+  const filtered = riwayat.filter(r => {
+    const matchSearch = 
+      (r.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) || 
+      (r.kode_barang?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (r.keterangan?.toLowerCase() || "").includes(search.toLowerCase());
+
+    if (!matchSearch) return false;
+
+    if (startDate || endDate) {
+      if (!r.tanggal) return false;
+      const rDate = new Date(r.tanggal);
+      rDate.setHours(0, 0, 0, 0);
+
+      if (startDate) {
+        const sDate = new Date(startDate);
+        sDate.setHours(0, 0, 0, 0);
+        if (rDate < sDate) return false;
+      }
+
+      if (endDate) {
+        const eDate = new Date(endDate);
+        eDate.setHours(23, 59, 59, 999);
+        if (rDate > eDate) return false;
+      }
+    }
+
+    return true;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const indexLast = currentPage * itemsPerPage;
@@ -104,45 +200,148 @@ export default function StokMasuk() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* LEFT: INPUT FORM */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                  <PlusCircle size={20} />
+          <div className="lg:col-span-4 flex flex-col">
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex-1 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <PlusCircle size={20} />
+                  </div>
+                  <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Input Stok Masuk</h2>
                 </div>
-                <h2 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Input Stok Masuk</h2>
-              </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Pilih Barang</label>
-                  <select 
-                    name="barang_id" 
-                    value={form.barang_id} 
-                    onChange={handleChange} 
-                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 dark:text-white uppercase"
-                  >
-                    <option value="">-- PILIH BARANG --</option>
-                    {barang.map(b => <option key={b.id} value={b.id}>{b.nama_barang} ({b.kode_barang})</option>)}
-                  </select>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {selectedBarang && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                      className="p-4 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 flex items-center gap-4"
+                  <div className="relative">
+                    {/* Selector Trigger Box */}
+                    <div
+                      className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800/80 rounded-2xl transition-all hover:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 outline-none"
                     >
-                      <img src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"} alt="p" className="w-12 h-12 rounded-lg object-cover bg-white shadow-sm" />
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black text-blue-600 uppercase truncate">{selectedBarang.nama_barang}</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase">Stok: {selectedBarang.stok} {selectedBarang.satuan}</p>
+                      <div 
+                        className="flex-1 flex items-center gap-3 cursor-pointer min-w-0"
+                        onClick={() => setIsOpenBarangDropdown(!isOpenBarangDropdown)}
+                      >
+                        {selectedBarang ? (
+                          <>
+                            <img
+                              src={selectedBarang.foto ? `${UPLOAD_URL}/${selectedBarang.foto}` : "/no-image.png"}
+                              alt={selectedBarang.nama_barang}
+                              className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-slate-100 dark:border-slate-800 shrink-0"
+                            />
+                            <div className="min-w-0 flex-1 pr-2">
+                              <p className="text-xs font-black text-slate-800 dark:text-white uppercase truncate leading-tight">{selectedBarang.nama_barang}</p>
+                              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1">
+                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{selectedBarang.kode_barang}</span>
+                                <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full shrink-0"></span>
+                                <span className="text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-md uppercase shrink-0">Stok: {selectedBarang.stok} {selectedBarang.satuan}</span>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-xs font-black text-slate-400 uppercase tracking-widest py-2 pl-1">-- PILIH BARANG --</span>
+                        )}
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+
+                      {/* Action Button: X (Clear) or CARI (Search) */}
+                      {selectedBarang ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setForm({ ...form, barang_id: "" });
+                          }}
+                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-all shrink-0"
+                          title="Batal pilih barang"
+                        >
+                          <X size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsOpenBarangDropdown(!isOpenBarangDropdown)}
+                          className="text-slate-400 text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-700 px-3.5 py-2 rounded-xl border border-slate-200/50 dark:border-slate-600/50 hover:bg-slate-200 transition-all shrink-0"
+                        >
+                          Cari
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Custom Searchable Dropdown Overlay */}
+                    {isOpenBarangDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-[40]" onClick={() => setIsOpenBarangDropdown(false)} />
+                        <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] z-[50] overflow-hidden animate-slideDown flex flex-col max-h-[350px]">
+                          {/* Search Input inside Dropdown */}
+                          <div className="p-4 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+                            <Search size={14} className="text-slate-400" />
+                            <input
+                              type="text"
+                              placeholder="Ketik nama atau kode barang..."
+                              value={searchBarang}
+                              onChange={(e) => setSearchBarang(e.target.value)}
+                              className="bg-transparent border-none outline-none text-xs font-bold text-slate-700 dark:text-white placeholder-slate-400 w-full uppercase"
+                              autoFocus
+                            />
+                            {searchBarang && (
+                              <button onClick={() => setSearchBarang("")} className="p-1 text-slate-300 hover:text-rose-500">
+                                <X size={12} />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Scrollable list */}
+                          <div className="overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
+                            {barang.filter(b => 
+                              (b.nama_barang?.toLowerCase() || "").includes(searchBarang.toLowerCase()) ||
+                              (b.kode_barang?.toLowerCase() || "").includes(searchBarang.toLowerCase())
+                            ).length === 0 ? (
+                              <p className="p-6 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Barang tidak ditemukan</p>
+                            ) : (
+                              barang.filter(b => 
+                                (b.nama_barang?.toLowerCase() || "").includes(searchBarang.toLowerCase()) ||
+                                (b.kode_barang?.toLowerCase() || "").includes(searchBarang.toLowerCase())
+                              ).map(b => (
+                                <div
+                                  key={b.id}
+                                  onClick={() => {
+                                    setForm({ ...form, barang_id: b.id });
+                                    setIsOpenBarangDropdown(false);
+                                    setSearchBarang("");
+                                  }}
+                                  className={`flex items-center justify-between p-4 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-colors ${
+                                    form.barang_id == b.id ? "bg-blue-50/30 dark:bg-blue-900/5" : ""
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <img
+                                      src={b.foto ? `${UPLOAD_URL}/${b.foto}` : "/no-image.png"}
+                                      alt={b.nama_barang}
+                                      className="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-slate-100 dark:border-slate-800"
+                                    />
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-black text-slate-800 dark:text-white uppercase leading-tight truncate max-w-[180px]">{b.nama_barang}</p>
+                                      <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">{b.kode_barang} {b.lokasi_rak ? `• ${b.lokasi_rak}` : ""}</p>
+                                    </div>
+                                  </div>
+                                  <span className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-xl border shrink-0 ${
+                                    b.stok <= b.stok_minimum 
+                                      ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/50" 
+                                      : "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/50"
+                                  }`}>
+                                    {b.stok} {b.satuan}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jumlah</label>
@@ -170,38 +369,95 @@ export default function StokMasuk() {
                     className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-slate-700 dark:text-white uppercase resize-none" 
                   />
                 </div>
-
-                <button 
-                  onClick={handleSubmit} 
-                  disabled={loading || !form.barang_id || !form.jumlah} 
-                  className="w-full py-4 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-3"
-                >
-                  {loading ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
-                  Simpan Stok Masuk
-                </button>
               </div>
+            </div>
+
+              <button 
+                onClick={handleSubmit} 
+                disabled={loading || !form.barang_id || !form.jumlah} 
+                className="w-full py-4 bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-3 mt-8"
+              >
+                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Check size={16} />}
+                Simpan Stok Masuk
+              </button>
             </div>
           </div>
 
           {/* RIGHT: HISTORY TABLE */}
-          <div className="lg:col-span-8 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
-              <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Riwayat Transaksi</h2>
-                <div className="relative w-full max-w-[250px]">
-                  <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    type="text" 
-                    placeholder="CARI DATA..." 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[10px] outline-none font-bold uppercase"
-                  />
+          <div className="lg:col-span-8 flex flex-col">
+            <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex-1 flex flex-col">
+              <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-[0.2em] flex items-center gap-2">
+                    <History size={16} className="text-blue-500" /> Riwayat Transaksi
+                  </h2>
+                  <div className="relative w-full sm:w-[220px]">
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="CARI DATA..." 
+                      value={search}
+                      onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[10px] outline-none font-bold uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* FILTER BAR */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {[
+                      { id: "all", label: "Semua" },
+                      { id: "today", label: "Hari Ini" },
+                      { id: "month", label: "Bulan Ini" },
+                      { id: "year", label: "Tahun Ini" },
+                    ].map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => handlePreset(p.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
+                          periodPreset === p.id 
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" 
+                            : "bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700/60">
+                      <Calendar size={12} className="text-slate-400" />
+                      <input 
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => handleDateChange("start", e.target.value)}
+                        className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                      <span className="text-[9px] font-black text-slate-400">s/d</span>
+                      <input 
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => handleDateChange("end", e.target.value)}
+                        className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      />
+                    </div>
+                    {(startDate || endDate || search || periodPreset !== "all") && (
+                      <button
+                        onClick={handleResetFilter}
+                        className="p-2 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 hover:bg-rose-100 transition-colors"
+                        title="Reset Filter"
+                      >
+                        <RotateCcw size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             {loadingData ? (
               <div className="p-8">
-                <TableSkeleton columns={5} rows={5} />
+                <TableSkeleton columns={6} rows={5} />
               </div>
             ) : (
               <div className="overflow-x-auto flex-1">
@@ -211,13 +467,14 @@ export default function StokMasuk() {
                       <th className="px-8 py-5">#</th>
                       <th className="px-8 py-5">Barang</th>
                       <th className="px-8 py-5 text-center">Jumlah</th>
+                      <th className="px-8 py-5 text-center">Via</th>
                       <th className="px-8 py-5">Tanggal</th>
                       <th className="px-8 py-5 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                     {currentData.length === 0 ? (
-                      <tr><td colSpan={5} className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Data tidak ditemukan</td></tr>
+                      <tr><td colSpan={6} className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Data tidak ditemukan</td></tr>
                     ) : currentData.map((r, i) => (
                       <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer" onClick={() => setSelectedItem(r)}>
                         <td className="px-8 py-4 text-[11px] font-bold text-slate-400">{indexFirst + i + 1}</td>
@@ -228,12 +485,21 @@ export default function StokMasuk() {
                         <td className="px-8 py-4 text-center">
                           <span className="text-[11px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-800">+{r.jumlah}</span>
                         </td>
+                        <td className="px-8 py-4 text-center">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-lg border ${
+                            r.keterangan?.toLowerCase().includes("scan")
+                              ? "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30"
+                              : "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700"
+                          }`}>
+                            {r.keterangan?.toLowerCase().includes("scan") ? "Scan QR" : "Manual"}
+                          </span>
+                        </td>
                         <td className="px-8 py-4 text-xs font-bold text-slate-500">
                           {new Date(r.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
                         </td>
                         <td className="px-8 py-4 text-center">
-                          <button className="p-2 rounded-xl text-slate-300 hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100">
-                            <Eye size={14} />
+                          <button className="flex items-center gap-1.5 mx-auto bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg border border-slate-100 dark:border-slate-700 transition-all text-[9px] font-black uppercase tracking-widest">
+                            <Eye size={12} /> Detail
                           </button>
                         </td>
                       </tr>

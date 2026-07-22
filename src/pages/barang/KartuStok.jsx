@@ -75,6 +75,29 @@ export default function KartuStok() {
       setError("Isi tanggal mulai dan tanggal akhir sekaligus");
       return;
     }
+
+    if (startDate && endDate) {
+      const dStart = new Date(startDate);
+      const dEnd = new Date(endDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+
+      if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) {
+        setError("Format tanggal tidak valid");
+        return;
+      }
+
+      if (dStart > dEnd) {
+        setError("Tanggal mulai tidak boleh melebihi tanggal akhir");
+        return;
+      }
+
+      if (dStart > today || dEnd > today) {
+        setError("Tanggal tidak boleh melebihi hari ini");
+        return;
+      }
+    }
+
     setError("");
     loadData(buildParams());
   };

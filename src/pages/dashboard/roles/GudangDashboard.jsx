@@ -249,7 +249,7 @@ export default function GudangDashboard() {
 
                             <motion.button
                                 whileHover={{ y: -4, scale: 1.02 }}
-                                onClick={() => navigate("/approval")}
+                                onClick={() => navigate("/persetujuan-pengajuan")}
                                 className="flex flex-col items-start p-4 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all text-left group gap-2"
                             >
                                 <div className="p-3 w-max rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-none mb-1 transform transition-transform group-hover:rotate-12 relative flex items-center justify-center">

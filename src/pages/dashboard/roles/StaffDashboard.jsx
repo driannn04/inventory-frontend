@@ -52,11 +52,11 @@ export default function StaffDashboard() {
     }, []);
 
     const STATUS_UI = {
-        pending_asisten_manager: { label: "Menunggu Asisten Manager", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-100 dark:border-amber-900/30", dot: "bg-amber-500 shadow-amber-500/20", line: "bg-amber-400", step: 1 },
-        pending_manager: { label: "Menunggu Manager", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 2 },
-        pending_gudang: { label: "Menunggu Gudang", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 3 },
-        completed: { label: "Selesai", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-100 dark:border-emerald-900/30", dot: "bg-emerald-500 shadow-emerald-500/20", line: "bg-emerald-400", step: 4 },
-        rejected: { label: "Ditolak", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-900/20", border: "border-rose-100 dark:border-rose-900/30", dot: "bg-rose-500 shadow-rose-500/20", line: "bg-rose-400", step: 0 },
+        pending_asisten_manager: { label: "Menunggu Persetujuan Asmen", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-100 dark:border-amber-900/30", dot: "bg-amber-500 shadow-amber-500/20", line: "bg-amber-400", step: 1 },
+        pending_manager: { label: "Menunggu Persetujuan Manager", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 2 },
+        pending_gudang: { label: "Menunggu Persetujuan Gudang", color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-100 dark:border-blue-900/30", dot: "bg-blue-500 shadow-blue-500/20", line: "bg-blue-400", step: 3 },
+        completed: { label: "Pengajuan Selesai", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-100 dark:border-emerald-900/30", dot: "bg-emerald-500 shadow-emerald-500/20", line: "bg-emerald-400", step: 4 },
+        rejected: { label: "Pengajuan Ditolak", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-900/20", border: "border-rose-100 dark:border-rose-900/30", dot: "bg-rose-500 shadow-rose-500/20", line: "bg-rose-400", step: 0 },
     };
 
     if (loading) return (
@@ -79,43 +79,7 @@ export default function StaffDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 pb-12"
         >
-            {/* ── HEADER ── */}
-            <div className="flex justify-between items-center px-2 flex-wrap gap-4">
-                <h2 className="text-sm font-black text-sky-900/40 dark:text-sky-400/40 uppercase tracking-[0.2em]">
-                    Staff Overview — Tracking Pengajuan
-                </h2>
-            </div>
 
-            {/* ── GREETING BANNER (Match PDAM Theme) ── */}
-            <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/30 rounded-[2.5rem] p-6 shadow-sm shadow-blue-500/5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-600 to-sky-400"></div>
-
-                <div className="flex items-center gap-4 relative z-10 pl-2">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-sky-400 rounded-2xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                        <Zap size={24} />
-                    </div>
-                    <div>
-                        <h3 className="text-sm md:text-base font-black text-sky-950 dark:text-white uppercase tracking-tight">Pusat Kendali Pengajuan Barang</h3>
-                        <div className="flex items-center gap-3 mt-0.5">
-                            <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest leading-none">Divisi Staff — PDAM Tirta Pakuan</p>
-                            <span className="w-1 h-1 bg-blue-200 rounded-full"></span>
-                            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
-                                <Calendar size={10} /> {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate("/buat-pengajuan")}
-                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/20 flex items-center justify-center gap-3 transition-all relative z-10 border border-blue-500/50"
-                >
-                    <PlusCircle size={16} />
-                    Buat Pengajuan
-                </motion.button>
-            </div>
 
             {/* ── STATS SECTION ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -165,18 +129,43 @@ export default function StaffDashboard() {
                                                 <h4 className="text-sm font-black text-sky-950 dark:text-white uppercase tracking-tight line-clamp-1">{r.catatan || "Tidak ada catatan"}</h4>
                                             </div>
 
-                                            {/* Progress Status Visual */}
-                                            <div className="flex items-center gap-2 md:gap-4 shrink-0">
-                                                {[1, 2, 3, 4].map(step => (
-                                                    <div key={step} className="flex items-center">
-                                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black transition-colors duration-500
-                                                            ${ui.step >= step ? `${ui.dot} text-white shadow-md` : "bg-white dark:bg-slate-800 text-slate-300 dark:text-slate-600 border border-slate-100 dark:border-slate-700"}
-                                                        `}>
-                                                            {ui.step >= step ? <CheckCircle2 size={12} /> : step}
+                                             {/* Progress Status Visual */}
+                                            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+                                                {[
+                                                    { id: 1, label: "Asmen" },
+                                                    { id: 2, label: "Manager" },
+                                                    { id: 3, label: "Gudang" },
+                                                    { id: 4, label: "Selesai" }
+                                                ].map((s, idx) => {
+                                                    const isPassed = ui.step > s.id;
+                                                    const isCurrent = ui.step === s.id && r.status !== "rejected";
+                                                    const isDone = r.status === "completed" && s.id === 4;
+                                                    const isHighlighted = isPassed || isCurrent || isDone;
+
+                                                    // Label color matching status
+                                                    let labelColor = "text-slate-400 dark:text-slate-600";
+                                                    if (isDone) labelColor = "text-emerald-600 dark:text-emerald-400 font-extrabold";
+                                                    else if (isCurrent) labelColor = `${ui.color} font-extrabold`;
+                                                    else if (isPassed) labelColor = "text-blue-500 dark:text-blue-450";
+
+                                                    return (
+                                                        <div key={s.id} className="flex items-center">
+                                                            <div className="flex flex-col items-center gap-1.5 min-w-[45px] md:min-w-[60px]">
+                                                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black transition-all duration-500
+                                                                    ${isHighlighted ? `${ui.dot} text-white shadow-md` : "bg-white dark:bg-slate-800 text-slate-350 dark:text-slate-600 border border-slate-100 dark:border-slate-700"}
+                                                                `}>
+                                                                    {isPassed || isDone ? <CheckCircle2 size={12} /> : s.id}
+                                                                </div>
+                                                                <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-wider ${labelColor}`}>
+                                                                    {s.label}
+                                                                </span>
+                                                            </div>
+                                                            {idx < 3 && (
+                                                                <div className={`w-3 md:w-6 h-0.5 -mt-4 transition-colors duration-500 ${ui.step > s.id ? ui.line : "bg-slate-100 dark:bg-slate-800"}`}></div>
+                                                            )}
                                                         </div>
-                                                        {step < 4 && <div className={`w-4 md:w-8 h-0.5 transition-colors duration-500 ${ui.step > step ? ui.line : "bg-slate-100 dark:bg-slate-800"}`}></div>}
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
 
                                             <div className="p-2.5 bg-white dark:bg-sky-900/40 text-sky-300 group-hover:text-sky-600 group-hover:bg-sky-50 dark:group-hover:bg-sky-900/60 rounded-xl transition-all shadow-sm">

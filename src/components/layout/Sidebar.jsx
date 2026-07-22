@@ -33,7 +33,7 @@ export default function Sidebar({ onClose }) {
     location.pathname === "/stok-masuk" || location.pathname === "/stok-keluar"
   );
   const [openPengajuan, setOpenPengajuan] = useState(false);
-  const [orgName, setOrgName] = useState("PDAM Inv");
+  const [orgName, setOrgName] = useState("PERUMDA Inv");
   const [pendingCount, setPendingCount] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [unreadNotifs, setUnreadNotifs] = useState([]);
@@ -70,7 +70,7 @@ export default function Sidebar({ onClose }) {
   }, [location.pathname]);
 
   useEffect(() => {
-    setOrgName("PDAM Tirta Pakuan");
+    setOrgName("PERUMDA Tirta Pakuan");
 
     // Load Pending Counts for Badge
     const fetchCounts = async () => {
@@ -133,9 +133,9 @@ export default function Sidebar({ onClose }) {
 
   // Modern pill-shaped active state
   const menuClass = (path) => `
-    flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-300 text-sm font-semibold relative overflow-hidden group
+    flex items-center gap-2.5 py-2.5 px-3 rounded-xl transition-all duration-300 text-[12.5px] font-bold relative overflow-hidden group whitespace-nowrap
     ${isActive(path)
-      ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 active-sidebar-item"
+      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 active-sidebar-item"
       : "text-slate-400 hover:bg-slate-700/50 hover:text-slate-100"}
   `;
 
@@ -182,8 +182,8 @@ export default function Sidebar({ onClose }) {
         <div className="flex justify-center flex-1">
           <img
             src="/logo-premium.png"
-            alt="PDAM Tirta Pakuan"
-            className="h-32 w-auto object-contain transition-transform hover:scale-105 duration-300"
+            alt="PERUMDA Tirta Pakuan"
+            className="h-28 w-auto object-contain transition-transform hover:scale-105 duration-300"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
@@ -215,9 +215,9 @@ export default function Sidebar({ onClose }) {
 
         {hasPermission("dashboard") && (
           <Link to="/" className={menuClass("/")}>
-            <LayoutDashboard size={18} className={isActive("/") ? "text-cyan-400" : ""} />
+            <LayoutDashboard size={18} className={isActive("/") ? "text-cyan-300" : ""} />
             Dashboard
-            {isActive("/") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
+            {isActive("/") && <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-300 rounded-r-full shadow-[0_0_10px_rgba(6,182,212,0.4)]" />}
           </Link>
         )}
 
@@ -293,19 +293,19 @@ export default function Sidebar({ onClose }) {
         {hasPermission("pengajuan-saya") && (
           <Link to="/pengajuan-saya" className={menuClass("/pengajuan-saya")}>
             <History size={18} className={isActive("/pengajuan-saya") ? "text-cyan-400" : ""} />
-            Pengajuan Saya
+            Pengajuan Anda
           </Link>
         )}
 
         {hasPermission("approval") && (
-          <Link to="/approval" className={menuClass("/approval")}>
-            <ClipboardCheck size={18} /> Validasi Pengajuan
+          <Link to="/persetujuan-pengajuan" className={menuClass("/persetujuan-pengajuan")}>
+            <ClipboardCheck size={18} /> Persetujuan Pengajuan
             <Badge count={pendingCount} />
           </Link>
         )}
 
         {hasPermission("list-pengajuan") && (
-          <Link to="/list-pengajuan" className={menuClass("/list-pengajuan")}>
+          <Link to="/semua-pengajuan" className={menuClass("/semua-pengajuan")}>
             <FileText size={18} /> Semua Pengajuan
           </Link>
         )}
@@ -364,7 +364,7 @@ export default function Sidebar({ onClose }) {
       {/* SIDEBAR FOOTER */}
       <div className="p-6 mt-auto">
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] text-center opacity-40">
-          PDAM Tirta Pakuan &copy; 2026
+          PERUMDA Tirta Pakuan &copy; 2026
         </p>
         <p className="text-[10px] font-black text-slate-400  uppercase tracking-[0.1em] text-center opacity-40">By Drian</p>
       </div>

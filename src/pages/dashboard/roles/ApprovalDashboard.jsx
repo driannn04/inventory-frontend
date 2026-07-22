@@ -82,7 +82,7 @@ export default function ApprovalDashboard() {
                     </div>
                 </div>
                 <Link 
-                    to="/approval"
+                    to="/persetujuan-pengajuan"
                     className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-lg ${
                         stats.pending > 0 
                         ? "bg-amber-500 text-white shadow-amber-500/25 hover:bg-amber-600" 

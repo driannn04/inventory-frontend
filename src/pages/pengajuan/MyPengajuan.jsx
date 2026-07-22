@@ -11,11 +11,11 @@ import PageHeader from "../../components/common/PageHeader";
 import { TableSkeleton } from "../../components/common/Skeleton";
 
 const STATUS_CONFIG = {
-  pending_asisten_manager: { label: "Menunggu Asmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
-  pending_manager: { label: "Menunggu Manager", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-  pending_gudang: { label: "Menunggu Gudang", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
-  completed: { label: "Selesai", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-900/50" },
-  rejected: { label: "Ditolak", cls: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50" },
+  pending_asisten_manager: { label: "Menunggu Persetujuan Asmen", cls: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-900/50" },
+  pending_manager: { label: "Menunggu Persetujuan Manager", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+  pending_gudang: { label: "Menunggu Persetujuan Gudang", cls: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-900/50" },
+  completed: { label: "Pengajuan Selesai", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-900/50" },
+  rejected: { label: "Pengajuan Ditolak", cls: "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:border-rose-900/50" },
 };
 
 const URGENCY_CONFIG = {
@@ -64,11 +64,11 @@ export default function MyPengajuan() {
 
   const stats = [
     { key: "", label: "Semua", color: "from-slate-600 to-slate-500", icon: <LayoutGrid size={16} />, count: data.length },
-    { key: "pending_asisten_manager", label: "Menunggu Asmen", color: "from-amber-500 to-orange-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_asisten_manager').length },
-    { key: "pending_manager", label: "Menunggu Manager", color: "from-blue-600 to-sky-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_manager').length },
-    { key: "pending_gudang", label: "Menunggu Gudang", color: "from-indigo-600 to-purple-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_gudang').length },
-    { key: "completed", label: "Selesai", color: "from-emerald-500 to-teal-600", icon: <CheckCircle size={16} />, count: data.filter(d => d.status === 'completed').length },
-    { key: "rejected", label: "Ditolak", color: "from-rose-500 to-pink-600", icon: <XCircle size={16} />, count: data.filter(d => d.status === 'rejected').length },
+    { key: "pending_asisten_manager", label: "Menunggu Persetujuan Asmen", color: "from-amber-500 to-orange-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_asisten_manager').length },
+    { key: "pending_manager", label: "Menunggu Persetujuan Manager", color: "from-blue-600 to-sky-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_manager').length },
+    { key: "pending_gudang", label: "Menunggu Persetujuan Gudang", color: "from-indigo-600 to-purple-500", icon: <Clock size={16} />, count: data.filter(d => d.status === 'pending_gudang').length },
+    { key: "completed", label: "Pengajuan Selesai", color: "from-emerald-500 to-teal-600", icon: <CheckCircle size={16} />, count: data.filter(d => d.status === 'completed').length },
+    { key: "rejected", label: "Pengajuan Ditolak", color: "from-rose-500 to-pink-600", icon: <XCircle size={16} />, count: data.filter(d => d.status === 'rejected').length },
   ];
 
   return (
@@ -76,7 +76,7 @@ export default function MyPengajuan() {
       <div className="space-y-6 pb-10">
         <PageHeader
           icon={<ClipboardList size={22} />}
-          title="Pengajuan Saya"
+          title="Pengajuan Anda"
           subtitle="Pantau alur persetujuan dan riwayat permintaan barang Anda"
           actions={
             <div className="flex gap-2">
@@ -109,7 +109,7 @@ export default function MyPengajuan() {
                   <span className={`text-lg font-black leading-none ${filterStatus === s.key ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-200"}`}>
                     {s.count}
                   </span>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1 truncate">{s.label}</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 leading-tight">{s.label}</p>
                 </div>
               </div>
               {filterStatus === s.key && (

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { 
-    ClipboardCheck, 
-    Clock, 
-    History, 
+import {
+    ClipboardCheck,
+    Clock,
+    History,
     ArrowRight,
     Users,
     ShieldCheck,
@@ -39,7 +39,7 @@ export default function AsistenManagerDashboard() {
             ]);
 
             setDashboardData(dashboardRes.data);
-            
+
             // Filter khusus status yang relevan bagi Asisten Manager (pending_asisten_manager)
             setStats({
                 pending: all.data.filter(p => p.status === 'pending_asisten_manager').length,
@@ -63,61 +63,23 @@ export default function AsistenManagerDashboard() {
     }, [pieRange]);
 
     if (loading) return (
-       <div className="pt-4 pb-12 space-y-8">
-          <div className="h-4 w-48 bg-slate-100 dark:bg-slate-800 rounded animate-pulse px-2"></div>
-          <div className="h-40 bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse"></div>)}
-          </div>
-          <div className="h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
-       </div>
+        <div className="pt-4 pb-12 space-y-8">
+            <div className="h-4 w-48 bg-slate-100 dark:bg-slate-800 rounded animate-pulse px-2"></div>
+            <div className="h-40 bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-3xl animate-pulse"></div>)}
+            </div>
+            <div className="h-[400px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
+        </div>
     );
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 10 }} 
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 pb-12"
         >
-            {/* ── HEADER ── */}
-            <div className="flex justify-between items-center px-2 flex-wrap gap-4">
-                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Asisten Manager Overview — Verifikasi Berkas
-                </h2>
-            </div>
 
-            {/* ── PREMIUM GREETING BANNER ── */}
-            <div className="bg-white dark:bg-slate-900 border border-blue-100 dark:border-blue-900/30 rounded-[2.5rem] p-6 shadow-sm shadow-blue-500/5 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-600 to-sky-400"></div>
-                
-                <div className="flex items-center gap-4 relative z-10 pl-2">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-sky-400 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                        <ShieldCheck size={28} />
-                    </div>
-                    <div>
-                        <h3 className="text-sm md:text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">Otoritas Validasi Asisten Manager</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                             <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest leading-none">Pusat Pemeriksaan Mutasi Barang</p>
-                             <span className="w-1.5 h-1.5 bg-blue-200 rounded-full"></span>
-                             <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center gap-1.5">
-                                <Calendar size={12} /> {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
-                             </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex gap-3 w-full md:w-auto">
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate("/approval")}
-                        className="flex-1 md:flex-none bg-gradient-to-r from-blue-600 to-sky-500 text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 transition-all relative z-10 border border-blue-400/50"
-                    >
-                        <Zap size={16} />
-                        Buka Antrean
-                    </motion.button>
-                </div>
-            </div>
 
 
             {/* ── STATS SECTION ── */}
@@ -129,16 +91,16 @@ export default function AsistenManagerDashboard() {
 
             {/* ── GRID LAYOUT ── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 {/* ── DISTRIBUSI STATUS PENGAJUAN ── */}
                 <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-2xl"><Activity size={22} /></div>
                             <div>
-                                <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Status Pengajuan Sistem</h3>
+                                <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Status Pengajuan</h3>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center gap-2">
-                                    Distribusi Proses 
+
                                     <span className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md border border-slate-200">
                                         {["7d", "30d", "year"].map(t => (
                                             <button key={t} onClick={() => setPieRange(t)}
@@ -150,11 +112,11 @@ export default function AsistenManagerDashboard() {
                                 </p>
                             </div>
                         </div>
-                        <Link to="/list-pengajuan" className="group p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all">
+                        <Link to="/semua-pengajuan" className="group p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all">
                             <ArrowRight size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                         </Link>
                     </div>
-                    
+
                     <div className="space-y-3 flex-1">
                         {[
                             { id: 'pending_asisten_manager', label: 'Validasi Asisten Manager', icon: <ShieldCheck size={18} />, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30 border-amber-100' },
@@ -190,14 +152,16 @@ export default function AsistenManagerDashboard() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Aktivitas Real-time</p>
                             </div>
                         </div>
-                        <Link to="/list-pengajuan" className="group p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all">
+                        <Link to="/semua-pengajuan" className="group p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all">
                             <ArrowRight size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                         </Link>
                     </div>
 
                     <div className="space-y-4 flex-1">
                         {recentLogs.length > 0 ? recentLogs.map((r, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-[1.5rem] bg-slate-50/50 dark:bg-slate-800/30 border border-slate-50 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-900/50 transition-all">
+                            <div key={i} onClick={() => navigate(`/pengajuan/${r.id}`)}
+                                className="flex items-center justify-between p-4 rounded-[1.5rem] bg-slate-50/50 dark:bg-slate-800/30 border border-slate-50 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-900/50 transition-all cursor-pointer hover:shadow-sm"
+                            >
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl shadow-sm flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
                                         <Users size={18} />
@@ -209,12 +173,26 @@ export default function AsistenManagerDashboard() {
                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">#{r.nomor_pengajuan}</p>
                                     </div>
                                 </div>
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm border ${
-                                    r.status.includes('pending') ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                    r.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                    'bg-rose-50 text-rose-600 border-rose-100'
-                                }`}>
-                                    {r.status.includes('pending') ? <Clock size={14}/> : r.status === 'completed' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                                <div className="flex items-center gap-3">
+                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg border ${
+                                        r.status === 'pending_asisten_manager' ? 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:border-amber-900/30' :
+                                        r.status === 'pending_manager' ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/30' :
+                                        r.status === 'pending_gudang' ? 'bg-sky-50 text-sky-700 border-sky-100 dark:bg-sky-950/20 dark:border-sky-900/30' :
+                                        r.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900/30' :
+                                        'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30'
+                                    }`}>
+                                        {r.status === 'pending_asisten_manager' ? 'Menunggu Asmen' :
+                                         r.status === 'pending_manager' ? 'Menunggu Manager' :
+                                         r.status === 'pending_gudang' ? 'Menunggu Gudang' :
+                                         r.status === 'completed' ? 'Selesai' :
+                                         r.status === 'rejected' ? 'Ditolak' : r.status}
+                                    </span>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm border ${r.status.includes('pending') ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                        r.status === 'completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                            'bg-rose-50 text-rose-600 border-rose-100'
+                                        }`}>
+                                        {r.status.includes('pending') ? <Clock size={14} /> : r.status === 'completed' ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                                    </div>
                                 </div>
                             </div>
                         )) : (

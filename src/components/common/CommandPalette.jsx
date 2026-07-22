@@ -35,14 +35,14 @@ export default function CommandPalette() {
     { id: 'tambah-keluar', name: 'Input Barang Keluar', icon: <ArrowRight size={18}/>, path: '/stok-keluar', tags: 'kurang stok exit', roles: ['admin', 'gudang'] },
 
     { id: 'pengajuan', name: 'Buat Pengajuan Barang', icon: <PlusCircle size={18}/>, path: '/buat-pengajuan', tags: 'permintaan request', roles: ['staff', 'admin', 'asisten_manager', 'manager'] },
-    { id: 'list-pengajuan', name: 'Daftar Pengajuan', icon: <ClipboardList size={18}/>, path: '/list-pengajuan', tags: 'riwayat pengajuan', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
-    { id: 'approval', name: 'Persetujuan (Approval)', icon: <CheckCircle2 size={18}/>, path: '/approval', tags: 'acc pengajuan manager admin', roles: ['admin', 'manager', 'asisten_manager', 'gudang'] },
+    { id: 'list-pengajuan', name: 'Semua Pengajuan', icon: <ClipboardList size={18}/>, path: '/semua-pengajuan', tags: 'riwayat pengajuan', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
+    { id: 'approval', name: 'Persetujuan Pengajuan', icon: <CheckCircle2 size={18}/>, path: '/persetujuan-pengajuan', tags: 'acc pengajuan manager admin', roles: ['admin', 'manager', 'asisten_manager', 'gudang'] },
     { id: 'scan', name: 'Scan QR Code', icon: <QrCode size={18}/>, path: '/scan', tags: 'barcode kamera scanner', roles: ['admin', 'gudang'] },
     { id: 'logs', name: 'Log Aktivitas Sistem', icon: <History size={18}/>, path: '/activity-log', tags: 'audit trail riwayat user', roles: ['admin'] },
 
     { id: 'users', name: 'Menu Pegawai (User)', icon: <Users size={18}/>, path: '/kelola-user', tags: 'karyawan user management pengguna', roles: ['admin'] },
     { id: 'kategori', name: 'Kategori Barang', icon: <Package size={18}/>, path: '/kategori', tags: 'jenis tipe barang kategori', roles: ['admin', 'gudang'] },
-    { id: 'laporan', name: 'Laporan Analitik', icon: <PieChart size={18}/>, path: '/laporan', tags: 'export excel pdf grafik', roles: ['admin', 'manager', 'gudang'] },
+    { id: 'laporan', name: 'Laporan Analitik', icon: <PieChart size={18}/>, path: '/laporan', tags: 'export excel pdf grafik', roles: ['admin', 'gudang', 'manager', 'asisten_manager'] },
     { id: 'profil', name: 'Profil Akun', icon: <UserCircle size={18}/>, path: '/profil', tags: 'profil akun ganti password sandi', roles: ['admin', 'staff', 'gudang', 'manager', 'asisten_manager'] },
   ].filter(item => item.roles.includes(role));
 

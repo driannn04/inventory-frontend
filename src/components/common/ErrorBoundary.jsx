@@ -24,18 +24,18 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-6 text-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="max-w-md w-full"
           >
             <div className="relative inline-block mb-8">
-               <div className="w-24 h-24 bg-rose-100 dark:bg-rose-900/30 rounded-[2rem] flex items-center justify-center text-rose-600">
-                  <AlertTriangle size={48} className="animate-bounce" />
-               </div>
-               <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-2 rounded-xl shadow-lg">
-                  <LifeBuoy size={20} className="animate-spin-slow" />
-               </div>
+              <div className="w-24 h-24 bg-rose-100 dark:bg-rose-900/30 rounded-[2rem] flex items-center justify-center text-rose-600">
+                <AlertTriangle size={48} className="animate-bounce" />
+              </div>
+              <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-2 rounded-xl shadow-lg">
+                <LifeBuoy size={20} className="animate-spin-slow" />
+              </div>
             </div>
 
             <h1 className="text-2xl font-black text-slate-800 dark:text-white mb-3">
@@ -54,7 +54,7 @@ class ErrorBoundary extends React.Component {
             </button>
 
             <p className="mt-8 text-[9px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-[0.3em]">
-              Internal System Error Handler • PDAM Tirta Pakuan
+              Internal System Error Handler • PERUMDA Tirta Pakuan
             </p>
           </motion.div>
         </div>
