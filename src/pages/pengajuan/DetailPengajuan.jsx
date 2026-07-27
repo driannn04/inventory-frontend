@@ -85,6 +85,19 @@ export default function DetailPengajuan() {
     const isDone = currentStatus === "completed" || currentStatus === "rejected";
 
     const handleApprove = async () => {
+        const result = await Swal.fire({
+            title: "Setujui Pengajuan?",
+            text: "Apakah Anda yakin ingin menyetujui permohonan pengajuan barang ini?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#2563eb",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: "Ya, Setujui!",
+            cancelButtonText: "Batal"
+        });
+
+        if (!result.isConfirmed) return;
+
         setProcessing(true);
         try {
             const res = await approvePengajuan({

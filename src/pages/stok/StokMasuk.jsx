@@ -107,17 +107,33 @@ export default function StokMasuk() {
 
   const handleSubmit = async () => {
     if (!form.barang_id || !form.jumlah) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "warning", title: "Lengkapi Data", text: "Pilih barang dan jumlah!" }));
+      const { default: Swal } = await import("sweetalert2");
+      Swal.fire({ icon: "warning", title: "Lengkapi Data", text: "Pilih barang dan jumlah!" });
       return;
     }
+
+    const { default: Swal } = await import("sweetalert2");
+    const confirmResult = await Swal.fire({
+      title: "Simpan Stok Masuk?",
+      text: `Apakah Anda yakin ingin menambahkan stok sebanyak ${form.jumlah} unit untuk barang "${selectedBarang?.nama_barang || ''}"?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: "Ya, Simpan!",
+      cancelButtonText: "Batal"
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
     try {
       setLoading(true);
       await tambahStokMasuk({ ...form, barang_id: Number(form.barang_id), jumlah: Number(form.jumlah) });
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "success", title: "Berhasil!", text: "Stok masuk berhasil disimpan" }));
+      Swal.fire({ icon: "success", title: "Berhasil!", text: "Stok masuk berhasil disimpan" });
       loadRiwayat(); loadBarang(); setCurrentPage(1);
       setForm({ barang_id: "", jumlah: "", keterangan: "" });
     } catch (err) {
-      import("sweetalert2").then(({ default: Swal }) => Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menyimpan data" }));
+      Swal.fire({ icon: "error", title: "Gagal", text: err.response?.data?.message || "Gagal menyimpan data" });
     } finally { setLoading(false); }
   };
 

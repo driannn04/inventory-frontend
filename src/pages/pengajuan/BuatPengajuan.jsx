@@ -185,6 +185,21 @@ export default function BuatPengajuan() {
 
   const handleSubmit = async () => {
     if (cart.length === 0) { Swal.fire({ icon: "warning", title: "Perhatian", text: "Tambahkan barang terlebih dahulu" }); return; }
+
+    const isEdit = location.state?.editMode;
+    const confirmResult = await Swal.fire({
+      title: isEdit ? "Perbarui Pengajuan?" : "Kirim Pengajuan?",
+      text: isEdit ? "Apakah Anda yakin ingin menyimpan perubahan pengajuan ini?" : "Apakah Anda yakin data barang dan keperluan sudah benar?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#64748b",
+      confirmButtonText: isEdit ? "Ya, Simpan!" : "Ya, Kirim!",
+      cancelButtonText: "Batal"
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
     const payload = {
       user_id: user.id,
       items: cart.map(item => ({ barang_id: item.id, jumlah: item.jumlah })),
@@ -195,7 +210,7 @@ export default function BuatPengajuan() {
 
     setLoading(true);
     try {
-      if (location.state?.editMode) {
+      if (isEdit) {
         await updatePengajuan(location.state.editId, payload);
         Swal.fire({ icon: "success", title: "Berhasil!", text: "Pengajuan berhasil diperbarui", timer: 2000, showConfirmButton: false });
       } else {
