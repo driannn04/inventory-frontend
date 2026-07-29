@@ -252,7 +252,14 @@ export default function StokMasuk() {
                               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1">
                                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">{selectedBarang.kode_barang}</span>
                                 <span className="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full shrink-0"></span>
-                                <span className="text-[9px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-md uppercase shrink-0">Stok: {selectedBarang.stok} {selectedBarang.satuan}</span>
+                                <span className="text-[9px] font-black text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md uppercase shrink-0">
+                                  Stok Fisik Gudang: {selectedBarang.stok} {selectedBarang.satuan}
+                                </span>
+                                {selectedBarang.stok_tersedia !== undefined && selectedBarang.stok_tersedia !== selectedBarang.stok && (
+                                  <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-md uppercase shrink-0">
+                                    Tersedia (Katalog): {selectedBarang.stok_tersedia} {selectedBarang.satuan}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </>
@@ -342,13 +349,20 @@ export default function StokMasuk() {
                                       <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">{b.kode_barang} {b.lokasi_rak ? `• ${b.lokasi_rak}` : ""}</p>
                                     </div>
                                   </div>
-                                  <span className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-xl border shrink-0 ${
-                                    b.stok <= b.stok_minimum 
-                                      ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/50" 
-                                      : "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/50"
-                                  }`}>
-                                    {b.stok} {b.satuan}
-                                  </span>
+                                  <div className="flex flex-col items-end gap-1 shrink-0">
+                                    <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-xl border ${
+                                      b.stok <= b.stok_minimum 
+                                        ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/50" 
+                                        : "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                    }`}>
+                                      Stok Gudang: {b.stok} {b.satuan}
+                                    </span>
+                                    {b.stok_tersedia !== undefined && b.stok_tersedia !== b.stok && (
+                                      <span className="text-[9px] font-extrabold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 rounded-lg border border-amber-200/50 dark:border-amber-900/30">
+                                        Tersedia: {b.stok_tersedia} {b.satuan}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               ))
                             )}
