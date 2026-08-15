@@ -36,6 +36,10 @@ export default function Laporan() {
   const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 15;
 
+  // State filter kategori (tambahan)
+  const [kategoriList, setKategoriList] = useState([]);
+  const [selectedKategori, setSelectedKategori] = useState("");
+
   // Helper: get local date string YYYY-MM-DD (bukan UTC)
   const toLocalDateStr = (d) => {
     const y = d.getFullYear();
@@ -43,6 +47,13 @@ export default function Laporan() {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${dd}`;
   };
+
+  // Fetch daftar kategori saat pertama kali mount
+  useEffect(() => {
+    api.get("/kategori")
+      .then(res => setKategoriList(res.data || []))
+      .catch(() => {});
+  }, []);
 
   // Quick date presets — auto-fetch setelah tanggal di-set
   const setPreset = async (days) => {
@@ -57,7 +68,9 @@ export default function Laporan() {
     setLoading(true);
     try {
       const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar" }[jenis];
-      const res = await api.get(`${endpoint}?start=${s}&end=${e}`);
+      // Sertakan filter kategori jika dipilih
+      const kategoriParam = selectedKategori ? `&kategori_id=${selectedKategori}` : "";
+      const res = await api.get(`${endpoint}?start=${s}&end=${e}${kategoriParam}`);
       setData(res.data);
       setLoaded(true);
       setCurrentPage(1);
@@ -108,10 +121,14 @@ export default function Laporan() {
     try {
       let res;
       if (jenis === "stok") {
-        res = await api.get("/laporan/stok");
+        // Sertakan filter kategori jika dipilih
+        const kategoriParam = selectedKategori ? `?kategori_id=${selectedKategori}` : "";
+        res = await api.get(`/laporan/stok${kategoriParam}`);
       } else {
         const endpoint = { masuk: "/laporan/barang-masuk", keluar: "/laporan/barang-keluar" }[jenis];
-        res = await api.get(`${endpoint}?start=${s}&end=${e}`);
+        // Sertakan filter kategori jika dipilih
+        const kategoriParam = selectedKategori ? `&kategori_id=${selectedKategori}` : "";
+        res = await api.get(`${endpoint}?start=${s}&end=${e}${kategoriParam}`);
       }
       setData(res.data);
       setLoaded(true);
@@ -149,12 +166,15 @@ export default function Laporan() {
       const base = `/export/${format}`;
       let endpoint, filename;
       const ts = new Date().toISOString().replace(/T/, '_').replace(/:/g, '-').split('.')[0];
+      // Sertakan filter kategori jika dipilih
+      const kategoriParam = selectedKategori ? `&kategori_id=${selectedKategori}` : "";
       if (jenis === "stok") {
-        endpoint = `${base}/stok`;
+        const kategoriStokParam = selectedKategori ? `?kategori_id=${selectedKategori}` : "";
+        endpoint = `${base}/stok${kategoriStokParam}`;
         filename = `laporan_stok_${ts}.${format === "excel" ? "xlsx" : "pdf"}`;
       } else {
         const map = { masuk: "barang-masuk", keluar: "barang-keluar" };
-        endpoint = `${base}/${map[jenis]}?start=${startDate}&end=${endDate}`;
+        endpoint = `${base}/${map[jenis]}?start=${startDate}&end=${endDate}${kategoriParam}`;
         filename = `laporan_${map[jenis]}_${ts}.${format === "excel" ? "xlsx" : "pdf"}`;
       }
       const res = await api.get(endpoint, { responseType: "blob" });
@@ -305,18 +325,70 @@ export default function Laporan() {
                   Tampilkan
                 </button>
               </div>
+
+              {/* ── Filter Kategori (tambahan) ── */}
+              {kategoriList.length > 0 && (
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Filter Kategori</label>
+                  <select
+                    value={selectedKategori}
+                    onChange={(e) => { setSelectedKategori(e.target.value); setLoaded(false); setData([]); }}
+                    className="w-full md:w-64 pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-sky-500/50 transition appearance-none cursor-pointer"
+                  >
+                    <option value="">Semua Kategori</option>
+                    {kategoriList.map((k) => (
+                      <option key={k.id} value={k.id}>{k.nama_kategori}</option>
+                    ))}
+                  </select>
+                  {selectedKategori && (
+                    <button
+                      onClick={() => { setSelectedKategori(""); setLoaded(false); setData([]); }}
+                      className="mt-1.5 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline"
+                    >
+                      × Hapus filter kategori
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Laporan Stok Real-Time</p>
-                <p className="text-xs text-slate-400">Menampilkan posisi stok barang saat ini di gudang</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Laporan Stok Real-Time</p>
+                  <p className="text-xs text-slate-400">Menampilkan posisi stok barang saat ini di gudang</p>
+                </div>
+                <button onClick={fetchLaporan} disabled={loading}
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95 text-sm disabled:opacity-50">
+                  {loading ? <RefreshCw size={16} className="animate-spin" /> : <Search size={16} />}
+                  Tampilkan
+                </button>
               </div>
-              <button onClick={fetchLaporan} disabled={loading}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all active:scale-95 text-sm disabled:opacity-50">
-                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Search size={16} />}
-                Tampilkan
-              </button>
+
+              {/* ── Filter Kategori untuk Stok (tambahan) ── */}
+              {kategoriList.length > 0 && (
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Filter Kategori</label>
+                  <select
+                    value={selectedKategori}
+                    onChange={(e) => { setSelectedKategori(e.target.value); setLoaded(false); setData([]); }}
+                    className="w-full md:w-64 pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-white outline-none focus:ring-2 focus:ring-sky-500/50 transition appearance-none cursor-pointer"
+                  >
+                    <option value="">Semua Kategori</option>
+                    {kategoriList.map((k) => (
+                      <option key={k.id} value={k.id}>{k.nama_kategori}</option>
+                    ))}
+                  </select>
+                  {selectedKategori && (
+                    <button
+                      onClick={() => { setSelectedKategori(""); setLoaded(false); setData([]); }}
+                      className="mt-1.5 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:underline"
+                    >
+                      × Hapus filter kategori
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
