@@ -3,6 +3,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { Plus, Search, Pencil, Trash2, QrCode, Download, ScrollText, Package, RefreshCw, ChevronLeft, ChevronRight, LayoutGrid, List, Filter, AlertTriangle, Boxes, ListFilter } from "lucide-react";
 import BarangModal from "../../components/modals/BarangModal";
 import { getBarang, deleteBarang, getQR, downloadQR } from "../../services/barangService";
+import { getKategori } from "../../services/kategoriService";
 import { UPLOAD_URL } from "../../utils/api";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { showSuccess, showError, confirmDelete } from "../../utils/swalHelper";
@@ -31,6 +32,7 @@ export default function Barang() {
   const [qrId, setQrId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [categoriesList, setCategoriesList] = useState([]);
 
   const [showTrace, setShowTrace] = useState(false);
   const [traceId, setTraceId] = useState(null);
@@ -39,7 +41,15 @@ export default function Barang() {
 
   useEffect(() => {
     loadBarang();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const res = await getKategori();
+      setCategoriesList(res.data);
+    } catch (err) { console.log(err); }
+  };
 
   // Update filter jika navigasi membawa data kategori baru
   useEffect(() => {
@@ -96,7 +106,7 @@ export default function Barang() {
     } catch (err) { showError("Gagal mengunduh QR"); }
   };
 
-  const categories = [...new Set(barang.map(b => b.nama_kategori))];
+  const categories = [...new Set(categoriesList.map(c => c.nama_kategori).filter(Boolean))];
 
   const filteredBarang = barang.filter((item) => {
     const matchSearch = (item.nama_barang?.toLowerCase() || "").includes(search.toLowerCase()) ||
@@ -133,7 +143,7 @@ export default function Barang() {
           subtitle="Manajemen dan monitoring stok inventaris operasional"
           actions={
             <div className="flex gap-2">
-              <button onClick={loadBarang} disabled={loading} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 transition-all">
+              <button onClick={() => { loadBarang(); loadCategories(); }} disabled={loading} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-blue-600 transition-all">
                 <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               </button>
               {(role === 'admin' || role === 'gudang') && (

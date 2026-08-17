@@ -4,6 +4,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { Search, Plus, Minus, Trash2, ClipboardList, AlertCircle, CheckCircle, PackageSearch, FileText, Send, RefreshCw, X, Package } from "lucide-react";
 import PageHeader from "../../components/common/PageHeader";
 import { getBarang } from "../../services/barangService";
+import { getKategori } from "../../services/kategoriService";
 import { createPengajuan, updatePengajuan } from "../../services/pengajuanService";
 import { UPLOAD_URL } from "../../utils/api";
 import { ListBarangSkeleton } from "../../components/common/Skeleton";
@@ -23,6 +24,7 @@ export default function BuatPengajuan() {
   const [loading, setLoading] = useState(false);
   const [urgensi, setUrgensi] = useState("normal");
   const [filterKategori, setFilterKategori] = useState("");
+  const [categoriesList, setCategoriesList] = useState([]);
 
   const user = getUser();
   const role = getRole();
@@ -31,6 +33,7 @@ export default function BuatPengajuan() {
 
   useEffect(() => {
     loadBarang();
+    loadCategories();
 
     // ✅ EDIT MODE HANDLING
     if (location.state?.editMode) {
@@ -117,6 +120,13 @@ export default function BuatPengajuan() {
     }
     catch (err) { console.log(err); }
     finally { setLoadingBarang(false); }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const res = await getKategori();
+      setCategoriesList(res.data);
+    } catch (err) { console.log(err); }
   };
 
   // Fuzzy Search Algorithm
@@ -275,7 +285,7 @@ export default function BuatPengajuan() {
 
                 {/* FILTERS */}
                 {(() => {
-                  const categories = [...new Set(barang.map(b => b.nama_kategori).filter(Boolean))];
+                  const categories = [...new Set(categoriesList.map(c => c.nama_kategori).filter(Boolean))];
                   return categories.length > 0 && (
                     <div className="flex gap-2.5 flex-wrap items-center">
                       <button onClick={() => setFilterKategori("")}
